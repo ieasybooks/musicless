@@ -1,145 +1,58 @@
-# nomusic
+# nomusic offline (prototype)
 
-<p align="center">
-  <img src="assets/logo.png" alt="nomusic" width="180" />
-</p>
+A self-contained Chromium extension that removes background music from YouTube
+videos entirely on the user's computer: no backend, no downloads, no account.
+It runs Spleeter 2-stem in the browser on one CPU thread.
 
-Watch videos with less background music. nomusic adds a button to videos in
-Chrome and separates their audio on your own computer. It is made for people
-who want to avoid music for religious or personal reasons.
-
-The default keeps **vocals**, including speech and singing. Some music may
-remain, and some wanted sounds may be removed. Start with a **public YouTube
-video with a fixed duration**; other sites are experimental.
-
-This version uses an operator key for every processing, playback and export
-request. The key is generated locally and kept in the extension's trusted
-storage; the default backend still listens only on loopback.
-
-## What you need
-
-- **Apple Silicon Mac, macOS 14+**, or **Linux x86_64, glibc 2.28+**.
-  On Mac, choose **Apple menu → About This Mac** to check the chip and OS.
-- **Google Chrome**. Other Chromium browsers need separate testing.
-- Internet access for installation, model downloads and source videos.
-- On Mac, [Homebrew](https://brew.sh/); on Linux, **Node.js 22+ or Deno 2.3+**.
-
-Linux installation selects CPU or NVIDIA CUDA automatically. Native Mac
-installation provides MPS acceleration when available. CPU processing can be
-slower than playback. See [platforms and profiles](docs/installation.md#platforms-and-profiles)
-for requirements and hardware-testing limits.
-
-## 1. Get the files and open Terminal
-
-1. On this repository's GitHub page, click **Code → Download ZIP**.
-2. Unzip it and move the project folder somewhere you will keep it, such as
-   Documents. The extension will continue to use files from this folder.
-3. On Mac, press **Command + Space**, type **Terminal**, and press Return.
-4. Type `cd `, including the trailing space, drag the project folder from
-   Finder into Terminal, and press Return. Linux users can open a terminal
-   in the project folder.
-
-If you use Git, these commands replace the download/unzip steps:
+## Install
 
 ```sh
-git clone https://github.com/IbraheemTuffaha/nomusic.git
-cd nomusic
+./setup.sh   # fetches and builds the model (37.5 MiB) and ONNX Runtime Web
 ```
 
-## 2. Install and check
+Then in Chrome, Edge, Brave or another Chromium browser open `chrome://extensions`,
+turn on **Developer mode**, choose **Load unpacked** and pick `offline/extension`.
+On a YouTube video, click the **nomusic** pill in the player's top-left corner.
 
-On Mac, install Homebrew first by following the command and **Next steps** at
-[brew.sh](https://brew.sh/). If it asks for your login password, Terminal hides
-characters while you type. On Linux, install a supported Node.js or Deno
-runtime before continuing.
+The extension asks for no permissions beyond running on YouTube
+(`www.youtube.com`, `m.youtube.com`, `www.youtube-nocookie.com` for embeds).
+There is no service worker, popup, network access or storage.
 
-From the project folder, with any existing nomusic helper stopped:
+## How it works
+
+| Piece | Role |
+| --- | --- |
+| `capture.js` | Runs in the page before YouTube's player. Keeps a copy of the encoded audio the player appends to its Media Source buffers, usually well ahead of the playhead. |
+| `content.js` | The pill, the Web Audio graph and playback. Routes the `<video>` through Web Audio to silence its track (the page's volume and mute keep working), schedules separated chunks on the video's clock, holds the video if separation falls behind, and follows source changes (next video, ads). |
+| `separator.html/js` | A hidden extension frame. It hosts the worker in the extension's origin, where WebAssembly is allowed and the page cannot reach it. |
+| `worker.js` | Demuxes (`demux.js`: WebM/Opus, fragmented MP4/AAC), decodes with WebCodecs, resamples to 44.1 kHz and runs the model. Then returns the vocals in back-to-back 11.9 s chunks, current chunk first. |
+| `dsp.js` | STFT/iSTFT and resampling, matching the reference Python pipeline (54 dB agreement on loud passages). |
+| `stretch.js`, `third_party/soundtouch` | Pitch-preserving time-stretch for speeds other than 1x (shared with the main extension). |
+| `model/spleeter-2stems.onnx` | Built by `tools/build_model.py`: both Spleeter networks merged into one graph that outputs the vocal mask, with weights stored as fp16. |
+
+## Tests
 
 ```sh
-./install.sh
+cd tests
+python3 build_media.py <video file> <media dir>/vlog 240   # local test streams
+node local.mjs <media dir>    # local Media Source pages: formats, seeks, speeds, stalls, ...
+node youtube.mjs              # live YouTube pages in headless Chrome
+node memory.mjs <media dir>   # memory cost
+CHROME=/path/to/brave node local.mjs <media dir>   # any Chromium browser
 ```
 
-On Mac, the installer offers to keep the backend running as a per-user background service. See the [background service guide](docs/background-service.md).
+Each test records the page's own audio and the extension's output on the same
+clock, then `analyze.py` measures sync (cross-correlation against Spleeter run
+offline), dropouts and output during silence. With the page's source file, it
+also compares against 1x Spleeter read at the media time each output block was
+heard, which holds at any playback speed.
 
-```sh
-backend/.venv/bin/nomusic doctor
-```
+## Known limits
 
-Installation creates the pinned Python environment, checks prerequisites and
-downloads the default model, about 84 MB. It can request permission to install
-missing system packages. Doctor runs a short, silent inference check and should
-finish with **Local checks passed.** Follow any reported remedy before continuing.
-
-An older default Python environment is preserved as `backend/.venv.bak` during
-migration. See [upgrading and rollback](docs/installation.md#upgrading-and-rollback)
-if you already have a backup or use a custom environment.
-
-## 3. Start the helper
-
-Generate a key once and copy it into the extension settings. For the optional
-Mac background service, enable it after generating the key. Otherwise start the
-helper in the terminal:
-
-```sh
-backend/.venv/bin/nomusic auth generate --label "this computer"
-./service.sh install  # when using the Mac background service
-# or: backend/.venv/bin/nomusic serve
-```
-
-When using the background service, do not also run `nomusic serve` in a
-Terminal. For the terminal path, keep the Terminal window open. Either path
-listens at `http://127.0.0.1:8723`; its model may still be loading after the
-listening message appears. The [local-use guide](docs/local-workflow.md)
-explains checking readiness.
-
-To stop the terminal helper, press **Control + C**. Active processing or
-requests get up to 60 seconds to finish stopping; a second **Control + C**
-forces exit immediately. Stopping while only the startup model load is running
-exits promptly. To stop the background service, run `./service.sh uninstall`.
-
-## 4. Add the extension
-
-1. Open `chrome://extensions` in Chrome and turn on **Developer mode**.
-2. Click **Load unpacked** and select the project's `extension` folder.
-3. Open nomusic from the toolbar, possibly under the puzzle-piece icon.
-   Keep the backend URL `http://127.0.0.1:8723`, paste the generated operator
-   key, and click **Connect**. After the authenticated check succeeds, choose
-   model **htdemucs** and **vocals**. The key stays in trusted extension
-   storage and is never synced with normal preferences.
-4. Open a public YouTube video. After updating extension files, reload the
-   extension on `chrome://extensions`, then reload your video tabs.
-
-## 5. Watch and save
-
-Click **nomusic** on the video. Playback starts when processed audio becomes
-available and can pause while more is prepared. Click again to return to the
-original audio. For a short first test, turn YouTube autoplay off.
-
-Use the download chevron beside the button for **MP3 audio** or **MP4 video**.
-You can request an export before processing finishes; leave the tab open until
-the file downloads. MP4 preparation may download the video separately.
-
-**A processing error keeps original audio suppressed and pauses the player.**
-The recovery panel offers **Retry**, which preserves the current volume and
-play/pause intent, and **Return to original**, which explicitly restores the
-native track.
-
-See [local use and troubleshooting](docs/local-workflow.md) for stem settings,
-exports, cache clearing and recovery after a restart.
-
-## Privacy and development
-
-Separation runs on the configured backend, your own computer by default.
-The backend downloads media from the source site and stores processed audio
-and metadata locally. Installation also contacts package and model hosts.
-
-- [Installation and development](docs/installation.md): profiles, upgrades,
-  model storage and editable development.
-- [Background service](docs/background-service.md): install, status, restart and removal on macOS.
-- [Reference](docs/reference.md): architecture, all backend settings and API.
-- [Verification](docs/verification.md): installed-package tests, CPU/extension
-  smoke and their limits.
-
-## License
-
-MIT
+- **Sources it can capture:** only Media Source players with Opus (WebM) or AAC (MP4) audio. A plain `<video src=file.mp4>` plays its original audio (the pill says so), and DRM-protected video cannot be captured.
+- **Speed changes:** the voice is time-stretched by SoundTouch, not Chrome's own stretcher. At 1.5x the vocals are about 30 ms ahead of the picture, which is under the usual 45 ms noticeability threshold.
+- **Fullscreen:** sites that make the `<video>` element itself fullscreen (rather than its container) hide the pill.
+- **Startup and seek pause:** playback pauses for about 2.5 s while the first chunk is separated, both after switching nomusic on and after a seek into audio the player has not loaded yet.
+- **Thin buffers:** each chunk needs audio up to its end, about 12 s past its start. If a site buffers less than that ahead, playback pauses briefly at chunk boundaries. YouTube normally buffers far more. A live stream watched right at the live edge (where only a few seconds are buffered) would keep pausing; a few tens of seconds behind it works (tested on a 24/7 stream).
+- **AAC in open-source Chromium:** these builds have no AAC decoder. YouTube serves them Opus, which works; on AAC-only sites the pill falls back to the original audio and says why.
+- **Headless test environment:** here, YouTube never loads a new position after a seek, even with no extension installed. YouTube seek tests therefore stay inside already-loaded audio, and seeking into new audio is covered by the local suite.

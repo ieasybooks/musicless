@@ -24,4 +24,4 @@ for file in ort.wasm.min.mjs ort-wasm-simd-threaded.mjs ort-wasm-simd-threaded.w
   cp "tests/node_modules/onnxruntime-web/dist/$file" extension/vendor/
 done
 cp tests/node_modules/onnxruntime-web/LICENSE extension/vendor/onnxruntime-LICENSE 2>/dev/null || true
-echo "Done. Load offline/extension as an unpacked extension."
+echo "Done. Load the extension folder as an unpacked extension."

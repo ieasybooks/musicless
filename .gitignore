@@ -1,29 +1,17 @@
+# Built or downloaded by setup.sh
+extension/model/*.onnx
+extension/vendor/
+node_modules/
+tests/.venv/
+tests/.work/
+dist/
+
 # Python
 __pycache__/
 *.py[cod]
-*$py.class
-*.so
-.Python
 .venv/
-.venv-*/
-venv/
-env/
-ENV/
-*.egg-info/
-backend/.installer-venv/
-backend/.venv.bak/
-build/
-dist/
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
 
-# Local-only state
-/mds/
-.cache/
-.desloppify/
-scorecard.png
-linkedin/
+# Media and logs from local experiments
 *.wav
 *.mp3
 *.m4a
@@ -32,17 +20,9 @@ linkedin/
 *.mp4
 *.log
 
-# Vendored MLX demucs (cloned by install.sh)
-vendor/
-
 # Editor / OS
 .DS_Store
 .idea/
 .vscode/
 *.swp
 .claude/
-
-# Extension build artifacts
-node_modules/
-extension/dist/
-extension/*.zip
