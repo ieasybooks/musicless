@@ -42,8 +42,12 @@ const EBML = {
   tracks: 0x1654ae6b, trackEntry: 0xae, trackNumber: 0xd7, trackType: 0x83, codecId: 0x86,
   codecPrivate: 0x63a2, codecDelay: 0x56aa, audio: 0xe1, samplingFrequency: 0xb5, channels: 0x9f,
   cluster: 0x1f43b675, timecode: 0xe7, simpleBlock: 0xa3, blockGroup: 0xa0, block: 0xa1,
+  contentEncodings: 0x6d80, contentEncoding: 0x6240, contentEncryption: 0x5035,
 };
-const DESCEND = new Set([EBML.segment, EBML.info, EBML.tracks, EBML.trackEntry, EBML.audio, EBML.cluster, EBML.blockGroup]);
+const DESCEND = new Set([
+  EBML.segment, EBML.info, EBML.tracks, EBML.trackEntry, EBML.audio, EBML.cluster, EBML.blockGroup,
+  EBML.contentEncodings, EBML.contentEncoding,
+]);
 
 function readVint(bytes, pos, keepMarker) {
   if (pos >= bytes.length) return null;
@@ -97,7 +101,7 @@ class WebmDemuxer {
     this.queue.clear();
   }
 
-  push(chunk, offset) {
+  push(chunk, offset = 0) {
     this.queue.push(chunk);
     const frames = [];
     const bytes = this.queue.bytes;
@@ -138,6 +142,7 @@ class WebmDemuxer {
       case EBML.codecPrivate: track.private = bytes.slice(start, end); this.pickTrack(); break;
       case EBML.samplingFrequency: track.rate = readFloat(bytes, start, end); this.pickTrack(); break;
       case EBML.channels: track.channels = readUint(bytes, start, end); this.pickTrack(); break;
+      case EBML.contentEncryption: track.encrypted = true; this.pickTrack(); break;
       case EBML.timecode: this.clusterTime = readUint(bytes, start, end); break;
       case EBML.simpleBlock:
       case EBML.block: {
@@ -161,6 +166,12 @@ class WebmDemuxer {
   // The first audio track becomes the source; its decoder config follows.
   pickTrack() {
     const track = this.tracks.find((candidate) => candidate.type === 2 && candidate.codec);
+    if (track?.encrypted) {
+      // DRM: the blocks are encrypted, so there is nothing we can decode.
+      this.protected = true;
+      this.audio = null;
+      return;
+    }
     if (!track || track.codec !== "A_OPUS") {
       if (track) this.unsupported = track.codec;
       return;
@@ -251,7 +262,7 @@ class Mp4Demuxer {
     this.pendingMoof = null;
   }
 
-  push(chunk, offset) {
+  push(chunk, offset = 0) {
     this.queue.push(chunk);
     const bytes = this.queue.bytes;
     const frames = [];
@@ -294,6 +305,11 @@ class Mp4Demuxer {
       const stbl = child(bytes, child(bytes, mdia, "minf"), "stbl");
       const stsd = child(bytes, stbl, "stsd");
       const entry = boxes(bytes, stsd.body + 8, stsd.end)[0];
+      if (entry?.type === "enca") {
+        // DRM: an encrypted sample entry (Common Encryption).
+        this.protected = true;
+        continue;
+      }
       if (!entry || entry.type !== "mp4a") {
         this.unsupported = entry?.type;
         continue;

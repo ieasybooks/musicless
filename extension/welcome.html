@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Welcome to nomusic</title>
+    <link rel="stylesheet" href="pages.css" />
+    <style>
+      body { font-size: 15px; }
+      main { max-width: 640px; margin: 48px auto; padding: 0 24px; }
+      header { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; }
+      header img { width: 48px; height: 48px; border-radius: 11px; }
+      h1 { margin: 0; font-size: 26px; }
+      h2 { font-size: 17px; margin: 28px 0 10px; }
+      ol, ul { padding-left: 22px; margin: 0; }
+      li { margin-bottom: 8px; }
+      .pill { display: inline-block; padding: 1px 9px; border-radius: 999px; background: #228b5a; font-size: 12px; font-weight: 600; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <img src="icons/icon-128.png" alt="" />
+        <h1>nomusic is ready</h1>
+      </header>
+
+      <ol>
+        <li><b>Reload any YouTube tabs</b> that were open before you installed nomusic.</li>
+        <li>
+          Play a YouTube video. nomusic removes its background music automatically. At the start, and
+          after jumping to a new part, the video pauses for a moment while nomusic prepares the audio.
+        </li>
+        <li>
+          The <span class="pill">nomusic on</span> button on the video turns it off (and on again) for that
+          video. The nomusic button in the browser toolbar has the setting for starting automatically.
+        </li>
+      </ol>
+
+      <h2>What to expect</h2>
+      <ul>
+        <li>Voices are kept: speech and singing. The instruments are removed. Some quiet music can remain.</li>
+        <li>
+          Everything happens on this computer, on one processor core. Nothing is uploaded, and nomusic
+          collects no data. While it is working it uses about 600 MB of memory.
+        </li>
+        <li>
+          If nomusic can't remove the music from a video, the video stays paused and silent, and nomusic
+          asks whether to retry or play the original audio.
+        </li>
+      </ul>
+
+      <h2>Limits</h2>
+      <ul>
+        <li>It works on YouTube in Chrome, Edge, Brave and other Chromium browsers on a computer, not on phones.</li>
+        <li>Copy-protected videos, such as rented movies, cannot be processed.</li>
+        <li>A live stream watched right at its live point keeps pausing; a little behind it plays smoothly.</li>
+      </ul>
+    </main>
+  </body>
+</html>

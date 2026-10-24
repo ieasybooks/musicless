@@ -1,31 +1,42 @@
 {
   "manifest_version": 3,
-  "name": "nomusic offline",
-  "version": "0.0.1",
-  "description": "Removes background music from YouTube videos on your own computer. Nothing is uploaded or downloaded.",
+  "name": "nomusic",
+  "version": "1.0.0",
+  "description": "Removes the background music from YouTube videos and keeps the voices. Everything runs on your computer.",
+  "minimum_chrome_version": "111",
+  "permissions": ["storage"],
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "nomusic",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
   "content_scripts": [
     {
-      "matches": [
-        "https://www.youtube.com/*",
-        "https://m.youtube.com/*",
-        "https://www.youtube-nocookie.com/*"
-      ],
-      "js": [
-        "capture.js"
-      ],
+      "matches": ["https://www.youtube.com/*", "https://m.youtube.com/*", "https://www.youtube-nocookie.com/*"],
+      "js": ["capture.js", "intent.js"],
       "run_at": "document_start",
       "all_frames": true,
       "world": "MAIN"
     },
     {
-      "matches": [
-        "https://www.youtube.com/*",
-        "https://m.youtube.com/*",
-        "https://www.youtube-nocookie.com/*"
-      ],
-      "js": [
-        "content.js"
-      ],
+      "matches": ["https://www.youtube.com/*", "https://m.youtube.com/*", "https://www.youtube-nocookie.com/*"],
+      "js": ["content.js"],
+      "css": ["content.css"],
       "run_at": "document_start",
       "all_frames": true
     }
@@ -33,15 +44,22 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "separator.html",
+        "main.js",
+        "audio.js",
+        "button.js",
+        "capture-bus.js",
+        "engine.js",
+        "grid.js",
+        "playback-intent.js",
+        "recorder.js",
+        "session.js",
+        "settings.js",
         "stretch.js",
-        "third_party/soundtouch/*.js"
+        "third_party/soundtouch/*.js",
+        "icons/button.png",
+        "separator.html"
       ],
-      "matches": [
-        "https://www.youtube.com/*",
-        "https://m.youtube.com/*",
-        "https://www.youtube-nocookie.com/*"
-      ]
+      "matches": ["https://www.youtube.com/*", "https://m.youtube.com/*", "https://www.youtube-nocookie.com/*"]
     }
   ],
   "content_security_policy": {

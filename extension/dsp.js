@@ -3,17 +3,11 @@
 // reflect padding): resampling to 44.1 kHz, the magnitude spectrogram the
 // model reads, and the masked inverse STFT that produces the vocals.
 
-export const RATE = 44100;
+import { FRAMES, HOP, RATE, WINDOW_SAMPLES } from "./grid.js";
+
+export { FRAMES, HOP, RATE, WINDOW_SAMPLES };
 export const N_FFT = 4096;
-export const HOP = 1024;
 export const BINS = 1024; // the model sees 0 to ~11 kHz; higher bins are dropped
-export const FRAMES = 512;
-export const WINDOW_SAMPLES = FRAMES * HOP; // 524288 samples, about 11.89 s
-// Windows are separated back to back with no overlap, like the reference
-// pipeline; scored against true vocals this beat overlapping windows slightly.
-export const CORE_SAMPLES = WINDOW_SAMPLES;
-export const CONTEXT_SAMPLES = 0;
-export const CHUNK_SECONDS = CORE_SAMPLES / RATE;
 
 const HALF = N_FFT / 2;
 const hann = new Float64Array(N_FFT).map((_, i) => 0.5 - 0.5 * Math.cos((2 * Math.PI * i) / N_FFT));
@@ -105,7 +99,7 @@ export function analyze(left, right) {
 }
 
 // Apply the vocal mask (2, 1, FRAMES, BINS) and inverse-STFT back to audio.
-// Returns the window's CORE_SAMPLES for each channel.
+// Returns the whole window for each channel.
 export function synthesize(spec, mask) {
   const frames = FRAMES + 1;
   const plane = frames * BINS;
@@ -145,13 +139,12 @@ export function synthesize(spec, mask) {
       weight[at] += w * w;
     }
   }
-  const left = new Float32Array(CORE_SAMPLES);
-  const right = new Float32Array(CORE_SAMPLES);
-  for (let i = 0; i < CORE_SAMPLES; i++) {
-    const at = CONTEXT_SAMPLES + i;
-    const w = weight[at] > 1e-11 ? weight[at] : 1;
-    left[i] = outLeft[at] / w;
-    right[i] = outRight[at] / w;
+  const left = new Float32Array(WINDOW_SAMPLES);
+  const right = new Float32Array(WINDOW_SAMPLES);
+  for (let i = 0; i < WINDOW_SAMPLES; i++) {
+    const w = weight[i] > 1e-11 ? weight[i] : 1;
+    left[i] = outLeft[i] / w;
+    right[i] = outRight[i] / w;
   }
   return { left, right };
 }
