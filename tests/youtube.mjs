@@ -127,9 +127,30 @@ await step("Tutorial: starts by itself mid-video (&t=60)", async () => {
   report.record("Tutorial: starts by itself mid-video (&t=60)", good(a), { first_audio_ms: ms, ...a });
 });
 
-// Headless YouTube here never loads a new position after a seek, even with no
-// extension installed (checked separately), so seeks stay inside the audio the
-// player already buffered; seeking into unloaded audio is covered by local.mjs.
+await step("Tutorial: the button turns it off and on again", async () => {
+  const click = await clickButton(tutorial);
+  await sleep(1500);
+  const off = await frameState(tutorial);
+  const playing = await tutorial.evaluate(() => !document.querySelector("#movie_player video").paused);
+  await clickButton(tutorial);
+  const { ms } = await timeUntilOn(tutorial, "back on");
+  const a = await listen(tutorial, "yt-tutorial-reon", 12);
+  report.record("Tutorial: the button turns it off and on again",
+    off.status === "off" && off.originalGain === 1 && playing && good(a),
+    { status_off: off.status, original_gain_off: off.originalGain, playing_while_off: playing, back_on_ms: ms, ...click, ...a });
+});
+
+// Headless YouTube stops serving a video about a minute into playback ("Something
+// went wrong", also without nomusic), and never loads a new position after a seek.
+// So the steps below use a fresh page and stay inside the audio the player already
+// buffered; seeking into unloaded audio is covered by local.mjs.
+await step("Tutorial: reopened for the next steps", async () => {
+  await tutorial?.close();
+  ({ page: tutorial } = await openWatch("6mxjfDmxTTw", 60));
+  const { ms } = await timeUntilOn(tutorial, "first audio");
+  report.record("Tutorial: reopened for the next steps", true, { first_audio_ms: ms });
+});
+
 const seekTo = (page, t) => page.evaluate((t) => document.getElementById("movie_player").seekTo(t, true), t);
 const buffered = (page) => page.evaluate(() => {
   const v = document.querySelector("#movie_player video");
@@ -137,8 +158,14 @@ const buffered = (page) => page.evaluate(() => {
 });
 
 await step("Tutorial: seek ahead within loaded audio", async () => {
-  const { t, ranges } = await buffered(tutorial);
-  const end = ranges.find(([a, b]) => a <= t && t <= b)?.[1] ?? t;
+  // Give the player a few seconds to load enough ahead.
+  let t, ranges, end;
+  for (let tries = 0; tries < 10; tries++) {
+    ({ t, ranges } = await buffered(tutorial));
+    end = ranges.find(([a, b]) => a <= t && t <= b)?.[1] ?? t;
+    if (end - t >= 20) break;
+    await sleep(1000);
+  }
   if (end - t < 20) throw new Error(`only ${Math.round(end - t)} s loaded ahead`);
   const target = Math.min(t + 15, end - 14);
   await seekTo(tutorial, target);
@@ -155,19 +182,6 @@ await step("Tutorial: seek back", async () => {
   const { ms } = await timeUntilOn(tutorial, "after seek back");
   const a = await listen(tutorial, "yt-tutorial-back", 12);
   report.record("Tutorial: seek back", good(a), { from: Math.round(t), to: Math.round(target), resume_ms: ms, ...a });
-});
-
-await step("Tutorial: the button turns it off and on again", async () => {
-  const click = await clickButton(tutorial);
-  await sleep(1500);
-  const off = await frameState(tutorial);
-  const playing = await tutorial.evaluate(() => !document.querySelector("#movie_player video").paused);
-  await clickButton(tutorial);
-  const { ms } = await timeUntilOn(tutorial, "back on");
-  const a = await listen(tutorial, "yt-tutorial-reon", 12);
-  report.record("Tutorial: the button turns it off and on again",
-    off.status === "off" && off.originalGain === 1 && playing && good(a),
-    { status_off: off.status, original_gain_off: off.originalGain, playing_while_off: playing, back_on_ms: ms, ...click, ...a });
 });
 
 await step("Tutorial: fullscreen keeps the button on the player", async () => {
@@ -201,6 +215,8 @@ await step("Tutorial: next video through YouTube's own navigation", async () => 
   // A pre-roll ad may play first; nomusic follows it and then the video.
   const adSeen = await tutorial.evaluate(() => !!document.querySelector(".ad-showing"));
   await waitForPlaying(tutorial, 90000);
+  // Listen to the video itself, not the hand-over from a long ad.
+  await tutorial.waitForFunction(() => !document.querySelector(".ad-showing"), { timeout: 120000 }).catch(() => {});
   const { ms, state } = await timeUntilOn(tutorial, "next video", 90000);
   const a = await listen(tutorial, "yt-next", 20);
   report.record("Tutorial: next video through YouTube's own navigation",
@@ -266,22 +282,27 @@ await step("Shorts", async () => {
   await page.close();
 }, { retry: true });
 
-await step("Home feed: muted previews are left alone", async () => {
-  const page = await openPage("https://www.youtube.com/");
-  await page.waitForSelector("ytd-rich-item-renderer a#thumbnail, a#thumbnail", { timeout: 30000 });
-  const thumbnail = await page.$("ytd-rich-item-renderer a#thumbnail") ?? await page.$("a#thumbnail");
-  await thumbnail.hover();
-  await sleep(5000);
-  const sessions = (await debugRequest(page, "sessions")) ?? [];
-  const preview = await page.evaluate(() => {
-    const v = [...document.querySelectorAll("video")].find((video) => !video.paused);
-    return v ? { muted: v.muted, playing: true } : null;
+await step("Inline previews: muted, left alone", async () => {
+  // Hovering a result plays a muted inline preview (a fresh profile's home feed is empty).
+  const page = await openPage("https://www.youtube.com/results?search_query=piano+tutorial");
+  await page.waitForSelector("ytd-video-renderer a#thumbnail", { timeout: 30000 });
+  const target = await page.evaluate(() => {
+    const thumb = [...document.querySelectorAll("ytd-video-renderer a#thumbnail")].find((a) => a.getBoundingClientRect().height > 50);
+    thumb.scrollIntoView({ block: "center" });
+    const r = thumb.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
   });
+  await page.mouse.move(target.x, target.y, { steps: 5 });
+  await sleep(6000);
+  const preview = await page.evaluate(() => {
+    const v = [...document.querySelectorAll("video")].find((video) => !video.paused && video.currentTime > 0);
+    return v ? { muted: v.muted, t: +v.currentTime.toFixed(1) } : null;
+  });
+  const sessions = (await debugRequest(page, "sessions")) ?? [];
   const frames = await page.evaluate(() => document.querySelectorAll('iframe[src*="separator.html"]').length);
-  report.record("Home feed: muted previews are left alone",
-    !preview || (preview.muted && frames === 0 && sessions.every((s) => !s.attached)),
-    { preview, sessions: sessions.length, attached: sessions.filter((s) => s.attached).length, engine_frames: frames,
-      note: preview ? undefined : "no preview played in this session (headless feed)" });
+  report.record("Inline previews: muted, left alone",
+    !!preview && preview.muted && frames === 0 && sessions.every((s) => !s.attached),
+    { preview, sessions: sessions.length, attached: sessions.filter((s) => s.attached).length, engine_frames: frames });
   await page.close();
 });
 

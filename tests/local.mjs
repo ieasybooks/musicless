@@ -15,7 +15,7 @@ const MEDIA = process.argv[2] ?? `${WORK}/media`;
 const SET = process.env.MEDIA_SET ?? "vlog";
 const QUICK = process.env.QUICK === "1";
 const report = new Report(process.env.REPORT ?? "local");
-const PORT = 8811;
+const PORT = Number(process.env.PORT ?? 8811);
 const server = await serve(MEDIA, PORT);
 const { browser, extensionId } = await launch();
 
@@ -149,10 +149,11 @@ for (const variant of VARIANTS) {
   });
 
   await step(`${tag} pausing while nomusic holds the video is respected`, async () => {
-    await seek(page, 100); // new audio: nomusic holds the video while it separates
+    // Far back: those chunks were dropped long ago, so nomusic holds the video to redo one.
+    await seek(page, 10);
     await waitFor(page, (s) => s.holding, { timeout: 5000, label: "hold" });
     await pause(page); // the user pauses during the hold (no pause event fires)
-    await waitFor(page, (s) => s.chunks.includes(Math.floor(100 / 11.8422)), { timeout: 30000, label: "chunk ready" });
+    await waitFor(page, (s) => s.chunks.includes(0), { timeout: 30000, label: "chunk ready" });
     await sleep(1500);
     const after = await videoState(page);
     const state = await frameState(page);
@@ -164,15 +165,18 @@ for (const variant of VARIANTS) {
 
   for (const rate of [1.5, 2]) {
     await step(`${tag} ${rate}x speed`, async () => {
+      const before = await frameState(page);
       await set(page, "playbackRate", rate);
       await sleep(1500);
       const a = await listen(page, `${variant}-rate-${rate}`, 14);
+      const after = await frameState(page);
       // Judged on loudness envelopes against 1x Spleeter of the source, read at the media
       // time each output block was heard (Chrome and SoundTouch stretch differently).
       report.record(`${tag} ${rate}x speed`,
         Math.abs(a.media_env_lag_ms) <= 45 && a.media_env_corr >= 0.75 && a.media_dropouts === 0 && a.over_silence === 0,
         { media_env_lag_ms: a.media_env_lag_ms, media_env_corr: a.media_env_corr, media_dropouts: a.media_dropouts,
-          env_corr_vs_chrome_stretch: a.env_corr, over_silence: a.over_silence });
+          env_corr_vs_chrome_stretch: a.env_corr, over_silence: a.over_silence, holds: after.holds - before.holds,
+          position_s: Math.round(after.currentTime) });
     });
   }
   await set(page, "playbackRate", 1);
