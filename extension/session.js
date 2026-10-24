@@ -16,7 +16,9 @@ import { settings } from "./settings.js";
 const AHEAD = 6; // chunks kept ready ahead of the playhead
 const BEHIND = 2;
 const TICK_MS = 250;
-const DRIFT_LIMIT = 0.045;
+const DRIFT_LIMIT = 0.045; // re-anchor at once beyond this
+const DRIFT_STEADY = 0.015; // or when every reading of the last 2 s is this far off the same way
+const DRIFT_SAMPLES = 8;
 const HOLD_LIMIT_MS = 30000;
 const UNKNOWN_SOURCE_MS = 2000;
 const STALL_MS = 400; // playing, but the clock has not moved for this long
@@ -36,13 +38,15 @@ const FAILURES = {
   updated: "nomusic was updated or turned off. Reload the page to continue.",
 };
 
-export function debugEnabled() {
+// Test diagnostics (localStorage.nomusicDebug = "1", set before the page loads).
+const DEBUG = (() => {
   try {
     return localStorage.getItem("nomusicDebug") === "1";
   } catch {
     return false;
   }
-}
+})();
+export const debugEnabled = () => DEBUG;
 
 // Media attached as an object (a worker's Media Source, a stream) has no URL:
 // give each object a stable name so a change is still a new source.
@@ -118,7 +122,12 @@ export class Session {
       this.wake();
     });
     on("loadstart", () => this.checkSource());
-    on("emptied", () => this.checkSource());
+    // A reset element fires no pause event: stop what was scheduled at once.
+    on("emptied", () => {
+      this.stopAll();
+      this.checkSource();
+    });
+    on("abort", () => this.stopAll());
     on("encrypted", () => this.fail("protected"));
     capture.watch(this);
     this.timer = setInterval(() => this.tick(), TICK_MS);
@@ -369,6 +378,7 @@ export class Session {
     if (!this.on || this.failure || !this.attached || video.paused || video.seeking || video.readyState < 3) return;
     this.noteClock();
     this.stats.resyncs++;
+    this.recentDrift = [];
     this.trace({ e: "resync", rate: video.playbackRate });
     this.anchor = { ctx: this.graph.ctx.currentTime, media: video.currentTime, rate: video.playbackRate };
     const k = chunkIndex(video.currentTime);
@@ -408,7 +418,10 @@ export class Session {
     }
     if (offset >= buffer.duration) return;
     if (!this.bus) {
+      // Each playback run fades in, so re-anchoring crossfades instead of cutting.
       this.bus = ctx.createGain();
+      this.bus.gain.setValueAtTime(0, when);
+      this.bus.gain.linearRampToValueAtTime(1, when + 0.01);
       this.bus.connect(this.graph.output);
     }
     const source = ctx.createBufferSource();
@@ -549,7 +562,9 @@ export class Session {
     }
 
     // Hold the video rather than play music while the audio it needs is missing.
-    const needed = this.playable(k, time) && (k >= last || time < chunkStart(k + 1) - 0.5 || this.chunks.has(k + 1));
+    // A held video waits for a few seconds of audio, not to be held again at once.
+    const lead = this.intent.held ? 3 : 0.5;
+    const needed = this.playable(k, time) && (k >= last || time < chunkStart(k + 1) - lead || this.chunks.has(k + 1));
     if (needed || !playing || !audible) {
       if (this.intent.held) this.intent.release();
     } else if (video.readyState >= 3 || this.intent.held) {
@@ -562,9 +577,11 @@ export class Session {
     }
 
     // A video can stall without pausing (network, or the site's own buffering):
-    // its clock stops, so our audio must stop too until it moves again.
+    // its clock stops, so our audio must stop too until it moves again. And
+    // whatever events did or did not fire, a paused or empty video gets no audio.
     const now = performance.now();
     if (video.currentTime !== this.lastClock) this.noteClock();
+    if (this.sources.size && (video.paused || video.readyState < 2)) this.stopAll();
     const stalled = !video.paused && (video.readyState < 3 || now - this.lastClockChange > STALL_MS);
     if (stalled) {
       if (this.sources.size) this.trace({ e: "stall" });
@@ -578,8 +595,16 @@ export class Session {
         this.stats.drift.push(Math.round(drift * 1000));
         if (this.stats.drift.length > 80) this.stats.drift.shift();
         this.driftStrikes = Math.abs(drift) > DRIFT_LIMIT ? (this.driftStrikes ?? 0) + 1 : 0;
-        if (this.driftStrikes >= 2) {
+        // A steady small offset (e.g. an anchor taken just before the audio
+        // device restarted) is corrected too; single jitter spikes are not.
+        this.recentDrift = [...(this.recentDrift ?? []), drift].slice(-DRIFT_SAMPLES);
+        const steady = this.recentDrift.length === DRIFT_SAMPLES &&
+          (this.recentDrift.every((d) => d > DRIFT_STEADY) || this.recentDrift.every((d) => d < -DRIFT_STEADY)) &&
+          !(performance.now() - (this.steadyAt ?? -Infinity) < 20000); // not again if it did not help
+        if (this.driftStrikes >= 2 || steady) {
           this.driftStrikes = 0;
+          if (steady) this.steadyAt = performance.now();
+          this.trace({ e: "drift", ms: Math.round(drift * 1000), steady });
           this.resync();
         }
       }
