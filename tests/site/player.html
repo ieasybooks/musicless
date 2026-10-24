@@ -1,20 +1,38 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>nomusic offline test player</title>
-<style>body { margin: 20px; background: #111; color: #ddd; font: 14px system-ui; } video { width: 854px; height: 480px; background: #000; }</style>
-<video id="video" controls playsinline></video>
+<title>nomusic test player</title>
+<style>body { margin: 20px; background: #111; color: #ddd; font: 14px system-ui; } .player { width: 854px; height: 480px; } video { width: 100%; height: 100%; background: #000; }</style>
+<div class="player"><video id="video" controls playsinline></video></div>
 <pre id="log"></pre>
 <script type="module">
 // A small Media Source player shaped like YouTube's: separate audio/video
-// SourceBuffers fed segment by segment about 30 s ahead of the playhead, with
-// abort + re-append on seek. "bytes" mode appends one muxed fragmented MP4 in
-// fixed-size slices that split boxes at arbitrary points. "file" mode plays a
-// plain progressive file. window.load(media, variant) swaps the source in the
-// same <video>, like a site moving to the next video.
+// SourceBuffers fed segment by segment ahead of the playhead, with abort and
+// re-append on seek. "bytes" mode appends one fragmented MP4 in fixed-size
+// slices that split boxes at arbitrary points. "progressive" plays a plain
+// file. window.load(media, variant) swaps the source in the same <video>, like
+// a site moving to the next video.
+//
+// Query parameters: media, variant, slice (bytes per append), ahead (seconds
+// of look-ahead), realm=frame (use another frame's MediaSource, which nomusic
+// cannot see), worker=1 (Media Source in a dedicated worker, attached through
+// srcObject), muted=1 (muted before the source loads), autoplay=1 (the page
+// starts playback itself, without a user gesture). A player.json with
+// "clearkey" plays ClearKey-encrypted media.
 const video = document.getElementById("video");
 const log = (message) => { document.getElementById("log").textContent += message + "\n"; };
-const AHEAD = 30;
+const params = new URLSearchParams(location.search);
+const AHEAD = Number(params.get("ahead") || 30);
+if (params.get("muted") === "1") video.muted = true;
 let current = null;
+
+// The window whose MediaSource and URL the player uses.
+let realm = window;
+if (params.get("realm") === "frame") {
+  const frame = document.createElement("iframe");
+  frame.style.display = "none";
+  document.body.append(frame);
+  realm = frame.contentWindow;
+}
 
 const idle = (sb) => sb.updating ? new Promise((resolve) => sb.addEventListener("updateend", resolve, { once: true })) : null;
 async function append(sb, bytes) {
@@ -23,10 +41,28 @@ async function append(sb, bytes) {
   await idle(sb);
 }
 
+const b64url = (hex) => btoa(String.fromCharCode(...hex.match(/../g).map((h) => parseInt(h, 16))))
+  .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+
+async function useClearKey({ kid, key }, mime) {
+  const access = await navigator.requestMediaKeySystemAccess("org.w3.clearkey", [{
+    initDataTypes: ["keyids", "cenc"], audioCapabilities: [{ contentType: mime }],
+  }]);
+  const keys = await access.createMediaKeys();
+  await video.setMediaKeys(keys);
+  const session = keys.createSession();
+  session.addEventListener("message", () => {
+    const license = { keys: [{ kty: "oct", kid: b64url(kid), k: b64url(key) }], type: "temporary" };
+    session.update(new TextEncoder().encode(JSON.stringify(license)));
+  });
+  await session.generateRequest("keyids", new TextEncoder().encode(JSON.stringify({ kids: [b64url(kid)] })));
+}
+
 async function load(media, variant, slice = 200_000, gapMs = 0) {
   current?.stop();
   if (gapMs) {
     video.removeAttribute("src");
+    video.srcObject = null;
     video.load();
     await new Promise((resolve) => setTimeout(resolve, gapMs));
   }
@@ -41,8 +77,23 @@ async function load(media, variant, slice = 200_000, gapMs = 0) {
   const base = `/media/${media}/${variant}/`;
   const fetchBytes = async (url) => new Uint8Array(await (await fetch(base + url)).arrayBuffer());
   const config = await (await fetch(base + "player.json")).json();
-  const mediaSource = new MediaSource();
-  video.src = URL.createObjectURL(mediaSource);
+  if (config.clearkey) await useClearKey(config.clearkey, config.mime);
+
+  if (params.get("worker") === "1") {
+    // The whole Media Source lives in a worker; the page only sees a handle.
+    // Segment lists play their joined audio file here (audio only).
+    const audioTrack = config.tracks?.find((track) => track.mime.startsWith("audio/"));
+    const url = config.mode === "bytes" ? config.url : `audio.${audioTrack.mime.includes("webm") ? "webm" : "mp4"}`;
+    const worker = new Worker("mse-worker.js");
+    worker.postMessage({ url: new URL(base + url, location.href).href, mime: config.mime ?? audioTrack.mime, slice });
+    const handle = await new Promise((resolve) => worker.addEventListener("message", (event) => event.data.handle && resolve(event.data.handle)));
+    video.srcObject = handle;
+    window.playerReady = true;
+    return;
+  }
+
+  const mediaSource = new realm.MediaSource();
+  video.src = realm.URL.createObjectURL(mediaSource);
   await new Promise((resolve) => mediaSource.addEventListener("sourceopen", resolve, { once: true }));
 
   if (config.mode === "bytes") {
@@ -110,6 +161,7 @@ async function load(media, variant, slice = 200_000, gapMs = 0) {
 }
 
 window.load = load;
-const params = new URLSearchParams(location.search);
-load(params.get("media"), params.get("variant"), Number(params.get("slice") || 200_000));
+load(params.get("media"), params.get("variant"), Number(params.get("slice") || 200_000)).then(() => {
+  if (params.get("autoplay") === "1") video.play().catch((error) => log(`autoplay refused: ${error.name}`));
+});
 </script>

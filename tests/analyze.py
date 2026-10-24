@@ -21,7 +21,8 @@ music is much louder than the voice:
   over_silence    0.5 s windows where the page's audio is silent (paused or
                   stalled video) but the output is not
   silent_gaps     runs of 30 ms or more where the output is silent while the
-                  reference vocals are clearly voiced (dropouts)
+                  reference vocals are clearly voiced (dropouts); with --source also
+                  media_silent_gaps, against the 1x reference at media time
   reference_db / output_db / original_db  overall levels (a quiet reference
                   means the stretch has no voice to keep)
 """
@@ -32,10 +33,10 @@ import sys
 from pathlib import Path
 
 import numpy as np
-import onnxruntime as ort
-import torch
 
-MODEL = Path(__file__).resolve().parents[1] / "extension/model/spleeter-2stems.onnx"
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import reference as spleeter  # noqa: E402
+
 base, rate = sys.argv[1], int(sys.argv[2])
 original = np.fromfile(f"{base}.original.s16", np.int16).astype(np.float64) / 32768
 output = np.fromfile(f"{base}.output.s16", np.int16).astype(np.float64) / 32768
@@ -43,6 +44,8 @@ output = np.fromfile(f"{base}.output.s16", np.int16).astype(np.float64) / 32768
 
 def resample(x, src, dst):
     """FFT resampling (band-limited; fine for analysis)."""
+    if src == dst:
+        return x
     m = int(round(len(x) * dst / src))
     spectrum = np.fft.rfft(x)
     out = np.zeros(m // 2 + 1, complex)
@@ -52,25 +55,12 @@ def resample(x, src, dst):
 
 
 def spleeter_vocals(audio):
-    """Offline Spleeter (the extension's model and block layout) on audio at
+    """Offline Spleeter (the extension's model, windows and crossfades) on audio at
     `rate`, mono or (samples, 2) stereo; returns the vocals as mono at `rate`."""
     stereo = audio if audio.ndim == 2 else np.stack([audio, audio], axis=1)
-    x = np.stack([resample(stereo[:, c], rate, 44100) for c in range(2)]).astype(np.float32)
-    session = ort.InferenceSession(str(MODEL))
-    window = torch.hann_window(4096)
-    block = 512 * 1024
-    padded = np.zeros((2, -(-x.shape[1] // block) * block), np.float32)
-    padded[:, : x.shape[1]] = x
-    out = []
-    for start in range(0, padded.shape[1], block):
-        chunk = torch.from_numpy(padded[:, start : start + block].copy())
-        spec = torch.stft(chunk, 4096, 1024, window=window, center=True, return_complex=True)
-        mag = spec.abs()[:, :1024, :512].transpose(1, 2)[:, None].contiguous().numpy()
-        mask = torch.from_numpy(session.run(None, {"x": mag})[0])[:, 0].transpose(1, 2)
-        mask = torch.nn.functional.pad(torch.cat([mask, mask[:, :, -1:]], 2), (0, 0, 0, 2049 - 1024))
-        out.append(torch.istft(spec * mask, 4096, 1024, window=window, center=True, length=block).numpy())
-    vocals = np.concatenate(out, axis=1)[:, : x.shape[1]].mean(axis=0).astype(np.float64)
-    return resample(vocals, 44100, rate)[: len(stereo)]
+    x = np.stack([resample(stereo[:, c], rate, spleeter.RATE) for c in range(2)], axis=1)
+    vocals = spleeter.vocals(x).mean(axis=1)
+    return resample(vocals, spleeter.RATE, rate)[: len(stereo)]
 
 
 reference = spleeter_vocals(original)
@@ -163,22 +153,35 @@ if "--source" in sys.argv:
     import subprocess
 
     source = sys.argv[sys.argv.index("--source") + 1]
-    cache = Path(f"{source}.vocals-env-stereo.npy")
-    if cache.exists():
-        env_1x = np.load(cache)
-    else:
-        raw = subprocess.run(["ffmpeg", "-v", "error", "-i", source, "-f", "f32le", "-ac", "2", "-ar", str(rate), "-"],
-                             capture_output=True, check=True).stdout
-        stereo_source = np.frombuffer(raw, np.float32).astype(np.float64).reshape(-1, 2)
-        env_1x = envelope(spleeter_vocals(stereo_source), HOP)
-        np.save(cache, env_1x)
     pairs = json.loads(Path(f"{base}.media.json").read_text())
     times = np.array([t for t, m in pairs if m is not None])
     medias = np.array([m for t, m in pairs if m is not None])
+    if not len(times):
+        sys.exit("the video was paused for the whole recording: nothing to compare at media time")
+    # 1x Spleeter of the source, only over the windows this recording heard (plus
+    # one before, whose tail completes the first crossfade), cached per span.
+    stride_s = spleeter.STRIDE / spleeter.RATE
+    first = max(0, int(medias.min() // stride_s) - 1)
+    last = int(medias.max() // stride_s) + 1
+    cache = Path(f"{source}.ref-v2-{first}-{last}-{rate}.npy")
+    if cache.exists():
+        env_1x = np.load(cache)
+    else:
+        start = first * spleeter.STRIDE / spleeter.RATE
+        span = (last - first) * stride_s + spleeter.WINDOW / spleeter.RATE
+        seek = ["-ss", f"{start:.6f}"] if start > 0 else []
+        raw = subprocess.run(["ffmpeg", "-v", "error", *seek, "-i", source, "-t", f"{span:.6f}", "-f", "f32le", "-ac", "2",
+                              "-ar", str(spleeter.RATE), "-"], capture_output=True, check=True).stdout
+        stereo_source = np.frombuffer(raw, np.float32).astype(np.float64).reshape(-1, 2)
+        mono = spleeter.vocals(stereo_source, first_window=first).mean(axis=1)
+        env_1x = envelope(resample(mono, spleeter.RATE, rate), HOP)
+        np.save(cache, env_1x)
+    env_start = first * stride_s
     frame_times = np.arange(len(env_out)) * HOP / rate
     media_at = np.interp(frame_times, times, medias, left=np.nan, right=np.nan)
-    index = np.clip(np.round(np.nan_to_num(media_at) * rate / HOP).astype(int), 0, len(env_1x) - 1)
-    env_media = np.where(np.isfinite(media_at), env_1x[index], 0)
+    offset = np.round((np.nan_to_num(media_at) - env_start) * rate / HOP).astype(int)
+    inside = np.isfinite(media_at) & (offset >= 0) & (offset < len(env_1x))
+    env_media = np.where(inside, env_1x[np.clip(offset, 0, len(env_1x) - 1)], 0)
     lags_m, corrs_m = [], []
     for start in range(EL, len(env_media) - EW - EL, EW):
         a = env_out[start : start + EW]
@@ -198,7 +201,21 @@ if "--source" in sys.argv:
         out_db = 20 * np.log10(np.sqrt(np.mean(env_out[i * per : (i + 1) * per] ** 2)) + 1e-9)
         if ref_db > -40 and out_db < ref_db - 20:
             drops += 1
+    # Silent gaps against the same 1x reference: 30 ms or more of output silence
+    # (5 ms frames) while the voice at that media time is clearly there.
+    out_frames = np.sqrt(np.mean(output[: len(env_out) * HOP].reshape(len(env_out), HOP) ** 2, axis=1))
+    # A paused, held or stalled video makes no sound of its own: silence is right there.
+    page_frames = np.sqrt(np.mean(original[: len(env_out) * HOP].reshape(len(env_out), HOP) ** 2, axis=1))
+    playing = 20 * np.log10(page_frames + 1e-9) > -70
+    voiced = (20 * np.log10(env_media + 1e-9) > -35) & np.isfinite(media_at) & playing
+    silent = 20 * np.log10(out_frames + 1e-9) < -70
+    media_gaps, run = 0, 0
+    for bad in voiced & silent:
+        run = run + 1 if bad else 0
+        if run == 6:
+            media_gaps += 1
     media_metrics = {
+        "media_silent_gaps": media_gaps,
         "media_env_lag_ms": float(np.median(lags_m)) if lags_m else None,
         "media_env_corr": round(float(np.median(corrs_m)), 3) if corrs_m else None,
         "media_dropouts": drops,

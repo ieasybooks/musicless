@@ -26,3 +26,6 @@ __pycache__/
 .vscode/
 *.swp
 .claude/
+
+# Small synthetic media used by the unit tests
+!tests/unit/fixtures/*

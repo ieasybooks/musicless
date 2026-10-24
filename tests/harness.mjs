@@ -1,14 +1,17 @@
-// Shared browser-test helpers: install the extension into a fresh Chrome
-// profile, read the pill's state, record what actually played, and analyze it.
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+// Shared browser-test helpers: install the extension into a fresh browser
+// profile, read nomusic's state, record what actually played, and analyze it.
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 import puppeteer from "puppeteer-core";
 
-export const WORK = process.env.NOMUSIC_TEST_DIR ?? "/home/ibraheem/nomusic-offline-test";
+const TESTS = new URL(".", import.meta.url).pathname;
+export const WORK = process.env.NOMUSIC_TEST_DIR ?? join(TESTS, ".work");
 const EXTENSION = new URL("../extension/", import.meta.url).pathname;
-const ANALYZE = new URL("./analyze.py", import.meta.url).pathname;
-const PYTHON = process.env.NOMUSIC_PYTHON ?? "/tmp/browserbench/py.sh";
+const ANALYZE = join(TESTS, "analyze.py");
+export const PYTHON = process.env.NOMUSIC_PYTHON ?? join(TESTS, ".venv", "bin", "python");
+const NS = "nomusic";
+mkdirSync(WORK, { recursive: true });
 
 // The shipped manifest only matches YouTube; tests also allow the local server.
 // Each launch gets its own copy, so parallel runs never see each other's edits.
@@ -23,12 +26,19 @@ function testExtension() {
   return dir;
 }
 
-export async function launch({ headless = true } = {}) {
+export function chromePath() {
+  if (process.env.CHROME) return process.env.CHROME;
+  for (const candidate of ["/usr/bin/google-chrome", "/usr/bin/chromium", "/usr/bin/chromium-browser",
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"]) {
+    if (existsSync(candidate)) return candidate;
+  }
+  throw new Error("No browser found: set CHROME to a Chrome, Edge, Brave or Chromium executable.");
+}
+
+// `autoplay: false` keeps the browser's real autoplay policy (sound needs a user gesture).
+export async function launch({ headless = true, autoStart = true, autoplay = true } = {}) {
   const profile = mkdtempSync(join(WORK, "profile-"));
-  const executablePath = process.env.CHROME ?? "/usr/bin/google-chrome";
-  // Portable test copies of other browsers (unpacked under WORK/browsers) cannot set
-  // up Chrome's sandbox on this system; only the installed Chrome has its profile.
-  const portable = executablePath.startsWith(join(WORK, "browsers"));
+  const executablePath = chromePath();
   const browser = await puppeteer.launch({
     executablePath,
     headless,
@@ -37,12 +47,13 @@ export async function launch({ headless = true } = {}) {
     userDataDir: profile,
     args: [
       "--mute-audio", // the graph still runs; nothing comes out of the speakers
-      "--autoplay-policy=no-user-gesture-required",
+      `--autoplay-policy=${autoplay ? "no-user-gesture-required" : "document-user-activation-required"}`,
       "--no-first-run",
       "--disable-features=Translate,MediaEngagementBypassAutoplayPolicies",
       "--window-size=1280,900",
       "--lang=en-US",
-      ...(portable ? ["--no-sandbox"] : []),
+      // Portable browser copies (and CI containers) cannot set up the sandbox.
+      ...(process.env.NOMUSIC_NO_SANDBOX === "1" ? ["--no-sandbox"] : []),
     ],
     defaultViewport: { width: 1280, height: 900 },
   });
@@ -53,7 +64,21 @@ export async function launch({ headless = true } = {}) {
     rmSync(profile, { recursive: true, force: true });
     rmSync(extension, { recursive: true, force: true });
   });
+  // The welcome page opens on install; tests do not need it.
+  await sleep(500);
+  for (const page of await browser.pages()) if (page.url().includes("welcome.html")) await page.close();
+  if (!autoStart) await setAutoStart(browser, extensionId, false);
   return { browser, extensionId };
+}
+
+// Change the toolbar setting, as the popup does.
+export async function setAutoStart(browser, extensionId, value) {
+  const page = await browser.newPage();
+  await page.goto(`chrome-extension://${extensionId}/popup.html`);
+  await page.evaluate((value) => chrome.storage.sync.set({ autoStart: value }), value);
+  const stored = await page.evaluate(() => chrome.storage.sync.get("autoStart"));
+  await page.close();
+  return stored.autoStart;
 }
 
 export async function newPage(browser) {
@@ -69,19 +94,37 @@ export async function newPage(browser) {
 
 export const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// The pill that matters: the one already switched on, else the biggest visible video's.
-const PICK_PILL = `(() => {
-  const pills = [...document.querySelectorAll(".nomusic-offline-pill")];
-  return pills.find((p) => p.dataset.status && p.dataset.status !== "off") ??
-    pills.filter((p) => p.style.display !== "none").sort((a, b) => (+b.dataset.area || 0) - (+a.dataset.area || 0))[0] ?? null;
-})()`;
+// Ask the page's nomusic content script (debug mode) for something.
+export function debugRequest(frame, type, extra = {}) {
+  return frame.evaluate(({ NS, type, extra }) => new Promise((resolve) => {
+    const id = Math.random().toString(36).slice(2);
+    const timer = setTimeout(() => resolve(undefined), 3000);
+    const onMessage = (event) => {
+      if (event.data?.[NS] === "debug-reply" && event.data.id === id) {
+        clearTimeout(timer);
+        window.removeEventListener("message", onMessage);
+        resolve(event.data.reply);
+      }
+    };
+    window.addEventListener("message", onMessage);
+    window.postMessage({ [NS]: "debug", type, id, ...extra }, "*");
+  }), { NS, type, extra });
+}
 
+// The session that matters (working, else on, else the first), plus its button.
 export async function frameState(frame) {
-  return frame.evaluate((pick) => {
-    const pill = eval(pick);
-    if (!pill) return null;
-    return { label: pill.textContent, ...JSON.parse(pill.dataset.state || "{}") };
-  }, PICK_PILL);
+  const state = await debugRequest(frame, "state");
+  if (!state) return null;
+  const button = await frame.evaluate(() => {
+    const el = [...document.querySelectorAll(".nomusic-btn")].find((b) => b.style.display !== "none");
+    const panel = document.querySelector(".nomusic-recovery:not([hidden])");
+    return {
+      label: el?.querySelector(".nomusic-btn__label")?.textContent ?? null,
+      buttonState: el?.dataset.state ?? null,
+      panel: panel ? panel.querySelector(".nomusic-recovery__message")?.textContent : null,
+    };
+  });
+  return { ...state, ...button };
 }
 
 export async function waitFor(frame, predicate, { timeout = 60000, label = "condition" } = {}) {
@@ -95,45 +138,44 @@ export async function waitFor(frame, predicate, { timeout = 60000, label = "cond
   throw new Error(`timed out waiting for ${label}; last state ${JSON.stringify(state)?.slice(0, 600)}`);
 }
 
-// A real click on the pill; if something on the page covers it (a site dialog),
-// report what, then click it directly so the test can go on.
-export async function clickPill(frame) {
-  await frame.waitForSelector(".nomusic-offline-pill", { visible: true, timeout: 30000 });
-  const pill = await frame.evaluateHandle((pick) => eval(pick), PICK_PILL);
-  const before = await pill.evaluate((el) => el.dataset.status ?? "off");
-  await pill.asElement().click();
+// A real click on the visible nomusic button; if something on the page covers
+// it (a site dialog), report what, then click it directly so the test goes on.
+export async function clickButton(frame) {
+  await frame.waitForSelector(".nomusic-btn", { visible: true, timeout: 30000 });
+  const button = await frame.evaluateHandle(() =>
+    [...document.querySelectorAll(".nomusic-btn")].find((b) => b.style.display !== "none"));
+  const before = await button.evaluate((el) => el.dataset.nomusicStatus);
+  await button.asElement().click();
   await sleep(800);
-  const after = await pill.evaluate((el) => el.dataset.status ?? "off");
+  const after = await button.evaluate((el) => el.dataset.nomusicStatus);
   if (after !== before) return null;
-  const covered = await pill.evaluate((el) => {
+  const covered = await button.evaluate((el) => {
     const r = el.getBoundingClientRect();
     const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
-    return top === el ? null : `${top?.tagName?.toLowerCase()}.${[...(top?.classList ?? [])].join(".")}`;
+    return top === el || el.contains(top) ? null : `${top?.tagName?.toLowerCase()}.${[...(top?.classList ?? [])].join(".")}`;
   });
-  await pill.evaluate((el) => el.click());
+  if (covered) await button.evaluate((el) => el.click());
   return { covered_by: covered };
 }
 
-export const video = (frame, script, arg) => frame.evaluate(script, arg);
+// Click "Retry" or "Return to original" in the recovery panel.
+export async function chooseRecovery(frame, text) {
+  const clicked = await frame.evaluate((text) => {
+    const item = [...document.querySelectorAll(".nomusic-recovery:not([hidden]) .nomusic-menu__item")]
+      .find((b) => b.textContent.trim() === text);
+    item?.click();
+    return !!item;
+  }, text);
+  if (!clicked) throw new Error(`no "${text}" in the recovery panel`);
+}
 
 // Pull the recorder's last `seconds` of original and output audio from the page.
-export async function dump(frame, seconds) {
-  return frame.evaluate((seconds) => new Promise((resolve) => {
-    const id = Math.random().toString(36).slice(2);
-    const onMessage = (event) => {
-      if (event.data?.["nomusic-offline"] === "debug-reply" && event.data.id === id) {
-        window.removeEventListener("message", onMessage);
-        resolve(event.data.reply);
-      }
-    };
-    window.addEventListener("message", onMessage);
-    window.postMessage({ "nomusic-offline": "debug", type: "dump", seconds, id }, "*");
-  }), seconds);
-}
+export const dump = (frame, seconds) => debugRequest(frame, "dump", { seconds });
 
 // Sync, similarity and gap metrics for a recording (see analyze.py).
 // With `source` (the page's media file), speed-independent checks against 1x Spleeter run too.
 export function analyze(recording, name, { source } = {}) {
+  if (!recording) throw new Error("no recording (is the session routed?)");
   const dir = join(WORK, "recordings");
   mkdirSync(dir, { recursive: true });
   const base = join(dir, name);
@@ -145,6 +187,7 @@ export function analyze(recording, name, { source } = {}) {
   return JSON.parse(out.trim().split("\n").pop());
 }
 
+// Resident memory of the browser's process tree, and of its extension processes.
 export function memoryOfChrome(browser) {
   const pid = browser.process()?.pid;
   if (!pid) return null;
@@ -160,7 +203,8 @@ export function memoryOfChrome(browser) {
     for (const proc of tree) if (ids.has(proc.ppid) && !ids.has(proc.pid)) { ids.add(proc.pid); grew = true; }
   }
   const procs = tree.filter((proc) => ids.has(proc.pid));
-  return { total_mb: Math.round(procs.reduce((sum, proc) => sum + proc.rss, 0) / 1024) };
+  const mb = (list) => Math.round(list.reduce((sum, proc) => sum + proc.rss, 0) / 1024);
+  return { total_mb: mb(procs), extension_mb: mb(procs.filter((proc) => proc.args.includes("--extension-process"))) };
 }
 
 export class Report {

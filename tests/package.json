@@ -1,10 +1,16 @@
 {
-  "name": "nomusic-offline-tests",
+  "name": "nomusic-tests",
   "private": true,
   "type": "module",
-  "description": "Browser tests for the offline extension prototype (Puppeteer driving installed Chrome).",
+  "description": "Unit tests (node:test) and browser tests (Puppeteer driving an installed Chromium browser) for the nomusic extension.",
+  "scripts": {
+    "unit": "node --test unit/*.test.mjs",
+    "local": "node local.mjs",
+    "youtube": "node youtube.mjs",
+    "memory": "node memory.mjs"
+  },
   "dependencies": {
     "onnxruntime-web": "1.30.0",
-    "puppeteer-core": "^24.0.0"
+    "puppeteer-core": "24.43.1"
   }
 }
