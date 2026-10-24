@@ -1,0 +1,115 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>nomusic offline test player</title>
+<style>body { margin: 20px; background: #111; color: #ddd; font: 14px system-ui; } video { width: 854px; height: 480px; background: #000; }</style>
+<video id="video" controls playsinline></video>
+<pre id="log"></pre>
+<script type="module">
+// A small Media Source player shaped like YouTube's: separate audio/video
+// SourceBuffers fed segment by segment about 30 s ahead of the playhead, with
+// abort + re-append on seek. "bytes" mode appends one muxed fragmented MP4 in
+// fixed-size slices that split boxes at arbitrary points. "file" mode plays a
+// plain progressive file. window.load(media, variant) swaps the source in the
+// same <video>, like a site moving to the next video.
+const video = document.getElementById("video");
+const log = (message) => { document.getElementById("log").textContent += message + "\n"; };
+const AHEAD = 30;
+let current = null;
+
+const idle = (sb) => sb.updating ? new Promise((resolve) => sb.addEventListener("updateend", resolve, { once: true })) : null;
+async function append(sb, bytes) {
+  await idle(sb);
+  sb.appendBuffer(bytes);
+  await idle(sb);
+}
+
+async function load(media, variant, slice = 200_000, gapMs = 0) {
+  current?.stop();
+  if (gapMs) {
+    video.removeAttribute("src");
+    video.load();
+    await new Promise((resolve) => setTimeout(resolve, gapMs));
+  }
+  const session = { stopped: false, stop() { this.stopped = true; clearInterval(this.timer); video.removeEventListener("seeking", this.onSeeking); } };
+  current = session;
+  window.playerReady = false;
+  if (variant === "progressive") {
+    video.src = `/media/${media}/progressive.mp4`;
+    window.playerReady = true;
+    return;
+  }
+  const base = `/media/${media}/${variant}/`;
+  const fetchBytes = async (url) => new Uint8Array(await (await fetch(base + url)).arrayBuffer());
+  const config = await (await fetch(base + "player.json")).json();
+  const mediaSource = new MediaSource();
+  video.src = URL.createObjectURL(mediaSource);
+  await new Promise((resolve) => mediaSource.addEventListener("sourceopen", resolve, { once: true }));
+
+  if (config.mode === "bytes") {
+    const sb = mediaSource.addSourceBuffer(config.mime);
+    const bytes = await fetchBytes(config.url);
+    window.playerReady = true;
+    for (let at = 0; at < bytes.length && !session.stopped; at += slice) await append(sb, bytes.subarray(at, at + slice));
+    if (!session.stopped) mediaSource.endOfStream();
+    log(`appended ${bytes.length} bytes in ${Math.ceil(bytes.length / slice)} slices`);
+    return;
+  }
+  mediaSource.duration = config.duration;
+  const tracks = config.tracks.map((track) => ({ ...track, sb: mediaSource.addSourceBuffer(track.mime), next: 0, epoch: 0 }));
+  for (const track of tracks) await append(track.sb, await fetchBytes(track.init));
+
+  async function pump(track) {
+    const epoch = track.epoch;
+    while (!session.stopped && !session.starved && track.next < track.segments.length && track.segments[track.next].start < video.currentTime + AHEAD) {
+      const bytes = await fetchBytes(track.segments[track.next].url);
+      if (track.epoch !== epoch || session.stopped) return;
+      await append(track.sb, bytes);
+      if (track.epoch !== epoch) return;
+      track.next++;
+    }
+    if (!session.stopped && tracks.every((t) => t.next >= t.segments.length) && mediaSource.readyState === "open" &&
+        tracks.every((t) => !t.sb.updating)) {
+      mediaSource.endOfStream();
+    }
+  }
+  let pumping = false;
+  async function pumpAll() {
+    if (pumping) return;
+    pumping = true;
+    try { await Promise.all(tracks.map(pump)); } finally { pumping = false; }
+  }
+  session.onSeeking = async () => {
+    const t = video.currentTime;
+    for (const track of tracks) {
+      track.epoch++;
+      await idle(track.sb);
+      if (mediaSource.readyState === "open") track.sb.abort();
+      track.next = Math.max(0, track.segments.findLastIndex((segment) => segment.start <= t + 0.001));
+    }
+    pumping = false;
+    pumpAll();
+  };
+  video.addEventListener("seeking", session.onSeeking);
+  // Simulate a network stall: drop what is buffered past the next second and
+  // stop loading for `ms`, so the video freezes mid-play without pausing.
+  window.stall = async (ms) => {
+    const t = video.currentTime;
+    session.starved = true;
+    for (const track of tracks) {
+      track.epoch++;
+      await idle(track.sb);
+      track.sb.remove(t + 1, mediaSource.duration);
+      await idle(track.sb);
+      track.next = Math.max(0, track.segments.findLastIndex((segment) => segment.start <= t + 1));
+    }
+    setTimeout(() => { session.starved = false; pumping = false; pumpAll(); }, ms);
+  };
+  session.timer = setInterval(pumpAll, 500);
+  await pumpAll();
+  window.playerReady = true;
+}
+
+window.load = load;
+const params = new URLSearchParams(location.search);
+load(params.get("media"), params.get("variant"), Number(params.get("slice") || 200_000));
+</script>

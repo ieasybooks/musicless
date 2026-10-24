@@ -1,0 +1,3 @@
+extension/model/*.onnx
+extension/vendor/ort*
+tests/node_modules/
