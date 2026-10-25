@@ -50,33 +50,34 @@ the store item:
 
 ## 2. Keep the old backend, then move main
 
-`main` on GitHub is still the old backend. On 25 October 2026 that commit was
-`89006dce37924c3674c2d3d26caa25379dc163c4`. If `git rev-parse origin/main`
-prints something else, stop and see whether another backend commit landed.
+This is already prepared in the local repository: branch `backend` and the
+annotated tag `backend-final` point at the last backend commit on GitHub
+(`89006dce37924c3674c2d3d26caa25379dc163c4`), and `main` (the same commit as
+`release/v1`) has been rebased on top of it, so moving GitHub's `main` is a
+fast-forward. The backend files are removed in the commit "Make the offline
+extension the project".
 
-These commands push. Run them yourself.
+First check that nothing new landed on GitHub's `main` since then:
 
 ```sh
 git fetch origin
-git rev-parse origin/main
-git branch backend origin/main
-git tag backend-final origin/main
-git push origin refs/heads/backend
-git push origin refs/tags/backend-final
+git rev-parse origin/main          # must print 89006dce37924c3674c2d3d26caa25379dc163c4
+git merge-base --is-ancestor origin/main main && echo "fast-forward: ok"
 ```
 
-Rebase the extension branch onto that commit so `main` can move forward
-without a force push. The extension history and `origin/main` split at
-`1152cb1`.
+If `origin/main` moved, stop: rebase `release/v1` onto it again
+(`git rebase --rebase-merges origin/main`), run the tests, point `main` at it,
+and move `backend` and `backend-final` to the new backend commit.
+
+These commands push. Run them yourself:
 
 ```sh
-git checkout release/v1
-git rebase origin/main
-git push origin release/v1:main
+git push origin refs/heads/backend refs/tags/backend-final
+git push origin main
 ```
 
-Do not force-push `main`. If the push is rejected, the rebase is not on top
-of `origin/main`.
+Do not force-push `main`. If the push is rejected, `main` is not on top of
+`origin/main`.
 
 After this, `https://github.com/IbraheemTuffaha/nomusic/blob/main/docs/privacy.md`
 must show the privacy policy while you are signed out. That URL is the one
@@ -84,13 +85,12 @@ you put in the store.
 
 ## 3. Tag
 
-Tag the commit you just pushed. It must contain `.github/workflows/release.yml`,
-and `manifest.json` must say `1.0.0`.
+Tag the commit you just pushed. It contains `.github/workflows/release.yml`,
+and `manifest.json` says `1.0.0`. If you tag on a later day than the date in
+`CHANGELOG.md` and the privacy policy, update those dates first.
 
 ```sh
-git checkout main
-git pull
-git tag v1.0.0
+git tag -a v1.0.0 main -m "nomusic 1.0.0"
 git push origin v1.0.0
 ```
 
