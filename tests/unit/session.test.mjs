@@ -63,7 +63,7 @@ function sessionSandbox({ video: props, settings = {}, streams = { "blob:a": 1 }
     },
     URL,
     t: (key) => key, // i18n.js: failure messages by key
-    importStretch: async () => ({ StretchClient: class { stretch(...args) { return stretch(...args); } } }),
+    importStretch: async () => ({ stretch }),
   };
   const { Session } = load("session.js", env, {
     rewrite: (source) => source.replace('import(chrome.runtime.getURL("stretch.js"))', "importStretch()"),

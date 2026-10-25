@@ -76,8 +76,7 @@ function sourceOf(video) {
 // Pitch-preserving time-stretch for playback rates other than 1 (SoundTouch
 // WSOLA), loaded on first use and shared by every session on the page.
 let stretcher = null;
-const loadStretcher = () =>
-  (stretcher ??= import(chrome.runtime.getURL("stretch.js")).then((module) => new module.StretchClient()));
+const loadStretcher = () => (stretcher ??= import(chrome.runtime.getURL("stretch.js")).then((module) => module.stretch));
 
 export class Session {
   constructor(video, { capture, engine, onChange = () => {} }) {
@@ -529,7 +528,7 @@ export class Session {
     chunk.stretching = rate;
     const channels = [chunk.buffer.getChannelData(0), chunk.buffer.getChannelData(1)];
     loadStretcher()
-      .then((client) => client.stretch(channels, rate, chunk.buffer.sampleRate))
+      .then((stretch) => stretch(channels, rate, chunk.buffer.sampleRate))
       .then(({ channels: out }) => {
         if (this.chunks.get(k) !== chunk || chunk.stretching !== rate) return;
         const buffer = this.graph.ctx.createBuffer(2, out[0].length, chunk.buffer.sampleRate);

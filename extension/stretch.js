@@ -1,6 +1,6 @@
 // ---------------------------------------------------------------------------
-// StretchClient: pitch-preserving time-stretch via the vendored SoundTouch
-// library (WSOLA). Pure JavaScript, run synchronously on the main thread — no
+// Pitch-preserving time-stretch via the vendored SoundTouch library (WSOLA).
+// Pure JavaScript, run synchronously on the main thread — no
 // Worker/worklet/WASM/CSP concerns. Each stretch() runs the WSOLA
 // feed/process/flush loop over one chunk and returns a buffer ~1/rate its
 // length with the pitch preserved. See third_party/soundtouch/.
@@ -33,66 +33,64 @@ const WSOLA_SEEK_MS = 15;
 const WSOLA_OVERLAP_MS = 20;
 const WSOLA_QUICK_SEEK = true;
 
-export class StretchClient {
-  /** Stretch one chunk to ~1/rate its length, pitch preserved. ``channels``
-   *  is one Float32Array per channel (1 or 2). Resolves ``{channels}``;
-   *  rejects on an internal error (the session then fails closed). */
-  async stretch(channels, rate, sampleRate) {
-    const inFrames = channels[0].length;
-    const stereo = channels.length >= 2;
-    const L = channels[0];
-    const R = stereo ? channels[1] : channels[0];
+/** Stretch one chunk to ~1/rate its length, pitch preserved. ``channels``
+ *  is one Float32Array per channel (1 or 2). Resolves ``{channels}``;
+ *  rejects on an internal error (the session then fails closed). */
+export async function stretch(channels, rate, sampleRate) {
+  const inFrames = channels[0].length;
+  const stereo = channels.length >= 2;
+  const L = channels[0];
+  const R = stereo ? channels[1] : channels[0];
 
-    // SoundTouch's WSOLA stage operates on interleaved stereo frames.
-    const inter = new Float32Array(inFrames * 2);
-    for (let i = 0; i < inFrames; i++) {
-      inter[2 * i] = L[i];
-      inter[2 * i + 1] = R[i];
-    }
-
-    const st = new Stretch({ createBuffers: true });
-    // Short window + ~50% overlap (no verbatim middle) — see the constants above.
-    st.setParameters(sampleRate, WSOLA_SEQUENCE_MS, WSOLA_SEEK_MS, WSOLA_OVERLAP_MS);
-    st.tempo = rate; // tempo > 1 shortens (faster); pitch is preserved
-    st.quickSeek = WSOLA_QUICK_SEEK;
-
-    const target = Math.max(1, Math.ceil(inFrames / rate));
-    const outL = new Float32Array(target);
-    const outR = stereo ? new Float32Array(target) : null;
-    let outFrames = 0;
-    const TMP = 8192;
-    const tmp = new Float32Array(TMP * 2);
-    const drain = () => {
-      while (st.outputBuffer.frameCount > 0 && outFrames < target) {
-        const want = Math.min(TMP, st.outputBuffer.frameCount, target - outFrames);
-        st.outputBuffer.receiveSamples(tmp, want);
-        for (let i = 0; i < want; i++) {
-          outL[outFrames + i] = tmp[2 * i];
-          if (outR) outR[outFrames + i] = tmp[2 * i + 1];
-        }
-        outFrames += want;
-      }
-    };
-
-    const BLK = 4096;
-    for (let off = 0; off < inFrames && outFrames < target; off += BLK) {
-      const n = Math.min(BLK, inFrames - off);
-      st.inputBuffer.putSamples(inter.subarray(off * 2, (off + n) * 2), 0, n);
-      st.process();
-      drain();
-    }
-    // Flush: push trailing zeros so the final WSOLA window is emitted, until
-    // we've collected the full target length (WSOLA leaves a tail otherwise,
-    // which would show up as a small gap at each chunk boundary).
-    const flush = new Float32Array(BLK * 2);
-    let guard = 0;
-    while (outFrames < target && guard++ < 64) {
-      st.inputBuffer.putSamples(flush, 0, BLK);
-      st.process();
-      drain();
-    }
-
-    const out = outR ? [outL, outR] : [outL];
-    return { channels: out };
+  // SoundTouch's WSOLA stage operates on interleaved stereo frames.
+  const inter = new Float32Array(inFrames * 2);
+  for (let i = 0; i < inFrames; i++) {
+    inter[2 * i] = L[i];
+    inter[2 * i + 1] = R[i];
   }
+
+  const st = new Stretch({ createBuffers: true });
+  // Short window + ~50% overlap (no verbatim middle) — see the constants above.
+  st.setParameters(sampleRate, WSOLA_SEQUENCE_MS, WSOLA_SEEK_MS, WSOLA_OVERLAP_MS);
+  st.tempo = rate; // tempo > 1 shortens (faster); pitch is preserved
+  st.quickSeek = WSOLA_QUICK_SEEK;
+
+  const target = Math.max(1, Math.ceil(inFrames / rate));
+  const outL = new Float32Array(target);
+  const outR = stereo ? new Float32Array(target) : null;
+  let outFrames = 0;
+  const TMP = 8192;
+  const tmp = new Float32Array(TMP * 2);
+  const drain = () => {
+    while (st.outputBuffer.frameCount > 0 && outFrames < target) {
+      const want = Math.min(TMP, st.outputBuffer.frameCount, target - outFrames);
+      st.outputBuffer.receiveSamples(tmp, want);
+      for (let i = 0; i < want; i++) {
+        outL[outFrames + i] = tmp[2 * i];
+        if (outR) outR[outFrames + i] = tmp[2 * i + 1];
+      }
+      outFrames += want;
+    }
+  };
+
+  const BLK = 4096;
+  for (let off = 0; off < inFrames && outFrames < target; off += BLK) {
+    const n = Math.min(BLK, inFrames - off);
+    st.inputBuffer.putSamples(inter.subarray(off * 2, (off + n) * 2), 0, n);
+    st.process();
+    drain();
+  }
+  // Flush: push trailing zeros so the final WSOLA window is emitted, until
+  // we've collected the full target length (WSOLA leaves a tail otherwise,
+  // which would show up as a small gap at each chunk boundary).
+  const flush = new Float32Array(BLK * 2);
+  let guard = 0;
+  while (outFrames < target && guard++ < 64) {
+    st.inputBuffer.putSamples(flush, 0, BLK);
+    st.process();
+    drain();
+  }
+
+  const out = outR ? [outL, outR] : [outL];
+  return { channels: out };
 }
