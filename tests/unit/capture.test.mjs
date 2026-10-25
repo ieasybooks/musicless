@@ -311,6 +311,13 @@ test("before the answer is known, only format headers are kept too", () => {
   assert.equal(missed, true, "the audio before it went by");
 });
 
+test("capture.js says which answer it applied", () => {
+  const env = sandbox({ consented: null });
+  env.control({ type: "consent", consented: true });
+  env.control({ type: "consent", consented: "yes" });
+  assert.deepEqual(env.posted.filter((m) => m.type === "consent").map((m) => m.consented), [true, false]);
+});
+
 test("with consent the audio is kept", () => {
   const env = sandbox({ consented: true });
   playShort(env);

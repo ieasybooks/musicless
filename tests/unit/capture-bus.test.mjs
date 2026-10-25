@@ -71,14 +71,39 @@ test("removals pass on when well-formed", () => {
   assert.equal(received[0][0].end, Infinity);
 });
 
-test("a stream's audio counts as missed only if nomusic itself said no to keeping it", () => {
-  const { capture, missed } = bus();
+// A stream as capture.js announces it.
+const announce = (capture, streamId) => capture.receive({ type: "stream", streamId, url: `blob:https://www.youtube.com/${streamId}` });
+const missedFor = (capture, missed, streamId) => {
+  capture.subscribe(streamId, { checkSource() {}, onEntries: (id, entries, replay) => missed.push([id, replay.missed]), onCaptureClosed() {} });
+  capture.receive({ type: "replay", streamId, entries: [], missed: true }); // what a page can post for any stream
+};
+
+test("after nomusic said no, audio counts as missed only for streams from before capture.js confirmed a yes", () => {
+  const { capture } = bus();
+  const missed = [];
+  capture.consent(false); // the user had not turned nomusic on
+  announce(capture, 5);
+  capture.consent(true); // then did (the welcome page)
+  announce(capture, 6); // made before capture.js had the answer
+  capture.receive({ type: "consent", consented: true }); // capture.js applied it
+  announce(capture, 7); // a later video (a new source)
+  for (const id of [5, 6, 7]) missedFor(capture, missed, id);
+  assert.deepEqual(missed, [[5, true], [6, true], [7, false]], "a forged replay cannot fail the later, clean stream");
+});
+
+test("for a user who turned nomusic on, a forged replay fails no stream; turning it off again does", () => {
+  const { capture } = bus();
+  const missed = [];
+  announce(capture, 3); // the page's first video, before nomusic's answer
   capture.consent(true);
-  capture.receive({ type: "replay", streamId: 5, entries: [], missed: true }); // posted by the page
-  capture.consent(false); // the user had not turned nomusic on, and then did
-  capture.consent(true);
-  capture.receive({ type: "replay", streamId: 5, entries: [], missed: true });
-  assert.deepEqual(missed, [false, true]);
+  capture.receive({ type: "consent", consented: true });
+  announce(capture, 4);
+  missedFor(capture, missed, 3);
+  missedFor(capture, missed, 4);
+  capture.consent(false); // turned off again (the popup): every stream it has goes unkept
+  missedFor(capture, missed, 3);
+  missedFor(capture, missed, 4);
+  assert.deepEqual(missed, [[3, false], [4, false], [3, true], [4, true]]);
 });
 
 test("no message to the page stops a subscription", () => {

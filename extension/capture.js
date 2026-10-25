@@ -407,6 +407,7 @@
     } else if (type === "consent") {
       consented = event.data.consented === true;
       if (!consented) for (const stream of streams.values()) dropMedia(stream);
+      post({ type: "consent", consented }); // streams announced from now on were made under this answer
     } else if (type === "subscribe") {
       // From then on its appends go out as they come, until it closes: no
       // message stops that (the page could post one), and the content script
