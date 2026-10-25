@@ -48,8 +48,10 @@ const DEBUG = (() => {
 })();
 export const debugEnabled = () => DEBUG;
 
-// Failures only a fresh page can help: Retry reloads it.
-const RELOAD = new Set(["updated", "uncaptured", "engine"]);
+// Failures only a fresh page can help: Retry reloads it. That includes sound
+// that cannot start ("audio"): the video's sound already goes through an audio
+// context that will not run, and only a new page gets a new one.
+const RELOAD = new Set(["updated", "uncaptured", "engine", "audio"]);
 
 // Reload the page; a YouTube watch page keeps its position.
 function reloadPage(time) {

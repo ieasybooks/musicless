@@ -429,6 +429,7 @@ test("if the sound still cannot start shortly after a click, the session fails c
   stuck.session.tick();
   assert.equal(stuck.session.failure?.reason, "audio");
   assert.equal(stuck.session.status, "failed");
+  assert.equal(stuck.session.retryReloads, true, "only a new page gets a new audio context");
   assert.equal(stuck.session.intent.held, true, "still silent and paused until the user chooses");
   const started = blocked(); // the click lets it play
   started.ctx.state = "running";
