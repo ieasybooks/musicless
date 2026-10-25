@@ -20,6 +20,10 @@ It is not a previous version of this extension.
 - A Chrome extension (Manifest V3) that removes background music from
   YouTube videos and keeps speech and singing, on the user's computer.
 - English and Arabic, including right-to-left layout.
+- Spleeter 2-stem (Deezer) runs in the browser with ONNX Runtime Web, on one
+  processor thread. Compared with Spleeter's own mask, nomusic removes more
+  of the music under speech: the model sees every window at the same level,
+  and its mask weighs the music estimate more.
 - Works in Chrome, Edge, Brave, and other Chromium browsers, version 111
   or newer, on a computer.
 - A first-run choice, **Turn on nomusic**, on the welcome page or the popup,
@@ -30,7 +34,8 @@ It is not a previous version of this extension.
   the first-run choice.
 - When the music cannot be removed, the video stays paused and silent until
   you choose Try again or Play with music. Some cases ask you to reload the
-  page.
+  page. While the browser does not let sound play yet, the video waits for a
+  click instead of playing silently.
 - Speed changes keep the voice's pitch. Seeking, volume, mute, fullscreen,
   Shorts, live streams, and embedded YouTube players work.
 - No account and no analytics. Audio is processed on the computer and is

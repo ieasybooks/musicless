@@ -48,7 +48,7 @@ Playback controls
 Volume, mute, seeking, fullscreen, and speed changes are supported. nomusic also works with supported Shorts, live streams, and embedded players on computers.
 
 Privacy
-nomusic reads audio that the site's own player has already loaded and processes it in browser memory only for music removal. Audio is never uploaded, shared, or saved as a file. It does not offer media downloads, recording, or audio export. The developer receives no audio, browsing history, or usage analytics. The automatic-removal setting, and whether you have turned nomusic on, are stored with Chrome's extension storage and may sync between your devices through Chrome Sync.
+nomusic reads audio that the site's own player has already loaded and processes it in browser memory only for music removal. Audio is never uploaded, shared, or saved as a file. It does not offer media downloads, recording, or audio export. The developer receives no audio, browsing history, or usage analytics. The automatic-removal setting, and whether you have turned nomusic on, are stored with Chrome's extension storage and may sync between your devices through Chrome Sync. A random token that lets nomusic's processing frame accept only nomusic itself stays on this computer.
 
 Limits to know
 • Some music may remain, especially quiet background music under speech. Voices can sound less bright. This is not a guarantee of music-free playback.

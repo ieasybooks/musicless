@@ -45,7 +45,9 @@ ClearKey-encrypted media. The suite installs the extension in a fresh profile
 with a debug flag that records the page's audio and nomusic's output on the
 same clock. `analyze.py` then checks sync (against Spleeter run offline),
 dropouts and gaps (against 1x Spleeter of the exact source, at the media time
-each block was heard) and output while the video is silent.
+each block was heard) and output while the video is silent. Its offline
+references are cached next to the media, keyed by the model and
+`reference.py`, so the first run after either changes is slower.
 
 It covers starting by itself, seeking, stalls, pausing (including during a
 hold), speed changes, volume, fullscreen, the button, the next video in the

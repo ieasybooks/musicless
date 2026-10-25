@@ -26,7 +26,7 @@ video plays, and plays them in place of the original track.
 | `session.js` | One video's music removal: follows its source, routes its audio through Web Audio (original silenced, separated voices at the page's volume), asks the engine for chunks around the playhead, schedules them on the video's clock, holds the video when a chunk is missing, fails closed. |
 | `button.js`, `content.css`, `i18n.js` | The button in the player and its recovery panel, in English or Arabic (`_locales/`), right to left where the player is. It shows with YouTube's own controls, and ignores clicks a page script fakes. |
 | `engine.js` | The page's connection to the hidden frame; routes messages by stream; notices a frame or worker that has gone away and starts a new one; removes the frame 30 s after nothing uses it. |
-| `separator.html/js` | The hidden frame, in the extension's own origin (WebAssembly allowed, out of the page's reach). It accepts one connection, and only with a random token from extension storage that page scripts cannot read; then it starts the tab worker and connects it to the shared model. |
+| `separator.html/js` | The hidden frame, in the extension's own origin (WebAssembly allowed, out of the page's reach). It accepts one connection, and only with a random token that page scripts cannot read: the background service worker makes it once, and the content script sends it only to the extension's own origin, fixed when the frame is created. Then it starts the tab worker and connects it to the shared model. |
 | `tab-worker.js` | Per tab: demuxes (`demux.js`), decodes with WebCodecs, resamples to 44.1 kHz, computes the STFT (`dsp.js`), sends it to the model, synthesizes the voices and crossfades the window edges. Keeps at most 64 MiB of audio per video, nothing more than 15 minutes behind or ahead of the playhead, and separates again whatever the player replaced. |
 | `model-worker.js`, `model.js` | One copy of the model for every tab (a shared worker; WebCodecs is not available there, which is why decoding stays per tab). A priority queue puts the chunk a playing video needs first. If shared workers are unavailable, a tab loads its own copy. |
 | `grid.js` | The fixed window grid shared by both sides. |
@@ -100,15 +100,20 @@ no session routes or separates anything, and the button on the player says
 
 nomusic never plays the original track by itself once it is on. If it cannot
 remove the music (copy-protected audio, audio it cannot capture, a codec the
-browser cannot decode, a chunk stuck for 30 s, or the extension being updated
-under an open page), the original stays silent, the video pauses, and the
-button's panel offers **Try again** or **Play with music**. When only a
-reload can help (the extension was updated, the audio went by before it could
-be captured, or the engine could not start again), the panel offers **Reload
-page** instead; on a watch page the reload keeps the position.
+browser cannot decode, a chunk stuck for 30 s, sound that still cannot start
+after a click, or the extension being updated under an open page), the
+original stays silent, the video pauses, and the button's panel offers **Try
+again** or **Play with music**. When only a reload can help (the extension was
+updated, the audio went by before it could be captured, the engine could not
+start again, or the sound cannot start), the panel offers **Reload page**
+instead; on a watch page the reload keeps the position.
 
 If the hidden frame or its workers stop answering, the engine is started
-again once; if that fails too, the video fails closed as above.
+again once; if that fails too, the video fails closed as above. Chunks the
+page kept through a pause or an engine restart carry a fingerprint of the
+audio they were made from; the new worker checks it against what it has
+before they play (the video holds meanwhile), so a chunk made from audio the
+player has since replaced is separated again.
 
 ## Memory
 
