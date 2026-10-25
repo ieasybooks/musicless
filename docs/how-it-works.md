@@ -20,26 +20,41 @@ video plays, and plays them in place of the original track.
 
 | File | Role |
 | --- | --- |
-| `capture.js` | Page world, before the site's scripts. Wraps `MediaSource`/`SourceBuffer` so it sees the encoded audio the player appends (Opus in WebM, AAC in MP4). Keeps at most 16 MiB of recent audio per stream, trimmed at segment boundaries with the format header kept, and frees a stream when its player detaches it. Nothing is downloaded. |
+| `capture.js` | Page world, before the site's scripts. Wraps `MediaSource`/`SourceBuffer` so it sees the encoded audio the player appends (Opus in WebM, AAC in MP4), and the ranges it removes or replaces (such as another audio track). Every wrapper calls the browser's own method first and records only what the browser accepted, so nomusic can never break the player. Keeps at most 16 MiB of recent audio per stream and 48 MiB per page, trimmed at segment boundaries with the format header kept, and frees a stream when its player detaches it. Until the user has turned nomusic on, it keeps only format headers. Nothing is downloaded. |
 | `intent.js` | Page world. Reports the page's `play()`/`pause()` calls, so a pause the user makes while nomusic holds the video is not undone. |
-| `content.js`, `main.js` | Load the content-script modules; give every `<video>` a `Session` as soon as it appears (before it can play) and a `Button` once it has a visible player. |
+| `content.js`, `main.js` | Load the content-script modules; give every `<video>` a `Session` as soon as it appears (before it can play) and a `Button` once it has a visible player. `capture-bus.js` checks every message from the page world before anything acts on it. |
 | `session.js` | One video's music removal: follows its source, routes its audio through Web Audio (original silenced, separated voices at the page's volume), asks the engine for chunks around the playhead, schedules them on the video's clock, holds the video when a chunk is missing, fails closed. |
-| `button.js`, `content.css` | The button in the player and its recovery panel. |
-| `engine.js` | The page's connection to the hidden frame; routes messages by stream; removes the frame 30 s after nothing uses it. |
-| `separator.html/js` | The hidden frame, in the extension's own origin (WebAssembly allowed, out of the page's reach). Starts the tab worker and connects it to the shared model. |
-| `tab-worker.js` | Per tab: demuxes (`demux.js`), decodes with WebCodecs, resamples to 44.1 kHz, computes the STFT (`dsp.js`), sends it to the model, synthesizes the voices and crossfades the window edges. Drops audio more than 15 minutes behind the playhead. |
+| `button.js`, `content.css`, `i18n.js` | The button in the player and its recovery panel, in English or Arabic (`_locales/`), right to left where the player is. It shows with YouTube's own controls, and ignores clicks a page script fakes. |
+| `engine.js` | The page's connection to the hidden frame; routes messages by stream; notices a frame or worker that has gone away and starts a new one; removes the frame 30 s after nothing uses it. |
+| `separator.html/js` | The hidden frame, in the extension's own origin (WebAssembly allowed, out of the page's reach). It accepts one connection, and only with a random token from extension storage that page scripts cannot read; then it starts the tab worker and connects it to the shared model. |
+| `tab-worker.js` | Per tab: demuxes (`demux.js`), decodes with WebCodecs, resamples to 44.1 kHz, computes the STFT (`dsp.js`), sends it to the model, synthesizes the voices and crossfades the window edges. Keeps at most 64 MiB of audio per video, nothing more than 15 minutes behind or ahead of the playhead, and separates again whatever the player replaced. |
 | `model-worker.js`, `model.js` | One copy of the model for every tab (a shared worker; WebCodecs is not available there, which is why decoding stays per tab). A priority queue puts the chunk a playing video needs first. If shared workers are unavailable, a tab loads its own copy. |
 | `grid.js` | The fixed window grid shared by both sides. |
 | `stretch.js`, `third_party/soundtouch` | Pitch-preserving time-stretch for speeds other than 1x. |
-| `popup.*`, `welcome.html`, `background.js`, `settings.js` | The toolbar setting, the welcome page, and storage for that setting and the first-run acknowledgement (**Turn on nomusic**). |
+| `popup.*`, `welcome.*`, `background.js`, `settings.js` | The toolbar popup, the welcome page, and the stored values: the automatic-removal setting and whether the user chose **Turn on nomusic** (`chrome.storage.sync`), and the frame's token (`chrome.storage.local`). |
 
 ## Separation
 
 Spleeter 2-stem (Deezer) is two U-Nets on the magnitude spectrogram (n_fft
-4096, hop 1024, below 11 kHz): one estimates the voices, one the
-accompaniment, and their ratio masks the mixture. `tools/build_model.py`
-merges both networks into one graph that outputs the mask and stores the
-weights at half precision (37.5 MiB).
+4096, hop 1024, below 11 kHz): one estimates the voices (v), one the
+accompaniment (a), and a mask built from the two is applied to the mixture.
+`tools/build_model.py` merges both networks into one graph that outputs the
+mask and stores the weights at half precision (37.5 MiB).
+
+Two changes to Spleeter's defaults remove more of the music that plays under
+speech, the case where it leaks most:
+
+- The mask is `v / (v + 2a)` instead of Spleeter's `v² / (v² + a²)`.
+- The network's masks depend on how loud its input is, so every window is
+  shown to it at the same level (-24 dBFS RMS). The mask is still applied to
+  the audio as it is, so the output level follows the video.
+
+On an evaluation set of English and Arabic speech over 42 Creative Commons
+background tracks, plus song excerpts, measured at typical YouTube loudness,
+music under speech is reduced by 1.2 to 2 dB more than with Spleeter's own
+mask, and PESQ (a speech-quality score) rises by about 0.2 at every music
+level. Music on its own is reduced by about 43 dB on average. In songs, 3 dB
+more of the accompaniment is removed and the singing loses a little fidelity.
 
 Spleeter reads 512 frames (11.9 s) at a time and is not shift-invariant: the
 same audio cut at a different place separates differently. So windows sit on
@@ -65,7 +80,21 @@ over a few milliseconds, so re-anchoring crossfades instead of clicking.
 When the chunk the playhead needs is not ready, nomusic pauses the video
 ("holds" it) rather than let music play. It resumes once at least three
 seconds are ready, so one hold does not run straight into the next. Audio is
-prepared while a video is paused, so pressing play usually needs no hold.
+prepared while a video is paused, so pressing play usually needs no hold. The
+video is also held while the browser keeps nomusic's sound from playing (no
+click on the page yet, or the audio device was taken away), until a click lets
+it play.
+
+Chunks are separated in order of distance from each video's playhead, so the
+chunk a playing video needs comes before look-ahead work in any tab.
+
+## Before nomusic is turned on
+
+On install, the welcome page explains what nomusic does with audio and asks
+the user to choose **Turn on nomusic** (the toolbar popup offers the same
+choice). Until then nomusic reads no audio: capture keeps only format headers,
+no session routes or separates anything, and the button on the player says
+**Set up nomusic** and opens the welcome page.
 
 ## Failing closed
 
@@ -73,9 +102,13 @@ nomusic never plays the original track by itself once it is on. If it cannot
 remove the music (copy-protected audio, audio it cannot capture, a codec the
 browser cannot decode, a chunk stuck for 30 s, or the extension being updated
 under an open page), the original stays silent, the video pauses, and the
-button's panel offers **Try again** or **Play with music**. When the page
-itself has to be reloaded, the panel offers **Reload page** instead of Try
-again.
+button's panel offers **Try again** or **Play with music**. When only a
+reload can help (the extension was updated, the audio went by before it could
+be captured, or the engine could not start again), the panel offers **Reload
+page** instead; on a watch page the reload keeps the position.
+
+If the hidden frame or its workers stop answering, the engine is started
+again once; if that fails too, the video fails closed as above.
 
 ## Memory
 
@@ -93,8 +126,24 @@ page (48 MiB).
   the page in Chrome. The engine queues messages until the worker holds its
   port, and captured audio is forwarded one entry per message.
 - Media routed into an AudioContext that the browser keeps suspended (no user
-  gesture yet) still plays, muted; nomusic resumes the context on the first
-  click or key press.
+  gesture yet) would play on, silent. nomusic holds the video instead and
+  resumes the context on the first click or key press.
+- A MessagePort to a worker that has died never reports it, so the engine
+  pings a quiet worker and treats no answer within 15 s as a lost engine.
 - Routing a media element through Web Audio cannot be undone, and a
   cross-origin file routed that way would play silence, so only Media Source
   (blob:) sources are routed; anything else is held instead.
+
+## Security
+
+`capture.js` and `intent.js` run in the page's own JavaScript world, so the
+page can see and imitate their messages. nomusic treats everything from that
+world as untrusted: messages are checked for shape and size, a stream that
+closes under a playing video fails closed rather than going quiet, and the
+in-player controls ignore clicks a script fakes. The hidden frame only accepts
+the content script (see the token above). The extension makes no network
+requests, has no remote code, and asks for one permission (`storage`) plus
+access to YouTube's pages. Diagnostics and audio recording exist only in the
+test harness's copy of the extension: they are switched on by a key the
+harness adds to that copy's manifest, and `recorder.js` is not in the release
+zip.
