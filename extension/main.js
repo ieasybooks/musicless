@@ -142,9 +142,19 @@ function start() {
   }, 2000);
 }
 
-// Turning automatic removal on applies at once to videos the user has not
-// turned off themselves; turning it off never interrupts a video already on.
+// Consent (the welcome page, the popup) starts or stops everything. Turning
+// automatic removal on applies at once to videos the user has not turned off
+// themselves; turning it off never interrupts a video already on.
+let consented = null;
+function applyConsent() {
+  if (settings.consented === consented) return;
+  consented = settings.consented;
+  capture.consent(consented);
+  for (const { session } of controllers.values()) session.consentChanged();
+}
+
 onSettingsChanged(() => {
+  applyConsent();
   if (!settings.autoStart) return;
   for (const { session } of controllers.values()) {
     if (!session.on && !session.userChoice && session.sourceUrl) session.turnOn();
@@ -165,4 +175,7 @@ if (debugEnabled()) {
   });
 }
 
-loadSettings().finally(start);
+loadSettings().finally(() => {
+  applyConsent();
+  start();
+});

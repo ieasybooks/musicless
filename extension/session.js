@@ -7,6 +7,9 @@
 // stays silent and the video pauses until the user chooses Retry or Return to
 // original. While a chunk is not ready yet, the video is held (paused) rather
 // than played with music.
+//
+// Until the user turns nomusic on (settings.consented), a session only shows
+// "setup": it reads no audio and leaves the video alone.
 
 import { resumeAudio, routeElement } from "./audio.js";
 import { CHUNK_SECONDS as CHUNK, chunkIndex, chunkStart, OVERLAP_SAMPLES, RATE } from "./grid.js";
@@ -154,6 +157,7 @@ export class Session {
   // ---- what the button calls -------------------------------------------------
 
   toggle() {
+    if (!settings.consented) return; // the button opens the welcome page instead
     this.userChoice = true;
     if (this.status === "blocked") {
       resumeAudio(); // the click itself lets the page play sound again
@@ -196,6 +200,19 @@ export class Session {
     this.turnOff();
   }
 
+  // The user turned nomusic on, or off again (the welcome page, the popup).
+  consentChanged() {
+    this.failure = null;
+    if (settings.consented) {
+      if (this.on && this.sourceUrl) this.startSource();
+    } else {
+      this.stopProcessing();
+      if (this.graph) this.graph.original.gain.value = 1;
+      this.intent.release();
+    }
+    this.tick();
+  }
+
   dispose() {
     if (this.disposed) return;
     this.disposed = true;
@@ -236,7 +253,7 @@ export class Session {
     this.engineLosses = 0;
     const url = this.sourceUrl;
     this.stats.started = performance.now();
-    if (!url) return; // nothing loaded yet: wait for the next source
+    if (!url || !settings.consented) return; // nothing loaded yet, or nothing may be read yet
     if (!url.startsWith("blob:")) {
       // A plain file or a media object: nothing was captured, and routing a
       // cross-origin file through Web Audio could silence it for good. Hold it instead.
@@ -297,8 +314,13 @@ export class Session {
 
   // One message per entry: a single cross-process message transferring many
   // buffers (a replay can hold ~170) can hang the page in Chrome.
-  onEntries(streamId, entries) {
+  onEntries(streamId, entries, replay) {
     if (!this.attached || streamId !== this.streamId) return;
+    if (replay?.missed) {
+      // Its audio went by before nomusic was turned on: only a reload can read it.
+      this.fail("uncaptured");
+      return;
+    }
     for (const entry of entries) {
       this.engine.post({ type: "entries", streamId: this.workerId, entries: [entry] }, entry.bytes ? [entry.bytes.buffer] : []);
     }
@@ -344,7 +366,7 @@ export class Session {
   }
 
   fail(reason, detail) {
-    if (!this.on || this.failure || this.disposed) return;
+    if (!this.on || !settings.consented || this.failure || this.disposed) return;
     this.failure = { reason, message: FAILURES[reason] ?? FAILURES.error, detail: detail ?? null };
     this.stopProcessing();
     if (this.graph) this.graph.original.gain.value = 0;
@@ -533,9 +555,9 @@ export class Session {
 
   tick() {
     if (this.disposed) return;
-    if (this.on && !this.failure && !chrome.runtime?.id) this.fail("updated");
-    if (!this.on || this.failure) {
-      if (!this.on && this.intent.held) this.intent.release();
+    if (this.on && settings.consented && !this.failure && !chrome.runtime?.id) this.fail("updated");
+    if (!this.on || !settings.consented || this.failure) {
+      if ((!this.on || !settings.consented) && this.intent.held) this.intent.release();
       this.update();
       return;
     }
@@ -660,6 +682,7 @@ export class Session {
   // ---- state for the button ---------------------------------------------------
 
   computeStatus() {
+    if (!settings.consented) return "setup";
     if (!this.on) return "off";
     if (this.failure) return "failed";
     const ctx = this.graph?.ctx;

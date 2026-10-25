@@ -4,6 +4,9 @@ export const DEFAULTS = Object.freeze({
   // Remove music from every video as soon as it starts. When off, the user
   // clicks the nomusic button on a video to start.
   autoStart: true,
+  // The user turned nomusic on after reading what it does (the welcome page or
+  // the popup). Until then it reads no audio at all.
+  consented: false,
 });
 
 export const settings = { ...DEFAULTS };

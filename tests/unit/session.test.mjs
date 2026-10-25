@@ -48,7 +48,10 @@ export function sessionSandbox({ video: props, settings = {}, streams = { "blob:
     ...grid, PlaybackIntent,
     settings: { autoStart: true, consented: true, ...settings },
     resumeAudio() {},
-    routeElement: () => graph,
+    routeElement: () => {
+      env.routed = (env.routed ?? 0) + 1;
+      return graph;
+    },
     performance: { now: () => now },
     chrome: { runtime: { id: "test", getManifest: () => ({}), getURL: (file) => file } },
     setInterval: () => 0,
@@ -294,4 +297,41 @@ test("Retry reloads the page for failures only a reload can help, keeping a watc
   slow.session.retry();
   assert.deepEqual(slow.reloads, [], "other failures try again in place");
   assert.equal(slow.session.failure, null);
+});
+
+test("before consent a session shows setup and leaves the video alone", () => {
+  const { session, video, engine, capture, env } = sessionSandbox({ settings: { consented: false } });
+  assert.equal(session.status, "setup");
+  assert.equal(env.routed ?? 0, 0, "its audio is not routed");
+  assert.equal(session.attached, false);
+  assert.equal(engine.sessions.size, 0);
+  assert.equal(capture.subscribed.size, 0);
+  assert.equal(session.intent.held, false);
+  assert.equal(video.paused, false);
+  video.dispatchEvent(new Event("encrypted"));
+  session.toggle();
+  assert.equal(session.failure, null);
+  assert.equal(session.status, "setup");
+});
+
+test("consenting starts the session; withdrawing it stops and gives the original back", () => {
+  const { session, env, graph } = sessionSandbox({ settings: { consented: false } });
+  env.settings.consented = true;
+  session.consentChanged();
+  assert.equal(session.attached, true);
+  assert.equal(graph.original.gain.value, 0);
+  assert.equal(session.status, "starting");
+  env.settings.consented = false;
+  session.consentChanged();
+  assert.equal(session.attached, false);
+  assert.equal(graph.original.gain.value, 1);
+  assert.equal(session.intent.held, false);
+  assert.equal(session.status, "setup");
+});
+
+test("a stream whose audio went by before consent fails as uncaptured", () => {
+  const { session } = sessionSandbox();
+  session.onEntries(1, [{ kind: "buffer", bufferId: 2, mime: "audio/webm" }], { missed: true });
+  assert.equal(session.failure?.reason, "uncaptured");
+  assert.equal(session.intent.held, true);
 });

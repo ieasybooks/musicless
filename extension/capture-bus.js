@@ -59,6 +59,11 @@ export class CaptureBus {
     window.postMessage({ [NS]: "control", ...message }, "*");
   }
 
+  // Whether the user turned nomusic on: capture.js keeps audio only then.
+  consent(consented) {
+    this.control({ type: "consent", consented });
+  }
+
   streamFor(url) {
     return this.urls.get(url) ?? null;
   }
@@ -104,7 +109,7 @@ export class CaptureBus {
       case "replay": {
         if (!Array.isArray(data.entries) || data.entries.length > MAX_ENTRIES) return;
         const entries = data.entries.map(cleanEntry);
-        if (!entries.includes(null)) this.subscribers.get(data.streamId)?.onEntries(data.streamId, entries);
+        if (!entries.includes(null)) this.subscribers.get(data.streamId)?.onEntries(data.streamId, entries, { missed: data.missed === true });
         break;
       }
       case "event": {

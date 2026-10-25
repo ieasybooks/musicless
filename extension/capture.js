@@ -15,6 +15,10 @@
 // The player must never notice: each wrapper calls the browser's own method
 // first (its errors reach the page as before), records only what the browser
 // accepted, and swallows any error of its own.
+//
+// Before the user turns nomusic on, only format headers are kept (any audio
+// read later needs them). The content script says which as soon as it knows;
+// until then audio is kept, and dropped if the answer is no.
 
 (() => {
   if (window.__nomusicCapture) return;
@@ -30,8 +34,9 @@
   const streamIds = new WeakMap(); // MediaSource -> stream id
   const urls = new WeakMap(); // MediaSource -> its latest object URL
   const buffers = new WeakMap(); // SourceBuffer -> { streamId, bufferId }
-  const streams = new Map(); // stream id -> { url, buffers, headers, log, bytes, subscribed }
+  const streams = new Map(); // stream id -> { url, buffers, headers, log, bytes, subscribed, missed }
   let nextId = 1;
+  let consented = null; // unknown until the content script says
 
   const safely = (fn) => {
     try {
@@ -145,6 +150,15 @@
     }
   }
 
+  // Without consent: the audio goes, and the stream cannot be read later.
+  function dropMedia(stream) {
+    const kept = stream.log.filter((entry) => entry.kind !== "append" || entry.header);
+    if (kept.length === stream.log.length) return;
+    stream.log = kept;
+    stream.bytes = kept.reduce((sum, entry) => sum + (entry.bytes?.byteLength ?? 0), 0);
+    stream.missed = true;
+  }
+
   function record(id, entry) {
     const stream = streams.get(id);
     if (!stream) return;
@@ -156,6 +170,10 @@
         entry.header = true;
       } else {
         stream.headers.delete(entry.bufferId);
+      }
+      if (consented === false && !entry.header) {
+        stream.missed = true;
+        return;
       }
     }
     if (entry.bytes) stream.bytes += entry.bytes.byteLength;
@@ -287,6 +305,9 @@
     const { type, streamId } = event.data;
     if (type === "hello") {
       for (const id of streams.keys()) post(describe(id));
+    } else if (type === "consent") {
+      consented = event.data.consented === true;
+      if (!consented) for (const stream of streams.values()) dropMedia(stream);
     } else if (type === "subscribe") {
       const stream = streams.get(streamId);
       if (!stream) {
@@ -295,7 +316,7 @@
       }
       stream.subscribed = true;
       const entries = stream.log.map((entry) => ({ ...entry, bytes: entry.bytes ? entry.bytes.slice() : null }));
-      post({ type: "replay", streamId, dropped: !!stream.dropped, entries },
+      post({ type: "replay", streamId, dropped: !!stream.dropped, missed: !!stream.missed, entries },
         entries.filter((entry) => entry.bytes).map((entry) => entry.bytes.buffer));
     } else if (type === "unsubscribe" && streams.has(streamId)) {
       streams.get(streamId).subscribed = false;

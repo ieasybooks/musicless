@@ -6,8 +6,8 @@
 //   QUICK=1               the WebM/Opus page only, without the long-running scenarios
 //   CHROME=/path/to/browser, REPORT=name, VARIANTS=webm-opus,mp4-aac
 import {
-  analyze, chooseRecovery, clickButton, dump, frameState, launch, memoryOfChrome, newPage, Report, setAutoStart,
-  sleep, waitFor, WORK,
+  analyze, chooseRecovery, clickButton, debugRequest, dump, frameState, launch, memoryOfChrome, newPage, Report, setAutoStart,
+  setSettings, sleep, waitFor, WORK,
 } from "./harness.mjs";
 import { existsSync } from "node:fs";
 import { serve } from "./serve.mjs";
@@ -336,6 +336,75 @@ await step("turning automatic removal on applies to the open video", async () =>
   report.record("turning automatic removal on applies to the open video", before === "off" && state.status === "on",
     { status_before: before, setting_to_audio_ms: ms });
   await page.close();
+});
+
+await step("nothing is read before consent; consenting starts the next video", async () => {
+  await setSettings(browser, extensionId, { consented: false });
+  try {
+    const page = await open(BASE);
+    await play(page);
+    await sleep(4000);
+    const before = await frameState(page);
+    const captured = await page.evaluate(() => window.__nomusicCaptureDebug());
+    const frames = await engineFrames(page);
+    const { paused, time } = await videoState(page);
+    await setSettings(browser, extensionId, { consented: true }); // on the welcome page
+    const started = Date.now();
+    const failed = await waitFor(page, (s) => s.status === "failed", { timeout: 10000, label: "the video that played before" });
+    const failMs = Date.now() - started;
+    // The next video in the player is read from its start.
+    await page.evaluate((media, v) => window.load(media, v, 200000, 1000), SET, BASE);
+    source = audioFile(BASE);
+    await page.waitForFunction("window.playerReady === true", { timeout: 30000 });
+    await play(page);
+    const { ms, state } = await timeUntilOn(page, "the next video");
+    const a = await listen(page, "after-consent", 12);
+    const media = captured.reduce((sum, stream) => sum + stream.media, 0);
+    report.record("nothing is read before consent; consenting starts the next video",
+      before.status === "setup" && before.originalGain === null && !before.attached && frames === 0 && !paused && time > 2 &&
+        media === 0 && captured.some((stream) => stream.missed) && failed.failure.reason === "uncaptured" && failMs < 5000 &&
+        state.status === "on" && good(a),
+      { status_before: before.status, routed_before: before.originalGain !== null, engine_frames_before: frames, played_before: !paused,
+        audio_kept_before: media, uncaptured_ms: failMs, next_video_audio_ms: ms, ...a });
+    await page.close();
+  } finally {
+    await setSettings(browser, extensionId, { consented: true });
+  }
+});
+
+await step("the release build has no diagnostics, and a page cannot start its worker", async () => {
+  const release = await launch({ diagnostics: false });
+  try {
+    const page = await newPage(release.browser);
+    await page.goto(`http://127.0.0.1:${PORT}/player.html?media=${SET}&variant=${BASE}`);
+    await page.waitForFunction("window.playerReady === true", { timeout: 30000 });
+    await play(page);
+    await page.waitForFunction('document.querySelector(".nomusic-btn")?.dataset.nomusicStatus === "on"', { timeout: 60000 });
+    const state = await debugRequest(page, "state");
+    const exposed = await page.evaluate(() => ({
+      capture: typeof window.__nomusicCaptureDebug,
+      dataset: [...document.querySelectorAll(".nomusic-btn")].some((button) => "nomusicDebug" in button.dataset),
+    }));
+    // A page script loads nomusic's hidden frame itself and hands it ports.
+    const answered = await page.evaluate((id) => new Promise((resolve) => {
+      const frame = document.createElement("iframe");
+      frame.src = `chrome-extension://${id}/separator.html`;
+      frame.onload = () => {
+        for (const message of [{ type: "nomusic-port" }, { type: "nomusic-port", token: "a guess" }]) {
+          const channel = new MessageChannel();
+          channel.port1.onmessage = () => resolve(true);
+          frame.contentWindow.postMessage(message, "*", [channel.port2]);
+        }
+      };
+      document.body.append(frame);
+      setTimeout(() => resolve(false), 5000);
+    }), release.extensionId);
+    report.record("the release build has no diagnostics, and a page cannot start its worker",
+      state === undefined && exposed.capture === "undefined" && !exposed.dataset && !answered,
+      { debug_reply: state ?? null, capture_inspector: exposed.capture, debug_dataset: exposed.dataset, page_started_worker: answered });
+  } finally {
+    await release.browser.close();
+  }
 });
 
 // Videos nomusic cannot process stay silent and paused until the user chooses.

@@ -14,26 +14,31 @@ export const PYTHON = process.env.NOMUSIC_PYTHON ?? join(TESTS, ".venv", "bin", 
 const NS = "nomusic";
 mkdirSync(WORK, { recursive: true });
 
-// What the page-world capture keeps, for the tests (the release has no way to read it).
+// What the page-world capture keeps, for the tests (the release has no way to
+// read it). `media` counts kept audio other than format headers.
 const CAPTURE_DEBUG = `window.__nomusicCaptureDebug = () => [...streams].map(([id, s]) => ({ id, url: s.url,
-  buffers: [...s.buffers.values()], bytes: s.bytes, stored: s.log.length, subscribed: s.subscribed, dropped: !!s.dropped }));\n`;
+  buffers: [...s.buffers.values()], bytes: s.bytes, stored: s.log.length, subscribed: s.subscribed, dropped: !!s.dropped,
+  missed: !!s.missed, media: s.log.reduce((sum, e) => sum + (e.kind === "append" && !e.header ? e.bytes.length : 0), 0) }));\n`;
 
 // The shipped manifest only matches YouTube; tests also allow the local server.
 // The test copy also turns on nomusic's diagnostics (state and recordings, which
 // the release cannot do): its manifest is marked, the recorder is made loadable
-// and the capture's state is readable from the page.
+// and the capture's state is readable from the page. `diagnostics: false`
+// leaves them out, as in the release.
 // Each launch gets its own copy, so parallel runs never see each other's edits.
-function testExtension() {
+function testExtension({ diagnostics = true } = {}) {
   const dir = mkdtempSync(join(WORK, "extension-under-test-"));
   cpSync(EXTENSION, dir, { recursive: true, dereference: true }); // worktrees may link the built model and runtime
-  if (!existsSync(join(dir, "recorder.js"))) cpSync(new URL("../extension/recorder.js", import.meta.url), join(dir, "recorder.js"));
-  const capture = readFileSync(join(dir, "capture.js"), "utf8");
-  const inspected = capture.replace(/^( *const streams = new Map\(\);.*\n)/m, `$1${CAPTURE_DEBUG}`);
-  if (inspected === capture) throw new Error("capture.js no longer declares `const streams = new Map();`: update CAPTURE_DEBUG");
-  writeFileSync(join(dir, "capture.js"), inspected);
   const manifest = JSON.parse(readFileSync(join(dir, "manifest.json"), "utf8"));
-  manifest.nomusic_test = true;
-  manifest.web_accessible_resources[0].resources.push("recorder.js");
+  if (diagnostics) {
+    if (!existsSync(join(dir, "recorder.js"))) cpSync(new URL("../extension/recorder.js", import.meta.url), join(dir, "recorder.js"));
+    const capture = readFileSync(join(dir, "capture.js"), "utf8");
+    const inspected = capture.replace(/^( *const streams = new Map\(\);.*\n)/m, `$1${CAPTURE_DEBUG}`);
+    if (inspected === capture) throw new Error("capture.js no longer declares `const streams = new Map();`: update CAPTURE_DEBUG");
+    writeFileSync(join(dir, "capture.js"), inspected);
+    manifest.nomusic_test = true;
+    manifest.web_accessible_resources[0].resources.push("recorder.js");
+  }
   for (const entry of [...manifest.content_scripts, ...manifest.web_accessible_resources]) {
     entry.matches.push("http://127.0.0.1/*");
   }
@@ -51,7 +56,8 @@ export function chromePath() {
 }
 
 // `autoplay: false` keeps the browser's real autoplay policy (sound needs a user gesture).
-export async function launch({ headless = true, autoStart = true, autoplay = true } = {}) {
+// The user has turned nomusic on (`consented`) unless a test says otherwise.
+export async function launch({ headless = true, autoStart = true, autoplay = true, consented = true, diagnostics = true } = {}) {
   const profile = mkdtempSync(join(WORK, "profile-"));
   const executablePath = chromePath();
   const browser = await puppeteer.launch({
@@ -72,7 +78,7 @@ export async function launch({ headless = true, autoStart = true, autoplay = tru
     ],
     defaultViewport: { width: 1280, height: 900 },
   });
-  const extension = testExtension();
+  const extension = testExtension({ diagnostics });
   const extensionId = await browser.installExtension(extension);
   // Remove the throwaway profile and extension copy once the browser has exited,
   // or when this script exits first (the browser is stopped then).
@@ -86,18 +92,22 @@ export async function launch({ headless = true, autoStart = true, autoplay = tru
   // The welcome page opens on install; tests do not need it.
   await sleep(500);
   for (const page of await browser.pages()) if (page.url().includes("welcome.html")) await page.close();
-  if (!autoStart) await setAutoStart(browser, extensionId, false);
+  await setSettings(browser, extensionId, { autoStart, consented });
   return { browser, extensionId };
 }
 
-// Change the toolbar setting, as the popup does.
-export async function setAutoStart(browser, extensionId, value) {
+// Change settings, as the popup and the welcome page do.
+export async function setSettings(browser, extensionId, values) {
   const page = await browser.newPage();
   await page.goto(`chrome-extension://${extensionId}/popup.html`);
-  await page.evaluate((value) => chrome.storage.sync.set({ autoStart: value }), value);
-  const stored = await page.evaluate(() => chrome.storage.sync.get("autoStart"));
+  await page.evaluate((values) => chrome.storage.sync.set(values), values);
+  const stored = await page.evaluate((keys) => chrome.storage.sync.get(keys), Object.keys(values));
   await page.close();
-  return stored.autoStart;
+  return stored;
+}
+
+export async function setAutoStart(browser, extensionId, value) {
+  return (await setSettings(browser, extensionId, { autoStart: value })).autoStart;
 }
 
 export async function newPage(browser) {

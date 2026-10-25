@@ -240,3 +240,40 @@ test("removed audio is recorded, and a removed buffer leaves the copy and its su
   assert.equal(env.posted.at(-1).entry.kind, "removeBuffer");
   assert.equal(replay(env, 1).entries.length, 0);
 });
+
+function playShort(env) {
+  const mediaSource = new env.context.MediaSource();
+  env.context.URL.createObjectURL(mediaSource);
+  const sb = mediaSource.addSourceBuffer(WEBM);
+  sb.appendBuffer(INIT);
+  for (const cluster of CLUSTERS) sb.appendBuffer(cluster);
+  return sb;
+}
+
+test("before consent only format headers are kept, and the stream is marked as missed", () => {
+  const env = sandbox();
+  env.control({ type: "consent", consented: false });
+  playShort(env);
+  const { entries, missed } = replay(env, 1);
+  assert.equal(entries.map((e) => e.kind).join(), "buffer,append");
+  assert.equal(entries[1].segment, "init");
+  assert.equal(missed, true);
+});
+
+test("audio kept before the answer is dropped if the answer is no", () => {
+  const env = sandbox();
+  playShort(env);
+  env.control({ type: "consent", consented: false });
+  const { entries, missed } = replay(env, 1);
+  assert.equal(bytesOf(entries), INIT.length);
+  assert.equal(missed, true);
+});
+
+test("with consent the audio is kept", () => {
+  const env = sandbox();
+  env.control({ type: "consent", consented: true });
+  playShort(env);
+  const { entries, missed } = replay(env, 1);
+  assert.equal(entries.filter((e) => e.kind === "append").length, 1 + CLUSTERS.length);
+  assert.equal(missed, false);
+});
