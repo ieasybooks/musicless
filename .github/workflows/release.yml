@@ -1,0 +1,117 @@
+name: Release
+
+# A tag runs the workflow file in the commit the tag points at.
+# Tag a commit that contains this file. A tag on the old backend
+# history does not run this workflow.
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  release:
+    name: Test, package, attest, draft release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    env:
+      NOMUSIC_TEST_DIR: ${{ github.workspace }}/tests/.work
+      # The runner's AppArmor profile blocks Chrome's sandbox.
+      NOMUSIC_NO_SANDBOX: "1"
+      CHROME: /usr/bin/google-chrome
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y ffmpeg
+
+      - name: Build the model and runtime, install the test tools
+        run: ./setup.sh --dev
+
+      - name: Unit tests
+        working-directory: tests
+        run: npm run unit
+
+      - name: Build synthetic test media
+        run: |
+          tests/.venv/bin/python tests/build_media.py synthetic "$NOMUSIC_TEST_DIR/media/synth" 240
+          tests/.venv/bin/python tests/build_media.py long "$NOMUSIC_TEST_DIR/media/long" 25
+
+      - name: Browser tests on local Media Source pages
+        working-directory: tests
+        run: MEDIA_SET=synth QUICK=1 node local.mjs
+
+      - name: Package
+        run: ./scripts/package.sh
+
+      - name: SHA-256
+        run: |
+          cd dist
+          sha256sum nomusic-*.zip > SHA256SUMS
+          cat SHA256SUMS
+
+      - name: Attest the zip and the checksum file
+        id: attest
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: |
+            dist/nomusic-*.zip
+            dist/SHA256SUMS
+
+      - name: Release notes and attestation bundle
+        env:
+          ATTESTATION_URL: ${{ steps.attest.outputs.attestation-url }}
+          BUNDLE: ${{ steps.attest.outputs.bundle-path }}
+        run: |
+          version=$(python3 -c 'import json; print(json.load(open("extension/manifest.json"))["version"])')
+          test "$GITHUB_REF_NAME" = "v$version"
+          cp "$BUNDLE" "dist/nomusic-${version}.attestation.json"
+          VERSION="$version" python3 - <<'PY'
+          import os
+          from pathlib import Path
+          version = os.environ["VERSION"]
+          lines = Path("CHANGELOG.md").read_text().splitlines()
+          start = next(i for i, line in enumerate(lines) if line.startswith(f"## [{version}]"))
+          end = next((i for i in range(start + 1, len(lines)) if lines[i].startswith("## [")), len(lines))
+          body = "\n".join(lines[start:end]).rstrip()
+          url = os.environ.get("ATTESTATION_URL") or ""
+          verify = "\n".join([
+              "",
+              "## Verify",
+              "",
+              "    sha256sum -c SHA256SUMS",
+              "    gh attestation verify nomusic-*.zip --repo IbraheemTuffaha/nomusic",
+              "",
+          ])
+          notes = body + "\n" + verify
+          if url:
+              notes += "\nAttestation: " + url + "\n"
+          Path("dist/release-notes.md").write_text(notes)
+          PY
+
+      - name: Draft GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(python3 -c 'import json; print(json.load(open("extension/manifest.json"))["version"])')
+          gh release create "$GITHUB_REF_NAME" \
+            --repo "$GITHUB_REPOSITORY" \
+            --draft \
+            --title "$GITHUB_REF_NAME" \
+            --notes-file dist/release-notes.md \
+            "dist/nomusic-${version}.zip" \
+            dist/SHA256SUMS \
+            "dist/nomusic-${version}.attestation.json"
