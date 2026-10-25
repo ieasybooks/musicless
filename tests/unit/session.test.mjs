@@ -29,7 +29,7 @@ class Video extends EventTarget {
   }
 }
 
-export function sessionSandbox({ video: props, settings = {}, streams = { "blob:a": 1 }, stretch = async (channels) => ({ channels }) } = {}) {
+function sessionSandbox({ video: props, settings = {}, streams = { "blob:a": 1 }, stretch = async (channels) => ({ channels }) } = {}) {
   let now = 1000;
   const param = () => ({ value: 1, setTargetAtTime() {}, setValueAtTime() {}, linearRampToValueAtTime() {}, cancelScheduledValues() {} });
   const started = [];
@@ -97,7 +97,7 @@ export function sessionSandbox({ video: props, settings = {}, streams = { "blob:
 }
 
 // A separated chunk as the worker sends it.
-export function chunk(k, validFrom = grid.chunkStart(k)) {
+function chunk(k, validFrom = grid.chunkStart(k)) {
   const samples = { length: grid.WINDOW_SAMPLES }; // only its length is read here
   return { type: "chunk", k, validFrom, left: samples, right: samples, timing: {} };
 }

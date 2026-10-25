@@ -33,7 +33,7 @@ test("the hidden frame starts a worker only for the content script's token, once
   assert.equal(frame.workers(), 1, "one connection per frame");
 });
 
-export function engineSandbox({ stored = {} } = {}) {
+function engineSandbox({ stored = {} } = {}) {
   const frames = [];
   const storage = { ...stored };
   const ports = [];

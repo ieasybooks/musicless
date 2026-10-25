@@ -24,7 +24,7 @@ class Port {
   postMessage(message) { this.sent.push(message); }
 }
 
-export function workerSandbox({ supported = true, localModel = null, configure = null } = {}) {
+function workerSandbox({ supported = true, localModel = null, configure = null } = {}) {
   let now = 0;
   const timers = new Set();
   const decoders = [];
