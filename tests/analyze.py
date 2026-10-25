@@ -191,11 +191,14 @@ if "--source" in sys.argv:
         best = int(np.nanargmax(scores))
         lags_m.append((best - EL) * 5)
         corrs_m.append(float(scores[best]))
+    # A paused, held or stalled video makes no sound of its own: silence is right there.
+    page_frames = np.sqrt(np.mean(original[: len(env_out) * HOP].reshape(len(env_out), HOP) ** 2, axis=1))
+    playing = 20 * np.log10(page_frames + 1e-9) > -70
     drops = 0
     per = int(0.5 * 200)
     for i in range(len(env_media) // per):
-        # A paused, held or stalled video freezes the media clock: silence is right there.
-        if db(original[i * per * HOP : (i + 1) * per * HOP]) < -70:
+        # Only windows where the video played (a hold starting mid-window is not a dropout).
+        if np.mean(playing[i * per : (i + 1) * per]) < 0.8:
             continue
         ref_db = 20 * np.log10(np.sqrt(np.mean(env_media[i * per : (i + 1) * per] ** 2)) + 1e-9)
         out_db = 20 * np.log10(np.sqrt(np.mean(env_out[i * per : (i + 1) * per] ** 2)) + 1e-9)
@@ -204,9 +207,6 @@ if "--source" in sys.argv:
     # Silent gaps against the same 1x reference: 30 ms or more of output silence
     # (5 ms frames) while the voice at that media time is clearly there.
     out_frames = np.sqrt(np.mean(output[: len(env_out) * HOP].reshape(len(env_out), HOP) ** 2, axis=1))
-    # A paused, held or stalled video makes no sound of its own: silence is right there.
-    page_frames = np.sqrt(np.mean(original[: len(env_out) * HOP].reshape(len(env_out), HOP) ** 2, axis=1))
-    playing = 20 * np.log10(page_frames + 1e-9) > -70
     voiced = (20 * np.log10(env_media + 1e-9) > -35) & np.isfinite(media_at) & playing
     silent = 20 * np.log10(out_frames + 1e-9) < -70
     media_gaps, run = 0, 0

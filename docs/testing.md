@@ -60,7 +60,12 @@ browser copies and CI containers need `NOMUSIC_NO_SANDBOX=1`. Browsers without
 H.264 and AAC (open-source Chromium) get the VP9/Opus pages automatically.
 
 Results go to `.work/results/<REPORT>.json` and recordings to
-`.work/recordings/`; `NOMUSIC_TEST_DIR` moves the work folder.
+`.work/recordings/`; `NOMUSIC_TEST_DIR` moves the work folder,
+`NOMUSIC_EXTENSION` tests another copy of the extension (such as an unzipped
+release package) and `PORT` lets several browsers run side by side.
+
+`soak.mjs [minutes]` plays a long stream (`LONG_SET`, built with
+`build_media.py long`) and checks that memory stays flat and sync holds.
 
 ## YouTube
 

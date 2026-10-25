@@ -7,7 +7,8 @@ import puppeteer from "puppeteer-core";
 
 const TESTS = new URL(".", import.meta.url).pathname;
 export const WORK = process.env.NOMUSIC_TEST_DIR ?? join(TESTS, ".work");
-const EXTENSION = new URL("../extension/", import.meta.url).pathname;
+// NOMUSIC_EXTENSION tests another copy, e.g. an unzipped release package.
+const EXTENSION = process.env.NOMUSIC_EXTENSION ?? new URL("../extension/", import.meta.url).pathname;
 const ANALYZE = join(TESTS, "analyze.py");
 export const PYTHON = process.env.NOMUSIC_PYTHON ?? join(TESTS, ".venv", "bin", "python");
 const NS = "nomusic";

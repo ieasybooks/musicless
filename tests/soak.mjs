@@ -11,7 +11,8 @@ const report = new Report(process.env.REPORT ?? "soak");
 const server = await serve(MEDIA, 8820);
 const { browser } = await launch();
 const page = await newPage(browser);
-await page.goto("http://127.0.0.1:8820/player.html?media=long&variant=webm-opus&ahead=120");
+const SET = process.env.LONG_SET ?? "long"; // build_media.py long <dir> [minutes]
+await page.goto(`http://127.0.0.1:8820/player.html?media=${SET}&variant=webm-opus&ahead=120`);
 await page.waitForFunction("window.playerReady === true", { timeout: 30000 });
 await page.evaluate(() => { document.querySelector("video").play().catch(() => {}); });
 await waitFor(page, (s) => s.status === "on" && !s.holding, { timeout: 60000, label: "on" });
@@ -29,7 +30,7 @@ for (let minute = 1; minute <= minutes; minute++) {
   });
   console.log(JSON.stringify(samples.at(-1)));
 }
-const a = analyze(await dump(page, 25), "soak", { source: `${MEDIA}/long/webm-opus/audio.webm` });
+const a = analyze(await dump(page, 25), "soak", { source: `${MEDIA}/${SET}/webm-opus/audio.webm` });
 const first = samples[Math.min(2, samples.length - 1)];
 const last = samples.at(-1);
 const growth = last.total_mb - first.total_mb;

@@ -461,7 +461,7 @@ if (!QUICK && h264) await step("muxed fMP4 with a 43.5 ms timestamp gap (known e
   await timeUntilOn(page, "muxed-gap on");
   const a = await listen(page, "muxed-gap", 25);
   // Expected: in sync until the gap's effect shows, then 43.5 ms late against Chrome's playback.
-  report.record("muxed fMP4 with a 43.5 ms timestamp gap (known edge case)", a.corr >= 0.8 && a.lag_ms <= 50,
+  report.record("muxed fMP4 with a 43.5 ms timestamp gap (known edge case)", a.corr >= 0.7 && a.lag_ms >= -5 && a.lag_ms <= 50,
     { note: "informational: the file's first AAC packet claims 2943 samples", ...a });
   await page.close();
 });

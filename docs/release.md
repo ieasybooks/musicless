@@ -16,8 +16,9 @@
    toolbar setting behave.
 6. **Package.** `./scripts/package.sh` writes `dist/nomusic-<version>.zip`
    (reproducible: the same sources give the same SHA-256). Unzip it into an
-   empty folder, load that folder in a clean browser profile, and play one
-   video.
+   empty folder and run the quick suite against it
+   (`NOMUSIC_EXTENSION=<folder> QUICK=1 node local.mjs`), then load that folder
+   in a clean browser profile and play one video.
 7. **Publish.** Upload the zip to the Chrome Web Store and Edge Add-ons
    dashboards with the texts and images in the [store listing](store-listing.md).
    Attach the zip and its SHA-256 to a GitHub release tagged `v<version>`.
