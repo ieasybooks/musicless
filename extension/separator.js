@@ -3,8 +3,15 @@
 // content script hands over a MessagePort and the worker talks to it directly.
 // The worker reaches the shared model through a second port; if shared workers
 // are unavailable it loads its own copy of the model.
-window.addEventListener("message", (event) => {
-  if (event.data?.type !== "nomusic-port" || !event.ports[0]) return;
+//
+// A page can load this frame too and post to it, so the frame takes one port,
+// and only with the token from extension storage that the content script sends.
+let taken = false;
+window.addEventListener("message", async (event) => {
+  if (taken || event.data?.type !== "nomusic-port" || typeof event.data.token !== "string" || !event.ports[0]) return;
+  const { engineToken } = await chrome.storage.local.get("engineToken");
+  if (taken || !engineToken || event.data.token !== engineToken) return;
+  taken = true;
   const worker = new Worker(new URL("./tab-worker.js", import.meta.url), { type: "module", name: "nomusic" });
   const ports = [event.ports[0]];
   try {

@@ -6,10 +6,23 @@
 
 const IDLE_MS = 30 * 1000;
 
+// A secret the hidden frame asks for before it takes a port, so that only
+// nomusic's content script can start a worker there: pages cannot read
+// extension storage (and a page can load the frame itself). Made on first use.
+async function engineToken() {
+  let { engineToken } = await chrome.storage.local.get("engineToken");
+  if (!engineToken) {
+    await chrome.storage.local.set({ engineToken: crypto.randomUUID() });
+    ({ engineToken } = await chrome.storage.local.get("engineToken")); // another tab may have made one too
+  }
+  return engineToken;
+}
+
 export class Engine {
   constructor() {
     this.frame = null;
     this.port = null;
+    this.token = null;
     this.sessions = new Map(); // stream id -> session
     this.model = null; // { seconds, shared } once loaded
     this.connected = false;
@@ -30,8 +43,14 @@ export class Engine {
     frame.style.setProperty("display", "none", "important");
     const channel = new MessageChannel();
     channel.port1.onmessage = (event) => this.dispatch(event.data);
+    const token = (this.token ??= engineToken().catch((error) => {
+      this.token = null; // try again with the next frame
+      throw error;
+    }));
     frame.addEventListener("load", () => {
-      frame.contentWindow.postMessage({ type: "nomusic-port" }, new URL(frame.src).origin, [channel.port2]);
+      token.then((value) => {
+        frame.contentWindow?.postMessage({ type: "nomusic-port", token: value }, new URL(frame.src).origin, [channel.port2]);
+      }, () => {});
     }, { once: true });
     document.documentElement.appendChild(frame);
     this.frame = frame;
