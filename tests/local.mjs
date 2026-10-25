@@ -94,7 +94,7 @@ for (const variant of VARIANTS) {
     memoryOneTab ??= memoryOfChrome(browser);
     const timing = state.timings[0];
     report.record(`${tag} starts automatically, original never heard`,
-      first.originalGain === 0 && state.status === "on" && state.label === "nomusic on" && good(a), {
+      first.originalGain === 0 && state.status === "on" && state.buttonState === "active" && good(a), {
         first_audio_ms: ms, original_gain_at_start: first.originalGain, model_load_s: state.model?.seconds,
         shared_model: state.model?.shared, first_chunk_ms: Math.round(timing?.total ?? -1), ...a,
       });
@@ -215,7 +215,7 @@ for (const variant of VARIANTS) {
     const state = await frameState(page);
     const { paused } = await videoState(page);
     report.record(`${tag} turn off restores the original`,
-      state.status === "off" && state.originalGain === 1 && !paused && state.label === "nomusic",
+      state.status === "off" && state.originalGain === 1 && !paused && state.buttonState === "idle",
       { status: state.status, original_gain: state.originalGain, playing: !paused, label: state.label, ...click });
   });
 
@@ -306,7 +306,7 @@ await step("with automatic removal off, the button starts it", async () => {
   const { ms } = await timeUntilOn(page, "started by click");
   const a = await listen(page, "manual-start", 12);
   report.record("with automatic removal off, the button starts it",
-    before.status === "off" && before.label === "nomusic" && !paused && good(a),
+    before.status === "off" && before.buttonState === "idle" && !paused && good(a),
     { status_before: before.status, original_gain_before: before.originalGain, click_to_audio_ms: ms, ...a });
   await page.close();
 });
@@ -333,7 +333,7 @@ async function failsClosed(name, query, variant, expectReason) {
     const state = await waitFor(page, (s) => s.status === "failed", { timeout: 20000, label: "failure" });
     await sleep(1500);
     const held = await videoState(page);
-    await chooseRecovery(page, "Return to original");
+    await chooseRecovery(page, "original");
     await sleep(2500);
     const after = await frameState(page);
     const resumed = await videoState(page);
@@ -353,7 +353,7 @@ await step("retry after a failure", async () => {
   const page = await open(BASE, "&realm=frame");
   await play(page);
   await waitFor(page, (s) => s.status === "failed", { timeout: 20000, label: "failure" });
-  await chooseRecovery(page, "Retry");
+  await chooseRecovery(page, "retry");
   await sleep(500);
   const retrying = await frameState(page);
   const again = await waitFor(page, (s) => s.status === "failed", { timeout: 20000, label: "failure again" });
@@ -505,7 +505,7 @@ await step("extension removed while playing: fails closed", async () => {
   await sleep(2000);
   const held = await videoState(page);
   const panel = await page.evaluate(() => document.querySelector(".nomusic-recovery:not([hidden]) .nomusic-recovery__message")?.textContent ?? null);
-  await chooseRecovery(page, "Return to original");
+  await chooseRecovery(page, "original");
   await sleep(1500);
   const resumed = await videoState(page);
   report.record("extension removed while playing: fails closed", held.paused && !!panel && !resumed.paused,
