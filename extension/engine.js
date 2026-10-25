@@ -42,10 +42,6 @@ export class Engine {
     this.pinged = 0; // when it was asked and has not answered since
   }
 
-  get running() {
-    return !!this.port;
-  }
-
   ensure() {
     if (this.port) return;
     const frame = document.createElement("iframe");

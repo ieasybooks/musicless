@@ -5,7 +5,7 @@
 // feed/process/flush loop over one chunk and returns a buffer ~1/rate its
 // length with the pitch preserved. See third_party/soundtouch/.
 //
-// Loaded as an ES module (dynamically imported by content.js the first time a
+// Loaded as an ES module (dynamically imported by session.js the first time a
 // session needs it), so the library only loads when pitch-preserve is actually
 // used. The static import below pulls in only Stretch.js + its three buffer
 // helpers — not the package index, which would also drag in the rate
@@ -34,17 +34,9 @@ const WSOLA_OVERLAP_MS = 20;
 const WSOLA_QUICK_SEEK = true;
 
 export class StretchClient {
-  // Kept for API symmetry with the resample fallback path: callers check
-  // ``stretcher?.available`` before using it. The module only exists once its
-  // import resolved, so by the time anyone holds an instance it is available;
-  // a per-call failure is surfaced by stretch() rejecting instead.
-  get available() {
-    return true;
-  }
-
   /** Stretch one chunk to ~1/rate its length, pitch preserved. ``channels``
-   *  is one Float32Array per channel (1 or 2). Resolves ``{channels}``.
-   *  Rejects on an internal error, so the caller can fall back to resampling. */
+   *  is one Float32Array per channel (1 or 2). Resolves ``{channels}``;
+   *  rejects on an internal error (the session then fails closed). */
   async stretch(channels, rate, sampleRate) {
     const inFrames = channels[0].length;
     const stereo = channels.length >= 2;
@@ -62,12 +54,7 @@ export class StretchClient {
     // Short window + ~50% overlap (no verbatim middle) — see the constants above.
     st.setParameters(sampleRate, WSOLA_SEQUENCE_MS, WSOLA_SEEK_MS, WSOLA_OVERLAP_MS);
     st.tempo = rate; // tempo > 1 shortens (faster); pitch is preserved
-    try {
-      st.quickSeek = WSOLA_QUICK_SEEK;
-    } catch (err) {
-      // Older SoundTouch builds may not expose this setter; the default is fine.
-      console.debug("[nomusic] quickSeek unsupported by this SoundTouch build", err);
-    }
+    st.quickSeek = WSOLA_QUICK_SEEK;
 
     const target = Math.max(1, Math.ceil(inFrames / rate));
     const outL = new Float32Array(target);
@@ -107,10 +94,5 @@ export class StretchClient {
 
     const out = outR ? [outL, outR] : [outL];
     return { channels: out };
-  }
-
-  dispose() {
-    // Nothing persistent: the import is browser-cached and Stretch instances
-    // are per-call and garbage-collected.
   }
 }

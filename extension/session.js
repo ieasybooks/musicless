@@ -12,7 +12,7 @@
 // "setup": it reads no audio and leaves the video alone.
 
 import { resumeAudio, routeElement } from "./audio.js";
-import { CHUNK_SECONDS as CHUNK, chunkIndex, chunkStart, OVERLAP_SAMPLES, RATE } from "./grid.js";
+import { chunkIndex, chunkStart, OVERLAP_SAMPLES, RATE } from "./grid.js";
 import { PlaybackIntent } from "./playback-intent.js";
 import { settings } from "./settings.js";
 
@@ -385,8 +385,10 @@ export class Session {
     buffer.copyToChannel(message.right, 1);
     this.chunks.set(message.k, { buffer, validFrom: message.validFrom });
     this.stats.made++;
-    this.stats.timings.push({ k: message.k, ...message.timing });
-    if (this.stats.timings.length > 40) this.stats.timings.shift();
+    if (debugEnabled()) {
+      this.stats.timings.push({ k: message.k, ...message.timing });
+      if (this.stats.timings.length > 40) this.stats.timings.shift();
+    }
     if (this.sources.has(message.k)) this.resync(); // a new version of what is playing
     else if (this.anchor) this.schedule(message.k);
     this.tick();
@@ -494,7 +496,7 @@ export class Session {
     source.onended = () => {
       if (this.sources.get(k) === source) this.sources.delete(k);
     };
-    if (this.stats.firstAudioMs === null) this.stats.firstAudioMs = performance.now() - this.stats.started;
+    if (debugEnabled() && this.stats.firstAudioMs === null) this.stats.firstAudioMs = performance.now() - this.stats.started;
   }
 
   stretch(k, rate) {
@@ -663,8 +665,10 @@ export class Session {
         for (let i = k; i <= k + 2; i++) this.schedule(i);
         const expected = this.anchor.media + (this.graph.ctx.currentTime - this.anchor.ctx) * this.anchor.rate;
         const drift = video.currentTime - expected;
-        this.stats.drift.push(Math.round(drift * 1000));
-        if (this.stats.drift.length > 80) this.stats.drift.shift();
+        if (debugEnabled()) {
+          this.stats.drift.push(Math.round(drift * 1000));
+          if (this.stats.drift.length > 80) this.stats.drift.shift();
+        }
         this.driftStrikes = Math.abs(drift) > DRIFT_LIMIT ? (this.driftStrikes ?? 0) + 1 : 0;
         // A steady small offset (e.g. an anchor taken just before the audio
         // device restarted) is corrected too; single jitter spikes are not.

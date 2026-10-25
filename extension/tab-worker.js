@@ -539,8 +539,6 @@ function stats(stream) {
 function onMessage({ data }) {
   const stream = streams.get(data.streamId);
   switch (data.type) {
-    case "load":
-      break;
     case "stream":
       newStream(data.streamId);
       break;

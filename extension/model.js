@@ -19,8 +19,7 @@ export function createModel() {
   let loading = null;
   let seconds = null;
   let busy = false;
-  let arrivals = 0;
-  const queue = [];
+  const queue = []; // in arrival order
 
   function load() {
     loading ??= (async () => {
@@ -57,11 +56,7 @@ export function createModel() {
           return;
         }
         let best = 0;
-        for (let i = 1; i < queue.length; i++) {
-          const a = queue[i];
-          const b = queue[best];
-          if (a.priority < b.priority || (a.priority === b.priority && a.arrival < b.arrival)) best = i;
-        }
+        for (let i = 1; i < queue.length; i++) if (queue[i].priority < queue[best].priority) best = i;
         const [job] = queue.splice(best, 1);
         try {
           const started = performance.now();
@@ -85,7 +80,7 @@ export function createModel() {
     // magnitude: Float32Array shaped INPUT_SHAPE. Resolves to { mask, ms }.
     run(magnitude, priority) {
       return new Promise((resolve, reject) => {
-        queue.push({ magnitude, priority, arrival: arrivals++, resolve, reject });
+        queue.push({ magnitude, priority, resolve, reject });
         pump();
       });
     },

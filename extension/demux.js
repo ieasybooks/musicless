@@ -99,7 +99,6 @@ class WebmDemuxer {
     this.audio = null;
     this.clusterTime = 0;
     this.config = null;
-    this.configVersion = 0;
   }
 
   reset() {
@@ -160,7 +159,7 @@ class WebmDemuxer {
         if (flags & 0x06) break; // laced blocks are not used for audio by mainstream muxers
         const data = bytes.slice(head + 3, end);
         const time = ((this.clusterTime + relative) * this.scale) / 1e9 + offset;
-        frames.push({ time, duration: opusPacketSeconds(data), data, configVersion: this.configVersion });
+        frames.push({ time, duration: opusPacketSeconds(data), data });
         break;
       }
       default:
@@ -188,10 +187,7 @@ class WebmDemuxer {
       numberOfChannels: track.channels ?? 2,
       description: track.private,
     };
-    if (configKey(config) !== configKey(this.config)) {
-      this.config = config;
-      this.configVersion++;
-    }
+    if (configKey(config) !== configKey(this.config)) this.config = config;
   }
 }
 
@@ -259,7 +255,6 @@ class Mp4Demuxer {
     this.track = null; // { id, timescale, config, defaults, editSeconds }
     this.pendingMoof = null;
     this.config = null;
-    this.configVersion = 0;
   }
 
   reset() {
@@ -343,10 +338,7 @@ class Mp4Demuxer {
         numberOfChannels: channels || 2,
         description: asc,
       };
-      if (configKey(config) !== configKey(this.config)) {
-        this.config = config;
-        this.configVersion++;
-      }
+      if (configKey(config) !== configKey(this.config)) this.config = config;
       return;
     }
   }
@@ -398,7 +390,6 @@ class Mp4Demuxer {
               time: (decodeTime - this.track.editSeconds * this.track.timescale) / this.track.timescale + offset,
               duration: duration / this.track.timescale,
               data: bytes.slice(dataPos, dataPos + size),
-              configVersion: this.configVersion,
             });
           }
           decodeTime += duration;
