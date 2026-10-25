@@ -22,12 +22,14 @@ not offer recording, media downloads, or audio export.
 
 ## Preferences
 
-nomusic stores two values with Chrome's extension storage: the
-automatic-removal setting, and whether you have acknowledged the first-run
-local-audio disclosure (the **Turn on nomusic** choice). Chrome may sync both
-between your own devices when you enable Chrome Sync. The developer does not
-receive them. You can change the automatic-removal setting in the extension's
-toolbar popup. Removing nomusic removes its local extension storage. Any
+nomusic stores three values with Chrome's extension storage: the
+automatic-removal setting; whether you have acknowledged the first-run
+local-audio disclosure (the **Turn on nomusic** choice); and a random token
+that lets nomusic's hidden processing frame accept connections only from
+nomusic itself. Chrome may sync the first two between your own devices when
+you enable Chrome Sync; the token stays on this device. The developer does not
+receive any of them. You can change the automatic-removal setting in the
+extension's toolbar popup. Removing nomusic removes its local extension storage. Any
 synced copy is managed by your browser's sync settings.
 
 ## Other services
@@ -78,10 +80,11 @@ before the store submission. The Latin name nomusic is the product name.
 
 ### التفضيلات
 
-يخزّن nomusic قيمتين في تخزين إضافات Chrome: إعداد الإزالة التلقائية، وما إذا
-كنت قد أقررت بإفصاح المرة الأولى عن المعالجة المحلية (اختيار **تشغيل
-nomusic**). قد يزامن Chrome القيمتين بين أجهزتك عندما تفعّل Chrome Sync، ولا
-يتلقاهما المطوّر. يمكنك تغيير إعداد الإزالة التلقائية من نافذة شريط الأدوات.
+يخزّن nomusic ثلاث قيم في تخزين إضافات Chrome: إعداد الإزالة التلقائية، وما
+إذا كنت قد أقررت بإفصاح المرة الأولى عن المعالجة المحلية (اختيار **تشغيل
+nomusic**)، ورمزًا عشوائيًا يجعل إطار المعالجة المخفي في nomusic لا يقبل الاتصال
+إلا من nomusic نفسه. قد يزامن Chrome القيمتين الأوليين بين أجهزتك عندما تفعّل
+Chrome Sync، أما الرمز فيبقى على هذا الجهاز. ولا يتلقى المطوّر أيًّا منها. يمكنك تغيير إعداد الإزالة التلقائية من نافذة شريط الأدوات.
 إزالة nomusic تزيل تخزينها المحلي. أي نسخة متزامنة يديرها إعداد المزامنة في
 متصفحك.
 

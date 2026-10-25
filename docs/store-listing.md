@@ -18,10 +18,11 @@ labels named below.
 nomusic
 ```
 
-**Summary** (110 of 132 characters; the manifest `description` is this string):
+**Summary** (123 of 132 characters; it is the manifest `description`, from
+`extension/_locales/en/messages.json`, so the package supplies it):
 
 ```text
-Reduce background music and keep voices. For use with YouTube™. Audio is processed locally and never uploaded.
+Removes most of the background music from YouTube™ videos and keeps the voices. Runs on your computer; nothing is uploaded.
 ```
 
 **Language:** English (`default_locale: en`), plus Arabic (`ar`) from the
@@ -97,7 +98,7 @@ Reduce background music during YouTube video playback while preserving voices, b
 **`storage`:**
 
 ```text
-Stores the automatic music-removal preference and whether the user has acknowledged the first-run local-audio disclosure (Turn on nomusic). These settings let nomusic start consistently and avoid repeating the disclosure. Both may sync between the user's own devices through Chrome Sync. No audio, video, browsing-history log, or analytics is stored in extension storage.
+Stores the automatic music-removal preference and whether the user has acknowledged the first-run local-audio disclosure (Turn on nomusic) in chrome.storage.sync, so nomusic starts consistently and does not repeat the disclosure; both may sync between the user's own devices through Chrome Sync. Also stores a random token in chrome.storage.local that the extension's own hidden processing frame checks, so that web pages cannot connect to it. No audio, video, browsing-history log, or analytics is stored in extension storage.
 ```
 
 Re-read this against the keys the extension actually writes. If the
@@ -125,7 +126,7 @@ to match a guessed form.
 **Remote code:** No, I am not using remote code.
 
 ```text
-All executable code and model files are included in the submitted package. nomusic bundles ONNX Runtime Web 1.30.0: vendor/ort.wasm.min.mjs, vendor/ort-wasm-simd-threaded.mjs, and vendor/ort-wasm-simd-threaded.wasm (14,239,897 bytes). It also bundles model/spleeter-2stems.onnx (39,364,028 bytes), an offline Spleeter 2-stem graph with fp16 weight storage.
+All executable code and model files are included in the submitted package. nomusic bundles ONNX Runtime Web 1.30.0: vendor/ort.wasm.min.mjs, vendor/ort-wasm-simd-threaded.mjs, and vendor/ort-wasm-simd-threaded.wasm (14,239,897 bytes). It also bundles model/spleeter-2stems.onnx (39,364,042 bytes), an offline Spleeter 2-stem graph with fp16 weight storage.
 
 model.js imports the packaged ORT module, sets ort.env.wasm.wasmPaths to the packaged vendor directory, sets numThreads = 1 and proxy = false, and loads the model from the extension's own URL. The word "threaded" in the upstream WASM filename does not mean that nomusic enables multiple inference threads.
 
