@@ -18,6 +18,8 @@ Conventions
 
 | Key | English | Arabic | Notes |
 |---|---|---|---|
+| `locale_code` | en | <div dir="rtl">ar</div> | Not translated: the catalog's language code, used for the lang attribute. |
+| `locale_dir` | ltr | <div dir="rtl">rtl</div> | Not translated: the catalog's writing direction. Pages and the in-player UI take their direction from it. |
 | `extension_name` | nomusic | <div dir="rtl">nomusic</div> | Brand; never translated or transliterated. |
 | `extension_description` | Removes most of the background music from YouTube videos and keeps the voices. Runs on your computer; nothing is uploaded. | <div dir="rtl">يزيل معظم الموسيقى الخلفية من مقاطع يوتيوب ويُبقي الأصوات البشرية. يعمل على جهازك، ولا يُرفع أي شيء.</div> | Store summary (132 characters at most). "Voices" = الأصوات البشرية to keep it apart from "sound" (صوت). |
 | `button_setup` | Set up nomusic | <div dir="rtl">إعداد nomusic</div> | Shown before the first-run consent. Verbal noun (مصدر) like Chrome's own buttons. |

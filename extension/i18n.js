@@ -5,9 +5,11 @@
 
 export const t = (key, ...substitutions) => chrome.i18n.getMessage(key, substitutions) || key;
 
-// The UI language and its writing direction, for lang/dir on anything we render
-// (an Arabic nomusic may sit on an English YouTube page, and the reverse).
-const ui = { lang: chrome.i18n.getUILanguage(), dir: chrome.i18n.getMessage("@@bidi_dir") || "ltr" };
+// The catalog's language and writing direction, for lang/dir on anything we
+// render (an Arabic nomusic may sit on an English YouTube page, and the
+// reverse). They come from the catalog itself: Chrome can serve one locale's
+// messages while reporting another as its UI language (seen with --lang).
+const ui = { lang: t("locale_code"), dir: t("locale_dir") === "rtl" ? "rtl" : "ltr" };
 
 export function setLanguage(element) {
   element.lang = ui.lang;

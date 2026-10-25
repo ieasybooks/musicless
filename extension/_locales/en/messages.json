@@ -1,4 +1,6 @@
 {
+  "locale_code": { "message": "en", "description": "Not translated: the language code of this catalog (BCP 47), for the lang attribute." },
+  "locale_dir": { "message": "ltr", "description": "Not translated: the writing direction of this catalog, ltr or rtl." },
   "extension_name": { "message": "nomusic", "description": "The brand. Keep it in Latin letters in every language." },
   "extension_description": {
     "message": "Removes most of the background music from YouTube videos and keeps the voices. Runs on your computer; nothing is uploaded.",

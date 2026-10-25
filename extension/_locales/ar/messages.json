@@ -1,4 +1,6 @@
 {
+  "locale_code": { "message": "ar", "description": "Not translated: the language code of this catalog (BCP 47), for the lang attribute." },
+  "locale_dir": { "message": "rtl", "description": "Not translated: the writing direction of this catalog, ltr or rtl." },
   "extension_name": { "message": "nomusic" },
   "extension_description": { "message": "يزيل معظم الموسيقى الخلفية من مقاطع يوتيوب ويُبقي الأصوات البشرية. يعمل على جهازك، ولا يُرفع أي شيء." },
 
