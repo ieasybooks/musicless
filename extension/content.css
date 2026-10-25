@@ -32,9 +32,11 @@
 .html5-video-player .nomusic-btn { top: 60px; }
 
 /* The button shows and hides with the player's own controls, except while it
-   is working on the video or needs the user. */
+   is working on the video or needs the user. Hidden, it is not a target
+   either: a click there goes to the video, as on the rest of the picture. */
 .ytp-autohide .nomusic-btn:not([data-state="working"]):not([data-state="attention"]):not([data-state="error"]):not(:focus-visible) {
   opacity: 0;
+  pointer-events: none;
 }
 
 /* A two-tone ring stays visible over any picture. */
