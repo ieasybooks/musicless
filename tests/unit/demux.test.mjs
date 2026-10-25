@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
+import vm from "node:vm";
 import { createDemuxer } from "../../extension/demux.js";
 
 const fixture = (name) => new Uint8Array(readFileSync(new URL(`./fixtures/${name}`, import.meta.url)));
@@ -131,4 +132,55 @@ test("fragmented MP4: an edit list's priming is trimmed, an empty edit (version 
   assert.equal(empty[0].time, plain[0].time);
   const primed = parse(MP4, withEditList(2048)).frames;
   assert.ok(Math.abs(primed[0].time - (plain[0].time - 2048 / 44100)) < 1e-9);
+});
+
+// Parses in a context of its own that is stopped after a second, so a parser
+// that loops over a malformed count fails the test instead of hanging it.
+const DEMUX = readFileSync(new URL("../../extension/demux.js", import.meta.url), "utf8").replace(/^export /gm, "");
+function parseWithin(mime, bytes) {
+  const context = vm.createContext({ mime, bytes, Uint8Array, DataView, TextDecoder });
+  vm.runInContext(DEMUX, context);
+  return vm.runInContext("createDemuxer(mime).push(bytes).length", context, { timeout: 1000 });
+}
+
+// The AAC fixture with its first sample table (trun) changed.
+function withFirstTrun({ count, flags }) {
+  const bytes = fixture("aac.mp4");
+  const body = Buffer.from(bytes).indexOf("trun") + 4;
+  const view = new DataView(bytes.buffer, bytes.byteOffset);
+  if (flags !== undefined) view.setUint32(body, flags); // version 0
+  view.setUint32(body + 4, count);
+  return bytes;
+}
+
+test("fragmented MP4: a sample count beyond its table or its data is not followed", () => {
+  const whole = parse(MP4, fixture("aac.mp4")).frames.length;
+  // Per-sample sizes: the table cannot hold four billion entries.
+  const sized = parseWithin(MP4, withFirstTrun({ count: 0xffffffff }));
+  assert.ok(sized > 0 && sized < whole, `${sized} frames: the other fragments still parse`);
+  // Default sizes only: the samples run out with the media data.
+  const defaults = parseWithin(MP4, withFirstTrun({ count: 0xffffffff, flags: 0x000001 }));
+  assert.ok(defaults > 0 && defaults < 2 * whole, `${defaults} frames`);
+});
+
+// The WebM fixture's header (EBML, Segment, Tracks) followed by `body`.
+function afterWebmHeader(body) {
+  const bytes = fixture("opus.webm");
+  const cluster = Buffer.from(bytes).indexOf(Buffer.from([0x1f, 0x43, 0xb6, 0x75]));
+  return new Uint8Array([...bytes.subarray(0, cluster), ...body]);
+}
+
+test("WebM: more frames in one append than any player sends are refused", () => {
+  const cluster = [0x1f, 0x43, 0xb6, 0x75, 0x01, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xe7, 0x81, 0x00];
+  const block = [0xa3, 0x85, 0x81, 0x00, 0x00, 0x80, 0xfc]; // track 1, one 20 ms Opus packet
+  const blocks = new Uint8Array(70000 * block.length).map((_, i) => block[i % block.length]);
+  assert.throws(() => createDemuxer(WEBM).push(afterWebmHeader([...cluster, ...blocks])), /too many audio frames/);
+});
+
+test("WebM: a header with more tracks than any stream has is refused", () => {
+  const ebml = fixture("opus.webm");
+  const header = ebml.subarray(0, 5 + (ebml[4] & 0x7f)); // the EBML element (a one-byte size)
+  const tracks = [0x18, 0x53, 0x80, 0x67, 0x01, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x16, 0x54, 0xae, 0x6b, 0x01, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff];
+  for (let i = 0; i < 100; i++) tracks.push(0xae, 0x80); // empty track entries
+  assert.throws(() => createDemuxer(WEBM).push(new Uint8Array([...header, ...tracks])), /too many WebM tracks/);
 });

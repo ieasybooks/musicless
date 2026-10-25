@@ -18,6 +18,15 @@ export function configKey(config) {
 // An element or box is parsed once complete; one that never completes would
 // grow the queue without end.
 const MAX_PENDING = 32 * 2 ** 20;
+// Bounds on what one append can make the parsers do, far beyond what players
+// send (an append is a few seconds of audio, a stream has one or two tracks).
+const MAX_FRAMES = 65536; // about 20 minutes of audio in a single append
+const MAX_TRACKS = 16;
+
+function addFrame(frames, frame) {
+  if (frames.length >= MAX_FRAMES) throw new Error("too many audio frames in one append");
+  frames.push(frame);
+}
 
 class ByteQueue {
   constructor() {
@@ -117,7 +126,10 @@ class WebmDemuxer {
       if (!size) break;
       const body = pos + id.length + size.length;
       if (DESCEND.has(id.value)) {
-        if (id.value === EBML.trackEntry) this.tracks.push({});
+        if (id.value === EBML.trackEntry) {
+          if (this.tracks.length >= MAX_TRACKS) throw new Error("too many WebM tracks");
+          this.tracks.push({});
+        }
         if (id.value === EBML.cluster) this.clusterTime = 0;
         pos = body;
         continue;
@@ -158,8 +170,9 @@ class WebmDemuxer {
         const flags = bytes[head + 2];
         if (flags & 0x06) break; // laced blocks are not used for audio by mainstream muxers
         const data = bytes.slice(head + 3, end);
+        if (!data.length) break;
         const time = ((this.clusterTime + relative) * this.scale) / 1e9 + offset;
-        frames.push({ time, duration: opusPacketSeconds(data), data });
+        addFrame(frames, { time, duration: opusPacketSeconds(data), data });
         break;
       }
       default:
@@ -302,6 +315,7 @@ class Mp4Demuxer {
       const mdhd = child(bytes, mdia, "mdhd");
       const mdhdVersion = bytes[mdhd.body];
       const timescale = readUint(bytes, mdhd.body + (mdhdVersion ? 20 : 12), mdhd.body + (mdhdVersion ? 24 : 16));
+      if (!timescale) continue;
       const stbl = child(bytes, child(bytes, mdia, "minf"), "stbl");
       const stsd = child(bytes, stbl, "stsd");
       const entry = boxes(bytes, stsd.body + 8, stsd.end)[0];
@@ -376,6 +390,9 @@ class Mp4Demuxer {
           q += 4;
         }
         if (trunFlags & 0x04) q += 4;
+        // The per-sample fields must fit in the box: the count alone could ask for billions.
+        const fields = 4 * [0x100, 0x200, 0x400, 0x800].filter((flag) => trunFlags & flag).length;
+        if (count * fields > trun.end - q) continue;
         // Sample data offset is relative to the moof start; mdat follows the moof directly.
         let dataPos = mdat.start - moofBytes.length + dataOffset;
         for (let i = 0; i < count; i++) {
@@ -385,13 +402,13 @@ class Mp4Demuxer {
           if (trunFlags & 0x200) { size = readUint(moofBytes, q, q + 4); q += 4; }
           if (trunFlags & 0x400) q += 4;
           if (trunFlags & 0x800) q += 4;
-          if (dataPos >= mdat.body && dataPos + size <= mdat.end) {
-            frames.push({
-              time: (decodeTime - this.track.editSeconds * this.track.timescale) / this.track.timescale + offset,
-              duration: duration / this.track.timescale,
-              data: bytes.slice(dataPos, dataPos + size),
-            });
-          }
+          // The samples follow each other in this media data; anything else is not audio we can place.
+          if (!size || !duration || dataPos < mdat.body || dataPos + size > mdat.end) break;
+          addFrame(frames, {
+            time: (decodeTime - this.track.editSeconds * this.track.timescale) / this.track.timescale + offset,
+            duration: duration / this.track.timescale,
+            data: bytes.slice(dataPos, dataPos + size),
+          });
           decodeTime += duration;
           dataPos += size;
         }
