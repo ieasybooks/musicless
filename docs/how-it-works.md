@@ -112,12 +112,17 @@ again once; if that fails too, the video fails closed as above.
 
 ## Memory
 
-The network needs about 500 MB of WebAssembly memory, which a WebAssembly
-instance cannot give back: the memory is freed by ending the worker. So the
-model lives in one shared worker for all tabs; a paused video lets go of it
-after two minutes, and the frame (and with it the worker) is removed 30 s
-after no video needs it. Captured audio is bounded per stream (16 MiB) and per
-page (48 MiB).
+While it works, nomusic adds about 400 MB to the browser (measured with
+tests/memory.mjs in Chrome 156 on Linux). The network's share is about
+240 MiB of WebAssembly memory; ONNX Runtime's parallel execution mode, used
+with one thread, plans its buffers in 48 MiB less than the default mode and
+gives identical masks. A WebAssembly instance cannot give memory back: the memory
+is freed by ending the worker. So the model lives in one shared worker for all
+tabs; a paused video lets go of it after two minutes, and the frame (and with
+it the worker) is removed 30 s after no video needs it, which returns the
+memory (tests/memory.mjs checks both). Captured audio is bounded per stream
+(16 MiB) and per page (48 MiB), and the worker keeps at most 64 MiB of encoded
+audio per video.
 
 ## Browser quirks handled
 
