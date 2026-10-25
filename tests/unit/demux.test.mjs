@@ -99,3 +99,36 @@ test("an element that never completes stops the stream instead of growing withou
     for (let i = 0; i < 40; i++) demuxer.push(new Uint8Array(2 ** 20));
   }, /never completed/);
 });
+
+// The AAC fixture with an edit list (version 1, 64-bit fields) put into its track.
+function withEditList(mediaTime) {
+  const bytes = fixture("aac.mp4");
+  const u32 = (at) => new DataView(bytes.buffer, bytes.byteOffset).getUint32(at);
+  const set32 = (array, at, value) => new DataView(array.buffer).setUint32(at, value);
+  const elst = new Uint8Array(36);
+  set32(elst, 0, 36);
+  elst.set([0x65, 0x6c, 0x73, 0x74, 1, 0, 0, 0, 0, 0, 0, 1], 4); // "elst", version 1, one entry
+  new DataView(elst.buffer).setBigInt64(24, BigInt(mediaTime)); // segment duration 0, then media_time
+  const edts = new Uint8Array(8 + elst.length);
+  set32(edts, 0, edts.length);
+  edts.set([0x65, 0x64, 0x74, 0x73], 4);
+  edts.set(elst, 8);
+  const moov = 28;
+  const trak = 144;
+  const after = trak + 8 + u32(trak + 8); // after tkhd, the trak's first child
+  const out = new Uint8Array(bytes.length + edts.length);
+  out.set(bytes.subarray(0, after));
+  out.set(edts, after);
+  out.set(bytes.subarray(after), after + edts.length);
+  set32(out, moov, u32(moov) + edts.length);
+  set32(out, trak, u32(trak) + edts.length);
+  return out;
+}
+
+test("fragmented MP4: an edit list's priming is trimmed, an empty edit (version 1) trims nothing", () => {
+  const plain = parse(MP4, fixture("aac.mp4")).frames;
+  const empty = parse(MP4, withEditList(-1)).frames;
+  assert.equal(empty[0].time, plain[0].time);
+  const primed = parse(MP4, withEditList(2048)).frames;
+  assert.ok(Math.abs(primed[0].time - (plain[0].time - 2048 / 44100)) < 1e-9);
+});

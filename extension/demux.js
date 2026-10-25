@@ -330,10 +330,10 @@ class Mp4Demuxer {
       const edts = child(bytes, trak, "edts");
       const elst = edts && child(bytes, edts, "elst");
       if (elst && readUint(bytes, elst.body + 4, elst.body + 8) > 0) {
-        const version = bytes[elst.body];
-        const at = elst.body + 8 + (version ? 8 : 4);
-        const mediaTime = version ? readUint(bytes, at, at + 8) : readUint(bytes, at, at + 4);
-        if (mediaTime !== 0xffffffff) editSeconds = mediaTime / timescale;
+        const size = bytes[elst.body] ? 8 : 4; // version 1 has 64-bit fields
+        const at = elst.body + 8 + size;
+        // A negative media time (-1: an empty edit) trims nothing.
+        if (!(bytes[at] & 0x80)) editSeconds = readUint(bytes, at, at + size) / timescale;
       }
       this.track = { id, timescale, defaults: trex.get(id) ?? {}, editSeconds };
       // Live streams repeat the init segment with every fragment: keep one config while it is unchanged.

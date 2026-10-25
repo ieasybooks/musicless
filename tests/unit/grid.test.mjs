@@ -40,3 +40,18 @@ test("the first chunk does not fade in (nothing comes before it)", () => {
   assert.equal(first[0], 1);
   assert.ok(first[WINDOW_SAMPLES - 1] < 0.001);
 });
+
+test("up to the media's end, the chunks that cover it add up to the full level", () => {
+  for (const end of [chunkStart(3) - 0.01, chunkStart(3) + 0.02, chunkStart(3) + (OVERLAP_SAMPLES / RATE) / 2, chunkStart(3) + 1]) {
+    // The page plays chunks 0 to chunkIndex(end); the worker zero-fills each past the end.
+    const last = chunkIndex(end - 0.001);
+    const level = new Float32Array(Math.ceil(end * RATE) + WINDOW_SAMPLES);
+    for (let k = 0; k <= last; k++) {
+      const chunk = new Float32Array(WINDOW_SAMPLES).fill(1);
+      applyFades([chunk], k);
+      for (let i = 0; i < WINDOW_SAMPLES; i++) level[k * STRIDE_SAMPLES + i] += chunk[i];
+    }
+    const endSample = Math.floor(end * RATE);
+    for (let n = 0; n < endSample; n++) assert.ok(Math.abs(level[n] - 1) < 1e-6, `end ${end}: sample ${n} at ${level[n]}`);
+  }
+});
