@@ -1,8 +1,42 @@
 // The content script's side of capture.js: which Media Source URL is which
 // captured stream, and the captured audio entries of streams a session
 // subscribed to. Messages arrive through window.postMessage from the page world.
+//
+// Anything in the page can post those messages, so they are checked before
+// they reach a session and the worker: shapes, types, finite numbers, sizes.
 
 const NS = "nomusic";
+const MAX_ENTRY_BYTES = 16 * 2 ** 20; // capture.js keeps no more than this per stream
+const MAX_ENTRIES = 20000;
+const MAX_URLS = 256;
+const SEGMENTS = new Set(["init", "media", "part"]);
+
+const isId = (value) => Number.isSafeInteger(value) && value > 0;
+
+// A copy of a captured entry with only what nomusic reads, or null if it is malformed.
+export function cleanEntry(entry) {
+  if (typeof entry !== "object" || entry === null) return null;
+  const { kind, bufferId } = entry;
+  if (kind === "end") return { kind };
+  if (!isId(bufferId)) return null;
+  switch (kind) {
+    case "buffer":
+    case "changeType":
+      return typeof entry.mime === "string" && entry.mime.length <= 256 ? { kind, bufferId, mime: entry.mime } : null;
+    case "append": {
+      const { bytes, offset, segment } = entry;
+      // Its own whole buffer: the buffer is what moves on to the worker.
+      const whole = bytes instanceof Uint8Array && bytes.buffer instanceof ArrayBuffer && bytes.byteOffset === 0 &&
+        bytes.byteLength === bytes.buffer.byteLength;
+      return whole && bytes.length <= MAX_ENTRY_BYTES && Number.isFinite(offset) && SEGMENTS.has(segment)
+        ? { kind, bufferId, bytes, offset, segment } : null;
+    }
+    case "abort":
+      return { kind, bufferId };
+    default:
+      return null;
+  }
+}
 
 export class CaptureBus {
   constructor() {
@@ -47,9 +81,14 @@ export class CaptureBus {
   }
 
   receive(data) {
+    if (!isId(data.streamId)) return;
     switch (data.type) {
       case "stream":
-        if (data.url) this.urls.set(data.url, data.streamId);
+        if (typeof data.url === "string" && data.url.startsWith("blob:") && data.url.length <= 2048) {
+          this.urls.delete(data.url);
+          this.urls.set(data.url, data.streamId);
+          if (this.urls.size > MAX_URLS) this.urls.delete(this.urls.keys().next().value);
+        }
         for (const session of this.watchers) session.checkSource();
         break;
       case "closed":
@@ -57,10 +96,17 @@ export class CaptureBus {
         this.subscribers.get(data.streamId)?.onCaptureClosed(data.streamId);
         this.subscribers.delete(data.streamId);
         break;
-      case "replay":
-      case "event":
-        this.subscribers.get(data.streamId)?.onEntries(data.streamId, data.type === "replay" ? data.entries : [data.entry]);
+      case "replay": {
+        if (!Array.isArray(data.entries) || data.entries.length > MAX_ENTRIES) return;
+        const entries = data.entries.map(cleanEntry);
+        if (!entries.includes(null)) this.subscribers.get(data.streamId)?.onEntries(data.streamId, entries);
         break;
+      }
+      case "event": {
+        const entry = cleanEntry(data.entry);
+        if (entry) this.subscribers.get(data.streamId)?.onEntries(data.streamId, [entry]);
+        break;
+      }
       default:
         break;
     }

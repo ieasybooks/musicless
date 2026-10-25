@@ -83,7 +83,6 @@ export class Session {
     this.anchor = null;
     this.sourceUrl = null;
     this.streamId = null;
-    this.closedUrl = null;
     this.attached = false;
     this.asleep = false; // let the engine go while paused; wakes on play, seek or unmute
     this.unknownSince = null;
@@ -201,7 +200,6 @@ export class Session {
     if (url !== this.sourceUrl) {
       this.stopProcessing();
       this.sourceUrl = url;
-      this.closedUrl = null;
       this.failure = null; // a failure belonged to the previous source
       this.stats.firstAudioMs = null;
       // Each new video starts on if the user wants nomusic on every video, or
@@ -209,7 +207,7 @@ export class Session {
       if (url) this.on = settings.autoStart || this.on;
       if (this.on && url) this.startSource();
       else if (this.graph && !this.on) this.graph.original.gain.value = 1;
-    } else if (this.on && !this.failure && !this.streamId && url && url !== this.closedUrl) {
+    } else if (this.on && !this.failure && !this.streamId && url) {
       this.streamId = this.capture.streamFor(url);
       if (this.streamId) this.unknownSince = null;
     }
@@ -287,12 +285,14 @@ export class Session {
     }
   }
 
-  // The player detached this Media Source; a new source follows if it plays on.
+  // The player closed this Media Source. A new one usually follows with a new
+  // URL (checkSource); if the element keeps this URL, a stream that reopens
+  // under it is attached, and without one the session fails closed.
   onCaptureClosed(streamId) {
     if (streamId !== this.streamId) return;
-    this.detach();
-    this.streamId = null;
-    this.closedUrl = this.sourceUrl;
+    this.stopProcessing();
+    this.unknownSince = performance.now();
+    this.tick();
   }
 
   onEngine(message) {
@@ -504,16 +504,21 @@ export class Session {
       return;
     }
     const video = this.video;
+    // Work only while the video can be heard; a paused one is prepared ahead of play.
+    const audible = !video.muted && video.volume > 0;
     if (!this.streamId) {
       // No source at all (between videos): nothing can play, so nothing to hold.
-      if (!this.sourceUrl && this.intent.held) this.intent.release();
+      // A source whose audio is not (or no longer) captured is held meanwhile.
+      if (!this.sourceUrl) {
+        if (this.intent.held) this.intent.release();
+      } else if (this.intent.wantsPlay && !video.ended && audible && (video.readyState >= 3 || this.intent.held)) {
+        this.hold();
+      }
       if (this.unknownSince && performance.now() - this.unknownSince > UNKNOWN_SOURCE_MS) this.fail("uncaptured");
       this.update();
       return;
     }
 
-    // Work only while the video can be heard; a paused one is prepared ahead of play.
-    const audible = !video.muted && video.volume > 0;
     if (!this.attached) {
       if (!audible || video.ended || this.asleep) {
         if (this.intent.held) this.intent.release();
