@@ -46,7 +46,7 @@ the store item:
 - Seek, change speed, turn the player button off and on, and open the
   recovery panel on a video it cannot process.
 - Switch the browser language to Arabic and check right-to-left layout.
-- The extension stays usable at about 450 MB of extra memory while it runs.
+- The extension stays usable at about 400 MB of extra memory while it runs.
 
 ## 2. Keep the old backend, then move main
 

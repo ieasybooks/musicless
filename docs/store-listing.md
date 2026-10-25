@@ -41,7 +41,7 @@ nomusic reduces background music while keeping the voices: speech and singing. C
 How it works
 • Audio separation runs on your computer using a bundled, open-source model. No account or backend service is needed.
 • After you choose Turn on nomusic, automatic removal is on by default. Turn it off in the toolbar if you prefer to start per video.
-• The video may pause briefly at the start or after a seek while clean audio is prepared. The button says Removing music… while that happens.
+• The video may pause briefly at the start or after a seek while the processed audio is prepared. The button says Removing music… while that happens.
 • Click Music removed on the player to hear the original sound, and click Remove music to turn removal back on. Before the first-run choice, the button says Set up nomusic.
 
 Playback controls
@@ -52,9 +52,9 @@ nomusic reads audio that the site's own player has already loaded and processes 
 
 Limits to know
 • Some music may remain, especially quiet background music under speech. Voices can sound less bright. This is not a guarantee of music-free playback.
-• Processing uses one CPU thread and roughly 450–500 MB of memory; performance varies by computer and video.
+• Processing uses one CPU thread and about 400 MB of memory; performance varies by computer and video.
 • Copy-protected videos cannot be processed. When removal fails, the button says Music not removed. The video pauses and the original stays silent until you choose Try again or Play with music. Some failures ask you to Reload page instead. If the browser is waiting for a click before it plays sound, the button says Click to start the sound.
-• Live streams may pause repeatedly at the live edge; playing a little behind it can help.
+• A live stream watched right at its live point keeps pausing. Watching a little behind it reduces the pauses.
 • This extension supports the listed site's desktop players, not phone browsers or other video services.
 
 Free and open source. Code and help: https://github.com/IbraheemTuffaha/nomusic

@@ -56,7 +56,7 @@ The button on the player:
 | What it says | What it means |
 | --- | --- |
 | Remove music | nomusic is off for this video. Click to remove the music. |
-| Removing music… | The clean audio is not ready yet. The video is paused. |
+| Removing music… | The processed audio is not ready yet. The video is paused. |
 | Music removed | The music is removed. Click to hear the original. |
 | Click to start the sound | The browser is waiting for a click before it plays sound. |
 | Music not removed | nomusic could not remove the music. Click to choose. |
@@ -77,15 +77,15 @@ Shorts, live streams, ads and embedded YouTube players work.
 
 ## What to expect
 
-- **Quality.** Voices are kept and instruments removed, but some music can
-  remain. The voice loses some brightness, because sound above 11 kHz is
+- **Quality.** Voices are kept and instrument sounds removed, but some music
+  can remain. The voice loses some brightness, because sound above 11 kHz is
   dropped. This is not a guarantee of music-free playback.
 - **Speed.** Each 12 seconds of audio takes about 2.5 seconds of one processor
   core on a mid-range laptop, so nomusic stays ahead of playback.
-- **Memory.** About 450 MB while it is working, shared by all tabs. It is
+- **Memory.** About 400 MB while it is working, shared by all tabs. It is
   released a few minutes after the last video is paused or closed.
 - **Limits.** YouTube only, on computers. A live stream watched right at its
-  live point keeps pausing. A little behind it plays smoothly.
+  live point keeps pausing. Watching a little behind it reduces the pauses.
 
 ## Privacy
 
