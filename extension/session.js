@@ -183,8 +183,13 @@ export class Session {
     this.update();
   }
 
+  // Whether Retry reloads the page, for the button's label.
+  get retryReloads() {
+    return RELOAD.has(this.failure?.reason);
+  }
+
   retry() {
-    if (RELOAD.has(this.failure?.reason)) {
+    if (this.retryReloads) {
       reloadPage(this.video.currentTime);
       return;
     }

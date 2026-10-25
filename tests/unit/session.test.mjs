@@ -335,6 +335,7 @@ test("chunks kept from an earlier worker play only once the new one has checked 
 test("Retry reloads the page for failures only a reload can help, keeping a watch page's position", () => {
   const watch = sessionSandbox({ video: { currentTime: 75.6 } });
   watch.session.fail("uncaptured");
+  assert.equal(watch.session.retryReloads, true, "what the button says");
   watch.session.retry();
   assert.deepEqual(watch.reloads, ["https://www.youtube.com/watch?v=abc&t=75s"]);
   const embed = sessionSandbox();
@@ -344,6 +345,7 @@ test("Retry reloads the page for failures only a reload can help, keeping a watc
   assert.deepEqual(embed.reloads, ["reload"]);
   const slow = sessionSandbox();
   slow.session.fail("slow");
+  assert.equal(slow.session.retryReloads, false);
   slow.session.retry();
   assert.deepEqual(slow.reloads, [], "other failures try again in place");
   assert.equal(slow.session.failure, null);

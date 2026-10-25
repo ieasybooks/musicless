@@ -18,7 +18,6 @@ const LABELS = {
   failed: ["error", t("button_failed"), t("button_failed_title")],
 };
 const PANEL = { note: t("panel_note"), retry: t("panel_retry"), reload: t("panel_reload"), original: t("panel_original") };
-const RELOAD_REASONS = ["updated", "uncaptured", "engine"]; // retry() reloads the page for these
 
 // Only the user's own clicks operate nomusic, never ones the page dispatches.
 const trusted = (handler) => (event) => {
@@ -107,7 +106,7 @@ export class Button {
       this.shownFailure = session.failure;
       if (session.failure) {
         this.recoveryMessage.textContent = session.failure.message;
-        this.retryBtn.textContent = RELOAD_REASONS.includes(session.failure.reason) ? PANEL.reload : PANEL.retry;
+        this.retryBtn.textContent = session.retryReloads ? PANEL.reload : PANEL.retry;
         this.openRecovery({ focus: true });
       } else {
         this.closeRecovery();
