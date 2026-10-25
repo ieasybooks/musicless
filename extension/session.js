@@ -349,7 +349,7 @@ export class Session {
     } else if (message.type === "unsupported") {
       this.fail(message.reason === "protected" ? "protected" : "codec", message.message);
     } else if (message.type === "error") {
-      this.fail(message.fatal ? "engine" : "error", message.message);
+      this.fail("error", message.message);
     } else if (message.type === "stats") {
       this.workerStats = message;
     }
@@ -499,6 +499,18 @@ export class Session {
     if (debugEnabled() && this.stats.firstAudioMs === null) this.stats.firstAudioMs = performance.now() - this.stats.started;
   }
 
+  unschedule(k) {
+    const source = this.sources.get(k);
+    if (!source) return;
+    try {
+      source.stop();
+    } catch {
+      // already ended
+    }
+    source.disconnect();
+    this.sources.delete(k);
+  }
+
   stretch(k, rate) {
     const chunk = this.chunks.get(k);
     if (!chunk || chunk.stretching === rate) return;
@@ -515,16 +527,7 @@ export class Session {
         chunk.stretching = null;
         if (this.anchor?.rate !== rate) return;
         // Swap a sped-up stand-in for the stretched version from the same point.
-        const standIn = this.sources.get(k);
-        if (standIn?.interim) {
-          try {
-            standIn.stop();
-          } catch {
-            // already ended
-          }
-          standIn.disconnect();
-          this.sources.delete(k);
-        }
+        if (this.sources.get(k)?.interim) this.unschedule(k);
         this.schedule(k);
       })
       .catch((error) => {
@@ -611,6 +614,7 @@ export class Session {
       if (i < k - BEHIND || i > k + AHEAD + 1 || (i >= k && !this.playable(i, i === k ? time : chunkStart(i)))) {
         this.chunks.delete(i);
         forget.push(i);
+        this.unschedule(i); // not heard yet: it starts later than now
       }
     }
     // Ask for the current chunk first (from the playhead), then the ones ahead.

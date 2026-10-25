@@ -228,6 +228,7 @@ test("a chunk ahead that starts late (made after a seek) is asked for again, and
   engine.deliver({ ...chunk(1, grid.chunkStart(1) + 2), streamId: session.workerId }); // made for a playhead 2 s into it
   session.tick();
   assert.equal(session.chunks.has(1), false, "dropped");
+  assert.equal(session.sources.has(1), false, "and not scheduled");
   const want = engine.wants().at(-1);
   assert.deepEqual(plain(want.forget), [1]);
   assert.equal(want.chunks[0].k, 1);

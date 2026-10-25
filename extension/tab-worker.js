@@ -61,6 +61,7 @@ function sharedModel(modelPort) {
   });
   const failed = (message) => {
     clearTimeout(timer);
+    if (fallback) return; // no longer used
     if (!started) {
       settle.reject(new Error(message));
       return;
@@ -87,7 +88,7 @@ function sharedModel(modelPort) {
   }, MODEL_PING_MS);
   modelPort.onmessage = ({ data }) => {
     pinged = 0;
-    if (data.type === "ready") {
+    if (data.type === "ready" && !fallback) {
       clearTimeout(timer);
       started = true;
       settle.resolve(data.seconds);
@@ -499,7 +500,7 @@ async function pump() {
         send({ type: "chunk", streamId: stream.id, k: job.k, validFrom: job.validFrom, left: vocals.left, right: vocals.right, timing },
           [vocals.left.buffer, vocals.right.buffer]);
       } catch (error) {
-        if (streams.get(stream.id) !== stream) continue;
+        if (streams.get(stream.id) !== stream || job.stale) continue;
         // Its session fails closed and drops it; the other streams go on.
         stream.failed = true;
         if (!stream.reported) send({ type: "error", streamId: stream.id, message: `Separation failed: ${error.message}` });
@@ -527,7 +528,7 @@ function stats(stream) {
     wanted: stream?.wanted ?? [],
     done: [...(stream?.done ?? [])],
     frames: list.length,
-    bytes: list.reduce((sum, frame) => sum + frame.data.byteLength, 0),
+    bytes: stream?.bytes ?? 0,
     first: list[0]?.time ?? null,
     last: list.length ? list[list.length - 1].time + list[list.length - 1].duration : null,
     ended: stream?.ended ?? false,

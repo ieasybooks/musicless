@@ -31,7 +31,6 @@
   const TOTAL_LIMIT = 48 * 2 ** 20; // across all streams on the page
   const MAX_ENTRIES = 10000; // per stream; a player's stay far below
   const MAX_STREAMS = 64;
-
   const MAX_HEADER = 256 * 1024; // a format header is a few kilobytes: past this, parts are media
 
   const streamIds = new WeakMap(); // MediaSource -> stream id
