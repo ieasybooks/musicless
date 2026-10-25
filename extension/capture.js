@@ -211,9 +211,7 @@
     }
     if (total <= TOTAL_LIMIT) return;
     for (const stream of streams.values()) {
-      if (stream.bytes <= TOTAL_LIMIT / holding) continue;
-      trim(stream, TOTAL_LIMIT / holding);
-      stream.dropped = true;
+      if (stream.bytes > TOTAL_LIMIT / holding) trim(stream, TOTAL_LIMIT / holding);
     }
   }
 
@@ -288,14 +286,10 @@
       const copy = entry.bytes ? entry.bytes.slice() : null;
       post({ type: "event", streamId: id, entry: { ...entry, bytes: copy } }, copy ? [copy.buffer] : []);
     }
-    if (stream.bytes > STREAM_LIMIT) {
-      trim(stream, STREAM_LIMIT);
-      stream.dropped = true;
-    }
+    if (stream.bytes > STREAM_LIMIT) trim(stream, STREAM_LIMIT);
     if (stream.log.length > MAX_ENTRIES) {
       // Many small appends, or entries without audio piling up (removals).
       trim(stream, stream.bytes / 2);
-      stream.dropped = true;
       const cut = stream.log.length - MAX_ENTRIES / 2;
       if (cut > 0) stream.log = stream.log.filter((e, at) => at >= cut || (e.kind !== "abort" && e.kind !== "remove"));
     }
@@ -424,7 +418,7 @@
       }
       stream.subscribed = true;
       const entries = stream.log.map((entry) => ({ ...entry, bytes: entry.bytes ? entry.bytes.slice() : null }));
-      post({ type: "replay", streamId, dropped: !!stream.dropped, missed: !!stream.missed, entries },
+      post({ type: "replay", streamId, missed: !!stream.missed, entries },
         entries.filter((entry) => entry.bytes).map((entry) => entry.bytes.buffer));
     }
   });

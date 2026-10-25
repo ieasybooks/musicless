@@ -33,8 +33,11 @@ function testExtension({ diagnostics = true } = {}) {
   if (diagnostics) {
     if (!existsSync(join(dir, "recorder.js"))) cpSync(new URL("../extension/recorder.js", import.meta.url), join(dir, "recorder.js"));
     const capture = readFileSync(join(dir, "capture.js"), "utf8");
-    const inspected = capture.replace(/^( *const streams = new Map\(\);.*\n)/m, `$1${CAPTURE_DEBUG}`);
-    if (inspected === capture) throw new Error("capture.js no longer declares `const streams = new Map();`: update CAPTURE_DEBUG");
+    const inspected = capture.replace(/^( *const streams = new Map\(\);.*\n)/m, `$1${CAPTURE_DEBUG}`)
+      .replace(/^( *function trim\(stream, limit\) \{\n)/m, "$1    stream.dropped = true; // (test copy) older audio was let go\n");
+    if (!inspected.includes(CAPTURE_DEBUG) || !inspected.includes("(test copy)")) {
+      throw new Error("capture.js no longer declares `const streams = new Map();` or `function trim(stream, limit) {`: update the harness");
+    }
     writeFileSync(join(dir, "capture.js"), inspected);
     manifest.nomusic_test = true;
     manifest.web_accessible_resources[0].resources.push("recorder.js");

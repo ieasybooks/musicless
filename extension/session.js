@@ -447,7 +447,7 @@ export class Session {
     const video = this.video;
     if (!this.on || this.failure || !this.attached || video.paused || video.seeking || video.readyState < 3) return;
     this.noteClock();
-    this.stats.resyncs++;
+    if (debugEnabled()) this.stats.resyncs++;
     this.recentDrift = [];
     this.trace({ e: "resync", rate: video.playbackRate });
     this.anchor = { ctx: this.graph.ctx.currentTime, media: video.currentTime, rate: video.playbackRate };
@@ -561,7 +561,7 @@ export class Session {
   hold() {
     if (!this.intent.held) {
       this.holdStarted = performance.now();
-      this.stats.holds++;
+      if (debugEnabled()) this.stats.holds++;
       this.trace({ e: "hold" });
     }
     this.intent.hold();

@@ -82,6 +82,7 @@ function replay(env, streamId) {
 }
 
 const bytesOf = (entries) => entries.reduce((sum, entry) => sum + (entry.bytes?.length ?? 0), 0);
+const PASS_BYTES = CLUSTERS.reduce((sum, cluster) => sum + cluster.length, 0); // one pass of the clusters
 
 function demuxReplay(entries) {
   const demuxers = new Map();
@@ -97,16 +98,16 @@ function demuxReplay(entries) {
 test("a long stream keeps only its most recent audio", () => {
   const env = sandbox();
   playLong(env, 12);
-  const { entries, dropped } = replay(env, 1);
-  assert.ok(dropped, "older audio was dropped");
+  const { entries } = replay(env, 1);
+  assert.ok(12 * PASS_BYTES > 120_000, "more than fits was appended");
   assert.ok(bytesOf(entries) <= 120_000 + INIT.length, `${bytesOf(entries)} bytes kept`);
 });
 
 test("the trimmed copy starts with the format header and still decodes", () => {
   const env = sandbox();
   playLong(env, 12);
-  const { entries, dropped } = replay(env, 1);
-  assert.equal(dropped, true);
+  const { entries } = replay(env, 1);
+  assert.ok(bytesOf(entries) < 12 * PASS_BYTES, "older audio was let go");
   const appends = entries.filter((e) => e.kind === "append");
   assert.equal(appends[0].segment, "init", "the init segment was put back in front");
   assert.equal(appends[1].segment, "media", "kept audio starts at a segment boundary");
@@ -134,9 +135,9 @@ test("segments split across appends are trimmed whole", () => {
 test("a short stream is kept whole", () => {
   const env = sandbox();
   playLong(env, 1);
-  const { entries, dropped } = replay(env, 1);
-  assert.equal(dropped, false);
+  const { entries } = replay(env, 1);
   assert.equal(entries.filter((e) => e.kind === "append").length, 1 + CLUSTERS.length);
+  assert.equal(bytesOf(entries), INIT.length + PASS_BYTES);
 });
 
 test("a detached Media Source frees its audio and says so", () => {
@@ -252,8 +253,8 @@ test("a format header split across appends is kept whole when older audio is tri
     sb.timestampOffset = pass * 3;
     for (const cluster of CLUSTERS) sb.appendBuffer(cluster);
   }
-  const { entries, dropped } = replay(env, 1);
-  assert.equal(dropped, true);
+  const { entries } = replay(env, 1);
+  assert.ok(bytesOf(entries) < 12 * PASS_BYTES, "older audio was let go");
   const header = entries.filter((e) => e.kind === "append").slice(0, 2);
   assert.equal(header[0].bytes.length + header[1].bytes.length, INIT.length);
   assert.ok(demuxReplay(entries).length > 100, "the kept audio still decodes");
