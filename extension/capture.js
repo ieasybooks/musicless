@@ -139,8 +139,9 @@
   }
 
   // Drop the oldest appended audio until the stream fits in `limit`. Structural
-  // entries stay. Each buffer's kept data starts at a segment boundary, with its
-  // latest format header put back in front when that was dropped.
+  // entries stay while they mean something for the kept audio. Each buffer's
+  // kept data starts at a segment boundary, with its latest format header put
+  // back in front when that was dropped.
   function trim(stream, limit) {
     const log = stream.log;
     const drop = new Set();
@@ -165,6 +166,7 @@
     }
     const latestHeader = new Map(); // buffer id -> log positions of its latest format header (init and parts)
     const started = new Set();
+    const typeChange = new Map(); // buffer id -> where in `kept` its type change waits for kept audio
     const kept = [];
     for (let at = 0; at < log.length; at++) {
       const entry = log[at];
@@ -176,6 +178,11 @@
       if (drop.has(at)) continue;
       // An abort or removal before a buffer's oldest kept audio no longer means anything.
       if ((entry.kind === "abort" || entry.kind === "remove") && !started.has(entry.bufferId)) continue;
+      // Nor does a type change followed by another before any kept audio.
+      if (entry.kind === "changeType") {
+        if (typeChange.has(entry.bufferId)) kept[typeChange.get(entry.bufferId)] = null;
+        typeChange.set(entry.bufferId, kept.length);
+      }
       if (entry.kind === "append" && !started.has(entry.bufferId)) {
         started.add(entry.bufferId);
         const header = latestHeader.get(entry.bufferId);
@@ -186,9 +193,10 @@
           }
         }
       }
+      if (entry.kind === "append") typeChange.delete(entry.bufferId);
       kept.push(entry);
     }
-    stream.log = kept;
+    stream.log = kept.filter(Boolean);
     stream.bytes = bytes;
   }
 
@@ -207,6 +215,18 @@
       trim(stream, TOTAL_LIMIT / holding);
       stream.dropped = true;
     }
+  }
+
+  // Log positions of a buffer's aborts and type changes since its last append.
+  function resets(log, bufferId) {
+    const found = new Set();
+    for (let at = log.length - 1; at >= 0; at--) {
+      const { kind } = log[at];
+      if (log[at].bufferId !== bufferId) continue;
+      if (kind === "append" || kind === "buffer") break;
+      if (kind === "abort" || kind === "changeType") found.add(at);
+    }
+    return found;
   }
 
   // Without consent: the audio goes, and the stream cannot be read later.
@@ -251,8 +271,16 @@
       stream.missed = true;
       return;
     }
-    // A repeated abort says nothing new.
-    if (entry.kind === "abort" && stream.log.findLast((e) => e.bufferId === entry.bufferId)?.kind === "abort") return;
+    // Between two appends, a type change replaces earlier ones and aborts (it
+    // starts the parser afresh), and an abort after either says nothing new.
+    // Of the stream's ends only the last counts.
+    if (entry.kind === "abort" || entry.kind === "changeType") {
+      const since = resets(stream.log, entry.bufferId);
+      if (entry.kind === "abort" && since.size) return;
+      if (since.size) stream.log = stream.log.filter((e, at) => !since.has(at));
+    } else if (entry.kind === "end") {
+      stream.log = stream.log.filter((e) => e.kind !== "end");
+    }
     if (entry.bytes) stream.bytes += entry.bytes.byteLength;
     stream.log.push(entry);
     if (stream.subscribed) {

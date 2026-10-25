@@ -19,7 +19,7 @@ const INIT = opus.subarray(0, starts[0]);
 const CLUSTERS = starts.map((start, i) => opus.subarray(start, starts[i + 1] ?? opus.length));
 const CLUSTER_SECONDS = 3 / CLUSTERS.length; // only used to space repeats apart
 
-function sandbox({ streamLimit = 120_000, totalLimit = 400_000 } = {}) {
+function sandbox({ streamLimit = 120_000, totalLimit = 400_000, maxEntries = 10000 } = {}) {
   const posted = [];
   const listeners = [];
   class MediaSource {
@@ -36,6 +36,7 @@ function sandbox({ streamLimit = 120_000, totalLimit = 400_000 } = {}) {
     this.appended += data?.byteLength ?? 0;
   };
   SourceBuffer.prototype.abort = function () {};
+  SourceBuffer.prototype.changeType = function () {};
   SourceBuffer.prototype.remove = function (start, end) { if (!(end > start)) throw new TypeError("bad range"); };
   MediaSource.prototype.removeSourceBuffer = function () {};
   let urls = 0;
@@ -47,7 +48,8 @@ function sandbox({ streamLimit = 120_000, totalLimit = 400_000 } = {}) {
   };
   context.window = context;
   vm.createContext(context);
-  const code = SOURCE.replace("16 * 2 ** 20", String(streamLimit)).replace("48 * 2 ** 20", String(totalLimit));
+  const code = SOURCE.replace("16 * 2 ** 20", String(streamLimit)).replace("48 * 2 ** 20", String(totalLimit))
+    .replace("MAX_ENTRIES = 10000", `MAX_ENTRIES = ${maxEntries}`);
   vm.runInContext(code, context);
   // Inside the sandbox `window` is its global proxy: messages must come from it.
   const self = vm.runInContext("window", context);
@@ -85,7 +87,7 @@ function demuxReplay(entries) {
   const demuxers = new Map();
   const frames = [];
   for (const entry of entries) {
-    if (entry.kind === "buffer") demuxers.set(entry.bufferId, createDemuxer(entry.mime));
+    if (entry.kind === "buffer" || entry.kind === "changeType") demuxers.set(entry.bufferId, createDemuxer(entry.mime));
     else if (entry.kind === "abort") demuxers.get(entry.bufferId).reset();
     else if (entry.kind === "append") frames.push(...demuxers.get(entry.bufferId).push(entry.bytes, entry.offset));
   }
@@ -386,4 +388,32 @@ test("with consent, an append holding a header and audio is kept and decodes as 
   assert.equal(missed, false);
   assert.equal(bytesOf(entries), opus.length);
   assert.deepEqual(demuxReplay(entries).map((f) => f.time), createDemuxer(WEBM).push(opus).map((f) => f.time));
+});
+
+test("type changes, aborts and ends do not pile up, alone or between appends", () => {
+  const MP4 = 'audio/mp4; codecs="mp4a.40.2"';
+  const env = sandbox({ maxEntries: 20 });
+  const mediaSource = new env.context.MediaSource();
+  env.context.URL.createObjectURL(mediaSource);
+  const sb = mediaSource.addSourceBuffer(WEBM);
+  for (let i = 0; i < 50; i++) {
+    sb.changeType(i % 2 ? MP4 : WEBM);
+    sb.abort();
+    mediaSource.endOfStream();
+  }
+  assert.equal(replay(env, 1).entries.map((e) => `${e.kind}:${e.mime ?? ""}`).join(), `buffer:${WEBM},changeType:${MP4},end:`);
+  // Each type change followed by its audio: the oldest go with that audio.
+  for (let pass = 0; pass < 50; pass++) {
+    sb.changeType(WEBM);
+    sb.timestampOffset = pass * 3;
+    sb.appendBuffer(INIT);
+    for (const cluster of CLUSTERS) sb.appendBuffer(cluster);
+    mediaSource.endOfStream();
+  }
+  const { entries } = replay(env, 1);
+  assert.ok(entries.length <= 20, `${entries.length} entries`);
+  assert.ok(entries.filter((e) => e.kind === "changeType").length <= 4);
+  const frames = demuxReplay(entries);
+  assert.ok(frames.length > 0, "the kept audio still decodes");
+  assert.ok(Math.abs(frames.at(-1).time + frames.at(-1).duration - 50 * 3) < 0.05, "up to the newest audio");
 });
