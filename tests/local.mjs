@@ -518,6 +518,8 @@ await step("two tabs share one model", async () => {
   await seek(second, 60);
   await play(second);
   const { ms, state } = await timeUntilOn(second, "second tab");
+  // A video still buffering after the seek is not held yet, and shows "on" before its audio.
+  await settled(second, "second tab with the next chunk ready");
   await sleep(8000);
   const memory = memoryOfChrome(browser);
   const a1 = analyze(await dump(first, 7), "tab-1", { source });
