@@ -408,6 +408,34 @@ test("while the browser keeps the sound from playing, the video is held (not fai
   }
 });
 
+test("if the sound still cannot start shortly after a click, the session fails closed with a way out", () => {
+  const blocked = () => {
+    const env = sessionSandbox({ video: { currentTime: 3 } });
+    env.engine.deliver({ ...chunk(0), streamId: env.session.workerId });
+    env.engine.deliver({ ...chunk(1), streamId: env.session.workerId });
+    env.ctx.state = "interrupted";
+    env.session.tick();
+    assert.equal(env.session.status, "blocked");
+    env.session.toggle(); // "Click to start the sound"
+    return env;
+  };
+  const stuck = blocked(); // the context does not start
+  stuck.advance(2000);
+  stuck.session.tick();
+  assert.equal(stuck.session.failure, null, "it gets a moment");
+  stuck.advance(1500);
+  stuck.session.tick();
+  assert.equal(stuck.session.failure?.reason, "audio");
+  assert.equal(stuck.session.status, "failed");
+  assert.equal(stuck.session.intent.held, true, "still silent and paused until the user chooses");
+  const started = blocked(); // the click lets it play
+  started.ctx.state = "running";
+  started.advance(4000);
+  started.session.tick();
+  assert.equal(started.session.failure, null);
+  assert.equal(started.session.status, "on");
+});
+
 test("the user's own choice does not carry over to the next video", () => {
   const { session, video, capture } = sessionSandbox();
   session.toggle(); // off for this video

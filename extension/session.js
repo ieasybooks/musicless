@@ -27,6 +27,7 @@ const HOLD_LIMIT_MS = 30000;
 const UNKNOWN_SOURCE_MS = 2000;
 const STALL_MS = 400; // playing, but the clock has not moved for this long
 const SLEEP_MS = 2 * 60 * 1000; // paused, ended or muted this long: let the engine go
+const AUDIO_START_MS = 3000; // after the user's click, the sound starts well within this
 const FADE_SECONDS = 0.004; // time constant of the fade when playback stops
 const OVERLAP_SECONDS = OVERLAP_SAMPLES / RATE;
 
@@ -103,6 +104,7 @@ export class Session {
     this.idleSince = null;
     this.engineLosses = 0;
     this.holdStarted = 0;
+    this.blockedClick = null; // when the user clicked to start the sound, while it has not started
     this.lastClock = -1;
     this.lastClockChange = 0;
     this.ticks = 0;
@@ -157,6 +159,7 @@ export class Session {
     this.userChoice = true;
     if (this.status === "blocked") {
       resumeAudio(); // the click itself lets the page play sound again
+      this.blockedClick ??= performance.now();
       return;
     }
     if (this.failure) return;
@@ -247,6 +250,7 @@ export class Session {
   startSource() {
     this.stopProcessing();
     this.holdStarted = performance.now(); // a hold carried over from before gets a fresh deadline
+    this.blockedClick = null;
     this.engineLosses = 0;
     const url = this.sourceUrl;
     this.stats.started = performance.now();
@@ -649,6 +653,13 @@ export class Session {
     // or while the browser keeps the audio from playing (until a click).
     // A held video waits for a few seconds of audio, not to be held again at once.
     const blocked = this.graph.ctx.state !== "running";
+    // Still no sound after the user's click (an audio device that stays gone,
+    // a browser that refuses): fail closed, so the panel offers a way out.
+    if (!blocked) this.blockedClick = null;
+    else if (this.blockedClick !== null && performance.now() - this.blockedClick > AUDIO_START_MS) {
+      this.fail("audio", "the sound did not start after a click");
+      return;
+    }
     const lead = this.intent.held ? 3 : 0.5;
     const needed = !blocked && this.playable(k, time) &&
       (k >= last || time < chunkStart(k + 1) - lead || this.playable(k + 1, chunkStart(k + 1)));
