@@ -27,7 +27,8 @@ const MODEL_SILENT_MS = 30000; // longer than the shared model ever runs one job
 
 let port = null;
 let model = null;
-const streams = new Map(); // stream id -> { id, buffers, frames, ended, duration, wanted, done, playing, position }
+// stream id -> { id, buffers, frames, removed, bytes, ended, duration, wanted, done, playing, position }
+const streams = new Map();
 let busy = false;
 let current = null; // the job being separated
 const supported = new Map(); // decoder config -> whether this browser decodes it (a promise)
@@ -148,8 +149,8 @@ function loadModel() {
 
 function newStream(id) {
   const stream = {
-    id, buffers: new Map(), frames: [], bytes: 0, ended: false, duration: Infinity,
-    wanted: [], done: new Set(), playing: false, position: 0,
+    id, buffers: new Map(), frames: [], removed: [], bytes: 0, ended: false, duration: Infinity,
+    wanted: [], done: new Map(), playing: false, position: 0, // done: k -> where its audio was cut by the stream's end
   };
   streams.set(id, stream);
   return stream;
@@ -158,52 +159,78 @@ function newStream(id) {
 const sameFrame = (a, b) => Math.abs(a.time - b.time) < 1e-4 && a.data.length === b.data.length &&
   a.data.every((byte, i) => byte === b.data[i]);
 
+// Index of the first frame at or after `time` in a list sorted by time.
+function firstFrom(list, time) {
+  let lo = 0;
+  let hi = list.length;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (list[mid].time < time - 1e-4) lo = mid + 1;
+    else hi = mid;
+  }
+  return lo;
+}
+
+const inWindow = (k, from, to) => chunkStart(k) + GAP_TOLERANCE < to && chunkStart(k) + WINDOW_SECONDS - GAP_TOLERANCE > from;
+const widen = (span, from, to) => (span ? [Math.min(span[0], from), Math.max(span[1], to)] : [from, to]);
+
 // Frames stay sorted by time. As in the browser's own buffer, newer audio
 // replaces the frames it overlaps: appending the same audio again changes
-// nothing, other audio there (another audio track) replaces it. Returns the
-// span of time with new or different audio, if any.
+// nothing (also where the player removed it before), other audio there
+// (another audio track) replaces it. Returns the spans of time with different
+// audio and with audio where there was none.
 function addFrames(stream, buffer, frames) {
   const list = stream.frames;
-  let from = Infinity;
-  let to = -Infinity;
+  const spans = { replaced: null, added: null };
   for (const frame of frames) {
     frame.buffer = buffer;
     const end = frame.time + frame.duration;
-    let lo = 0;
-    let hi = list.length;
-    while (lo < hi) {
-      const mid = (lo + hi) >> 1;
-      if (list[mid].time < frame.time - 1e-4) lo = mid + 1;
-      else hi = mid;
-    }
-    hi = lo;
+    const lo = firstFrom(list, frame.time);
+    let hi = lo;
     while (hi < list.length && list[hi].time < end - 1e-4) hi++;
     if (hi === lo + 1 && sameFrame(list[lo], frame)) continue;
-    from = Math.min(from, frame.time);
-    to = Math.max(to, end, hi > lo ? list[hi - 1].time + list[hi - 1].duration : end);
+    let kind = hi > lo ? "replaced" : "added";
+    if (kind === "added") {
+      const at = firstFrom(stream.removed, frame.time);
+      let past = at;
+      while (past < stream.removed.length && stream.removed[past].time < end - 1e-4) past++;
+      const removed = stream.removed.splice(at, past - at);
+      if (removed.length) kind = removed.length === 1 && sameFrame(removed[0], frame) ? null : "replaced";
+    }
+    if (kind) spans[kind] = widen(spans[kind], frame.time, hi > lo ? Math.max(end, list[hi - 1].time + list[hi - 1].duration) : end);
     for (const replaced of list.splice(lo, hi - lo, frame)) stream.bytes -= replaced.data.length;
     stream.bytes += frame.data.length;
   }
-  return from < to ? [from, to] : null;
+  return spans;
 }
 
-// Frames of `buffer` starting in [start, end): audio the player removed.
+// Frames of `buffer` starting in [start, end): audio the player removed. In
+// the windows of made chunks they are remembered, so that the same audio
+// appended again (a player refilling its buffer) changes nothing.
 function removeFrames(stream, buffer, start, end) {
-  stream.frames = stream.frames.filter((frame) => {
-    const kept = frame.buffer !== buffer || frame.time < start || frame.time >= end;
-    if (!kept) stream.bytes -= frame.data.length;
-    return kept;
-  });
+  const kept = [];
+  const gone = [];
+  for (const frame of stream.frames) {
+    if (frame.buffer !== buffer || frame.time < start || frame.time >= end) {
+      kept.push(frame);
+    } else {
+      stream.bytes -= frame.data.length;
+      if ([...stream.done.keys()].some((k) => inWindow(k, frame.time, frame.time + frame.duration))) gone.push(frame);
+    }
+  }
+  stream.frames = kept;
+  if (gone.length) stream.removed = [...stream.removed, ...gone].sort((a, b) => a.time - b.time);
 }
 
-// Audio changed in [from, to): chunks made from what was there before must be
-// made again. The page drops them and asks again; one being made now is dropped.
-// A window counts as covered to within GAP_TOLERANCE of its edges, so audio
-// appended right after it does not change it.
-function invalidate(stream, [from, to]) {
-  const overlaps = (k) => chunkStart(k) + GAP_TOLERANCE < to && chunkStart(k) + WINDOW_SECONDS - GAP_TOLERANCE > from;
-  if (current?.stream === stream && overlaps(current.k)) current.stale = true;
-  const changed = [...stream.done].filter(overlaps);
+// Audio changed: chunks made from what was there before must be made again.
+// The page drops them and asks again; one being made now is dropped. Other
+// audio changes a chunk; audio where there was none only changes one that was
+// cut short by the end of the stream (which was not the end after all).
+function invalidate(stream, { replaced, added }) {
+  const changes = (k, cut) => (replaced && inWindow(k, ...replaced)) ||
+    (added && added[1] > cut + GAP_TOLERANCE && inWindow(k, ...added));
+  if (current?.stream === stream && changes(current.k, current.cut)) current.stale = true;
+  const changed = [...stream.done].filter(([k, cut]) => changes(k, cut)).map(([k]) => k);
   for (const k of changed) stream.done.delete(k);
   if (changed.length) send({ type: "changed", streamId: stream.id, chunks: changed });
 }
@@ -266,8 +293,7 @@ function onEntry(stream, entry) {
         decodable(config).then((ok) => ok || report(stream, "codec", `This browser cannot decode this video's audio (${config.codec}).`));
       }
       for (const frame of frames) frame.config = config;
-      const changed = addFrames(stream, buffer, frames);
-      if (changed) invalidate(stream, changed);
+      invalidate(stream, addFrames(stream, buffer, frames));
     } else if (buffer.demuxer.unsupported) {
       report(stream, "codec", `This video's audio format (${buffer.demuxer.unsupported}) is not supported.`);
     }
@@ -343,7 +369,7 @@ function ready(stream, k, from) {
   // page plays the chunk only from where its audio starts.
   if (runStart > Math.max(from, start, 0) + LEAD_TOLERANCE) return null;
   const late = from > start && runStart > start + GAP_TOLERANCE;
-  return { range: [first, last], validFrom: late ? runStart : start };
+  return { range: [first, last], validFrom: late ? runStart : start, cut: stop < end ? stop : Infinity };
 }
 
 // Decodes frames of one decoder config. Output is placed at the rate it comes
@@ -492,7 +518,7 @@ async function pump() {
   try {
     for (let job = nextJob(); job; job = nextJob()) {
       const { stream } = job;
-      stream.done.add(job.k);
+      stream.done.set(job.k, job.cut);
       current = job;
       try {
         const { vocals, timing } = await separate(stream, job);
@@ -526,7 +552,7 @@ function stats(stream) {
     streamId: stream?.id,
     runs: runs.slice(0, 20).map(([a, b]) => [+a.toFixed(2), +b.toFixed(2)]),
     wanted: stream?.wanted ?? [],
-    done: [...(stream?.done ?? [])],
+    done: [...(stream?.done.keys() ?? [])],
     frames: list.length,
     bytes: stream?.bytes ?? 0,
     first: list[0]?.time ?? null,
@@ -560,7 +586,8 @@ function onMessage({ data }) {
       // Chunks the page evicted can be separated again when it asks later; the
       // ones it has (also from before this worker) are watched for changes.
       for (const k of data.forget ?? []) stream.done.delete(k);
-      for (const k of data.have ?? []) stream.done.add(k);
+      for (const k of data.have ?? []) if (!stream.done.has(k)) stream.done.set(k, Infinity);
+      stream.removed = stream.removed.filter((frame) => [...stream.done.keys()].some((k) => inWindow(k, frame.time, frame.time + frame.duration)));
       evict(stream);
       break;
     case "stats":

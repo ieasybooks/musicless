@@ -129,8 +129,7 @@ export function workerSandbox({ supported = true, localModel = null, configure =
       const stream = inside.streams.get(id);
       const buffer = stream.buffers.get(9) ?? stream.buffers.set(9, { id: 9 }).get(9);
       for (const frame of frames) frame.config ??= config;
-      const changed = inside.addFrames(stream, buffer, frames);
-      if (changed) inside.invalidate(stream, changed);
+      inside.invalidate(stream, inside.addFrames(stream, buffer, frames));
       w.send({ type: "entries", streamId: id, entries: [] }); // lets the worker look for work
     },
     errors() { return content.sent.filter((message) => message.type === "error"); },
@@ -339,13 +338,35 @@ test("removed audio is not separated again; other audio appended there changes t
   const w = await madeChunk0();
   w.entry(1, { kind: "remove", bufferId: 2, start: 0, end: Infinity });
   await w.advance();
-  assert.deepEqual(w.changed(), [], "a removal alone changes no chunk (the player frees memory this way)");
-  w.want(1, [{ k: 0, from: 0 }], { forget: [0] });
+  assert.deepEqual(w.changed(), [], "a removal alone changes no chunk (players free memory this way)");
+  w.want(1, [{ k: 1, from: grid.chunkStart(1) }], { position: 5 });
+  w.feed(1, 9, { from: 15, header: false });
   await w.advance();
-  assert.equal(w.runs().length, 1, "no audio left to separate");
-  w.feed(1, 15, { header: false, other: true });
+  assert.equal(w.runs().length, 1, "nothing left to separate chunk 1 from");
+  w.feed(1, 15, { header: false, other: true }); // another track where the removed audio was
   await w.advance();
-  assert.equal(w.runs().length, 2, "the new audio is separated");
+  assert.deepEqual(w.changed(), [[0]]);
+});
+
+test("removed audio appended again unchanged (a player refilling its buffer) changes nothing", async () => {
+  const w = await madeChunk0();
+  w.entry(1, { kind: "remove", bufferId: 2, start: 2 * PASS_SECONDS, end: Infinity });
+  w.feed(1, 9.5, { from: 2 * PASS_SECONDS, header: false });
+  await w.advance();
+  assert.deepEqual(w.changed(), []);
+  assert.equal(w.runs().length, 1, "nothing made again");
+});
+
+test("the replay of the same audio after a wake does not change the chunks the page has", async () => {
+  const w = workerSandbox();
+  w.start();
+  w.ready();
+  w.stream(1);
+  w.send({ type: "want", streamId: 1, chunks: [{ k: 1, from: grid.chunkStart(1) }], forget: [], have: [0], duration: 600, playing: false, position: 5 });
+  w.feed(1, 27); // the capture's copy, replayed to the new worker
+  await w.advance();
+  assert.deepEqual(w.changed(), []);
+  assert.equal(w.runs().length, 1, "only the chunk it asked for");
 });
 
 test("a removed buffer's audio is gone", async () => {
