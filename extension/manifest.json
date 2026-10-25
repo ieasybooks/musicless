@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "nomusic",
+  "name": "__MSG_extension_name__",
   "version": "1.0.0",
-  "description": "Removes the background music from YouTube videos and keeps the voices. Everything runs on your computer.",
+  "description": "__MSG_extension_description__",
+  "default_locale": "en",
   "minimum_chrome_version": "111",
   "permissions": ["storage"],
   "icons": {
@@ -13,7 +14,7 @@
   },
   "action": {
     "default_popup": "popup.html",
-    "default_title": "nomusic",
+    "default_title": "__MSG_extension_name__",
     "default_icon": {
       "16": "icons/icon-16.png",
       "32": "icons/icon-32.png",
@@ -50,6 +51,7 @@
         "capture-bus.js",
         "engine.js",
         "grid.js",
+        "i18n.js",
         "playback-intent.js",
         "recorder.js",
         "session.js",
