@@ -182,7 +182,12 @@ export class Button {
   positionPanel() {
     if (this.recovery.hidden) return;
     const host = document.fullscreenElement ?? document.body;
-    if (this.recovery.parentElement !== host) host.appendChild(this.recovery);
+    if (this.recovery.parentElement !== host) {
+      // Moving the panel blurs whatever is focused inside it: focus it again.
+      const focused = this.recovery.contains(document.activeElement) ? document.activeElement : null;
+      host.appendChild(this.recovery);
+      focused?.focus();
+    }
     const pill = this.el.isConnected && this.el.style.display !== "none";
     const rect = (pill ? this.el : this.video).getBoundingClientRect();
     const { offsetWidth: width, offsetHeight: height } = this.recovery;
