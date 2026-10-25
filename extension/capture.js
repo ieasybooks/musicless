@@ -18,8 +18,8 @@
 // accepted, and swallows any error of its own.
 //
 // Before the user turns nomusic on, only format headers are kept (any audio
-// read later needs them). The content script says which as soon as it knows;
-// until then audio is kept, and dropped if the answer is no.
+// read later needs them). That holds until the content script has said so,
+// too: audio is kept only once it is known that the user turned nomusic on.
 
 (() => {
   if (window.__nomusicCapture) return;
@@ -265,7 +265,7 @@
   function record(id, entry) {
     const stream = streams.get(id);
     if (!stream) return;
-    if (entry.kind === "append" && !entry.header && consented === false) {
+    if (entry.kind === "append" && !entry.header && consented !== true) {
       stream.missed = true;
       return;
     }

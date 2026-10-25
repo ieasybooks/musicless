@@ -19,7 +19,8 @@ const INIT = opus.subarray(0, starts[0]);
 const CLUSTERS = starts.map((start, i) => opus.subarray(start, starts[i + 1] ?? opus.length));
 const CLUSTER_SECONDS = 3 / CLUSTERS.length; // only used to space repeats apart
 
-function sandbox({ streamLimit = 120_000, totalLimit = 400_000, maxEntries = 10000 } = {}) {
+// `consented`: the content script's answer, sent at once (null: not yet).
+function sandbox({ streamLimit = 120_000, totalLimit = 400_000, maxEntries = 10000, consented = true } = {}) {
   const posted = [];
   const listeners = [];
   class MediaSource {
@@ -56,6 +57,7 @@ function sandbox({ streamLimit = 120_000, totalLimit = 400_000, maxEntries = 100
   const control = (message) => {
     for (const fn of listeners) fn({ source: self, data: { nomusic: "control", ...message } });
   };
+  if (consented !== null) control({ type: "consent", consented });
   return { context, posted, control };
 }
 
@@ -288,8 +290,7 @@ function playShort(env) {
 }
 
 test("before consent only format headers are kept, and the stream is marked as missed", () => {
-  const env = sandbox();
-  env.control({ type: "consent", consented: false });
+  const env = sandbox({ consented: false });
   playShort(env);
   const { entries, missed } = replay(env, 1);
   assert.equal(entries.map((e) => e.kind).join(), "buffer,append");
@@ -297,18 +298,21 @@ test("before consent only format headers are kept, and the stream is marked as m
   assert.equal(missed, true);
 });
 
-test("audio kept before the answer is dropped if the answer is no", () => {
-  const env = sandbox();
-  playShort(env);
-  env.control({ type: "consent", consented: false });
+test("before the answer is known, only format headers are kept too", () => {
+  const env = sandbox({ consented: null }); // storage has not answered yet
+  const sb = playShort(env);
+  assert.equal(bytesOf(replay(env, 1).entries), INIT.length);
+  assert.equal(replay(env, 1).missed, true);
+  env.control({ type: "consent", consented: true });
+  sb.timestampOffset = 3;
+  for (const cluster of CLUSTERS) sb.appendBuffer(cluster);
   const { entries, missed } = replay(env, 1);
-  assert.equal(bytesOf(entries), INIT.length);
-  assert.equal(missed, true);
+  assert.equal(bytesOf(entries), INIT.length + PASS_BYTES, "audio is kept once the answer is yes");
+  assert.equal(missed, true, "the audio before it went by");
 });
 
 test("with consent the audio is kept", () => {
-  const env = sandbox();
-  env.control({ type: "consent", consented: true });
+  const env = sandbox({ consented: true });
   playShort(env);
   const { entries, missed } = replay(env, 1);
   assert.equal(entries.filter((e) => e.kind === "append").length, 1 + CLUSTERS.length);
@@ -337,8 +341,7 @@ test("before consent, an append holding a header and audio keeps only the header
   const aac = new Uint8Array(readFileSync(new URL("./fixtures/aac.mp4", import.meta.url)));
   const moof = Buffer.from(aac).indexOf("moof") - 4;
   for (const [bytes, header, mime] of [[opus, INIT, WEBM], [aac, aac.subarray(0, moof), 'audio/mp4; codecs="mp4a.40.2"']]) {
-    const env = sandbox();
-    env.control({ type: "consent", consented: false });
+    const env = sandbox({ consented: false });
     appendIn(env, bytes, [bytes.length], mime); // the whole file in one append
     const { entries, missed } = replay(env, 1);
     assert.deepEqual(keptHeader(entries), Buffer.from(header));
@@ -348,8 +351,7 @@ test("before consent, an append holding a header and audio keeps only the header
 
 test("before consent, a header and audio split at any byte keep only the header", () => {
   for (const slices of [[7], [16, 333], [INIT.length - 2, 5000], [INIT.length, 1000], [1000]]) {
-    const env = sandbox();
-    env.control({ type: "consent", consented: false });
+    const env = sandbox({ consented: false });
     appendIn(env, opus, slices);
     const { entries, missed } = replay(env, 1);
     const kept = keptHeader(entries);
@@ -360,19 +362,16 @@ test("before consent, a header and audio split at any byte keep only the header"
   }
 });
 
-test("a header and audio kept before the answer lose the audio if the answer is no", () => {
-  const env = sandbox();
-  appendIn(env, opus, [opus.length]); // storage has not answered yet
-  assert.equal(bytesOf(replay(env, 1).entries), opus.length);
-  env.control({ type: "consent", consented: false });
+test("before the answer is known, an append holding a header and audio keeps only the header", () => {
+  const env = sandbox({ consented: null }); // storage has not answered yet
+  appendIn(env, opus, [opus.length]);
   const { entries, missed } = replay(env, 1);
   assert.deepEqual(keptHeader(entries), Buffer.from(INIT));
   assert.equal(missed, true);
 });
 
 test("a format header larger than any real one is not kept before consent", () => {
-  const env = sandbox();
-  env.control({ type: "consent", consented: false });
+  const env = sandbox({ consented: false });
   const size = 300 * 1024; // an EBML header element claiming 300 KiB, then a Cluster
   const bytes = new Uint8Array([0x1a, 0x45, 0xdf, 0xa3, 0x20 | (size >> 16), (size >> 8) & 0xff, size & 0xff, ...new Uint8Array(size), ...CLUSTERS[0]]);
   appendIn(env, bytes, [bytes.length]);
@@ -382,8 +381,7 @@ test("a format header larger than any real one is not kept before consent", () =
 });
 
 test("with consent, an append holding a header and audio is kept and decodes as before", () => {
-  const env = sandbox();
-  env.control({ type: "consent", consented: true });
+  const env = sandbox({ consented: true });
   appendIn(env, opus, [opus.length]);
   const { entries, missed } = replay(env, 1);
   assert.equal(missed, false);

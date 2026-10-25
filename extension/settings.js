@@ -5,7 +5,8 @@ export const DEFAULTS = Object.freeze({
   // clicks the nomusic button on a video to start.
   autoStart: true,
   // The user turned nomusic on after reading what it does (the welcome page or
-  // the popup). Until then it reads no audio at all.
+  // the popup). Until then, and on each page until this is known there, it
+  // keeps no audio: capture.js keeps only format headers.
   consented: false,
 });
 
