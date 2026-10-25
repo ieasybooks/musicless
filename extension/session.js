@@ -89,7 +89,8 @@ export class Session {
     this.status = "off";
     this.graph = null;
     this.bus = null; // gain node of the current playback run, faded out on stop
-    this.chunks = new Map(); // k -> { buffer, validFrom, stretched?, stretching? }
+    this.chunks = new Map(); // k -> { buffer, validFrom, cut, print, stretched?, stretching? }
+    this.unchecked = new Set(); // chunks kept from an earlier worker, until the current one checked them
     this.sources = new Map(); // k -> AudioBufferSourceNode
     this.requested = null; // the last request sent to the worker
     this.anchor = null;
@@ -291,11 +292,15 @@ export class Session {
     this.tick();
   }
 
+  // A new worker gets the captured audio again. Chunks kept from before (a
+  // sleep, a lost engine) are not played until it has checked that their audio
+  // is still the same.
   attach() {
     if (this.attached || !this.streamId) return;
     this.attached = true;
     this.idleSince = null;
     this.requested = null; // forces a fresh request list
+    this.unchecked = new Set(this.chunks.keys());
     this.workerId = this.engine.attach(this);
     this.capture.subscribe(this.streamId, this);
   }
@@ -320,6 +325,7 @@ export class Session {
     for (const entry of entries) {
       this.engine.post({ type: "entries", streamId: this.workerId, entries: [entry] }, entry.bytes ? [entry.bytes.buffer] : []);
     }
+    if (replay) this.engine.post({ type: "replayed", streamId: this.workerId }); // now it can check what it was told the page has
   }
 
   // The player closed this Media Source. A new one usually follows with a new
@@ -337,10 +343,14 @@ export class Session {
   onEngine(message) {
     if (message.type === "chunk") {
       if (this.attached) this.addChunk(message);
+    } else if (message.type === "checked") {
+      for (const k of message.chunks) this.unchecked.delete(k);
+      this.tick();
     } else if (message.type === "changed") {
       // Their audio changed (the player switched audio tracks, say): they are
       // made again, and the video holds rather than play the old voice meanwhile.
       for (const k of message.chunks) this.chunks.delete(k);
+      if (message.chunks.some((k) => this.sources.has(k))) this.stopAll(); // not a moment more of the old audio
       this.requested = null;
       this.tick();
     } else if (message.type === "unsupported") {
@@ -380,7 +390,8 @@ export class Session {
     const buffer = ctx.createBuffer(2, message.left.length, RATE);
     buffer.copyToChannel(message.left, 0);
     buffer.copyToChannel(message.right, 1);
-    this.chunks.set(message.k, { buffer, validFrom: message.validFrom });
+    this.chunks.set(message.k, { buffer, validFrom: message.validFrom, cut: message.cut, print: message.print });
+    this.unchecked.delete(message.k);
     this.stats.made++;
     if (debugEnabled()) {
       this.stats.timings.push({ k: message.k, ...message.timing });
@@ -444,7 +455,7 @@ export class Session {
 
   schedule(k) {
     const chunk = this.chunks.get(k);
-    if (!chunk || this.sources.has(k) || !this.anchor) return;
+    if (!chunk || this.unchecked.has(k) || this.sources.has(k) || !this.anchor) return;
     // Only chunks around the playhead; later ones are scheduled as playback nears them.
     const time = this.video.currentTime;
     if (k < chunkIndex(Math.max(0, time - OVERLAP_SECONDS)) || k > chunkIndex(time) + 2) return;
@@ -534,9 +545,14 @@ export class Session {
       });
   }
 
-  playable(k, time) {
+  // Whether chunk k has audio from `time` on (one made after a seek starts late).
+  covers(k, time) {
     const chunk = this.chunks.get(k);
     return !!chunk && chunk.validFrom <= time + 0.05;
+  }
+
+  playable(k, time) {
+    return this.covers(k, time) && !this.unchecked.has(k);
   }
 
   hold() {
@@ -552,7 +568,7 @@ export class Session {
     const time = this.video.currentTime;
     let k = chunkIndex(time);
     if (!this.playable(k, time)) return 0;
-    while (this.chunks.has(k + 1)) k++;
+    while (this.playable(k + 1, chunkStart(k + 1))) k++;
     return chunkStart(k + 1) - time;
   }
 
@@ -608,7 +624,7 @@ export class Session {
     // going back before that, or coming to it from an earlier chunk, needs a redo.
     const forget = [];
     for (const i of this.chunks.keys()) {
-      if (i < k - BEHIND || i > k + AHEAD + 1 || (i >= k && !this.playable(i, i === k ? time : chunkStart(i)))) {
+      if (i < k - BEHIND || i > k + AHEAD + 1 || (i >= k && !this.covers(i, i === k ? time : chunkStart(i)))) {
         this.chunks.delete(i);
         forget.push(i);
         this.unschedule(i); // not heard yet: it starts later than now
@@ -625,10 +641,8 @@ export class Session {
     if (!asked || forget.length || key !== asked.key || playing !== asked.playing || !Object.is(video.duration, asked.duration) ||
         Math.abs(time - asked.time) > 30) {
       this.requested = { key, playing, time, duration: video.duration };
-      this.engine.post({
-        type: "want", streamId: this.workerId, chunks: want, forget, have: [...this.chunks.keys()],
-        duration: video.duration, playing, position: time,
-      });
+      const have = [...this.chunks].map(([i, { cut, print }]) => ({ k: i, cut, print }));
+      this.engine.post({ type: "want", streamId: this.workerId, chunks: want, forget, have, duration: video.duration, playing, position: time });
     }
 
     // Hold the video rather than play music while the audio it needs is missing,

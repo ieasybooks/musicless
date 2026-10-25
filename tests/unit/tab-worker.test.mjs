@@ -357,16 +357,67 @@ test("removed audio appended again unchanged (a player refilling its buffer) cha
   assert.equal(w.runs().length, 1, "nothing made again");
 });
 
-test("the replay of the same audio after a wake does not change the chunks the page has", async () => {
+// A new worker (after a sleep, or a lost engine) told of the chunks the page
+// kept: their cut and fingerprint as the earlier worker sent them.
+async function laterWorker(kept, { chunks = [], position = 5 } = {}) {
   const w = workerSandbox();
   w.start();
   w.ready();
   w.stream(1);
-  w.send({ type: "want", streamId: 1, chunks: [{ k: 1, from: grid.chunkStart(1) }], forget: [], have: [0], duration: 600, playing: false, position: 5 });
+  const have = kept.map(({ k, cut, print }) => ({ k, cut, print }));
+  w.send({ type: "want", streamId: 1, chunks, forget: [], have, duration: 600, playing: false, position });
+  return w;
+}
+const checked = (w) => w.content.sent.filter((message) => message.type === "checked").map((message) => [...message.chunks]);
+
+test("chunks kept from an earlier worker are confirmed once the replay shows the same audio", async () => {
+  const first = await madeChunk0();
+  const w = await laterWorker(first.chunks(1), { chunks: [{ k: 1, from: grid.chunkStart(1) }] });
   w.feed(1, 27); // the capture's copy, replayed to the new worker
+  w.send({ type: "replayed", streamId: 1 });
   await w.advance();
+  assert.deepEqual(checked(w), [[0]]);
   assert.deepEqual(w.changed(), []);
   assert.equal(w.runs().length, 1, "only the chunk it asked for");
+});
+
+test("chunks kept from an earlier worker are made again if their audio changed or is gone", async () => {
+  const first = await madeChunk0();
+  const other = await laterWorker(first.chunks(1));
+  other.feed(1, 27, { other: true }); // another track was put in while no worker watched
+  other.send({ type: "replayed", streamId: 1 });
+  await other.advance();
+  assert.deepEqual(other.changed(), [[0]]);
+  assert.deepEqual(checked(other), []);
+  const gone = await laterWorker(first.chunks(1));
+  gone.feed(1, 9, { from: 15 }); // the old buffer was removed; the new one starts later
+  gone.send({ type: "replayed", streamId: 1 });
+  await gone.advance();
+  assert.deepEqual(gone.changed(), [[0]]);
+});
+
+test("a chunk an earlier worker cut short at the stream's end is made again when the stream goes on", async () => {
+  const first = workerSandbox();
+  first.start();
+  first.ready();
+  first.stream(1);
+  first.feed(1, 15);
+  first.entry(1, { kind: "end" });
+  first.want(1, [{ k: 1, from: grid.chunkStart(1) }]);
+  await first.advance();
+  first.answer();
+  await first.advance();
+  const [made] = first.chunks(1);
+  assert.ok(made.cut > 15 && made.cut < 15.2, `cut where the audio ends, ${made.cut}`);
+  const w = await laterWorker([made]);
+  w.feed(1, 15);
+  w.entry(1, { kind: "end" });
+  w.send({ type: "replayed", streamId: 1 });
+  await w.advance();
+  assert.deepEqual(checked(w), [[1]], "the same audio, the same end");
+  w.feed(1, 3, { from: 15, header: false }); // not the end after all
+  await w.advance();
+  assert.deepEqual(w.changed(), [[1]]);
 });
 
 test("a removed buffer's audio is gone", async () => {
@@ -416,15 +467,13 @@ test("the last chunk made against an end that was not the end is made again", as
   assert.deepEqual(w.changed(), [[1]]);
 });
 
-test("chunks the page already has are watched for changes too", async () => {
-  const w = workerSandbox();
-  w.start();
-  w.ready();
-  w.stream(1);
+test("chunks kept from an earlier worker are watched for changes once confirmed", async () => {
+  const first = await madeChunk0();
+  const w = await laterWorker(first.chunks(1));
   w.feed(1, 15);
-  w.want(1, [{ k: 1, from: grid.chunkStart(1) }], { position: 5 });
-  w.send({ type: "want", streamId: 1, chunks: [], forget: [], have: [0], duration: 600, playing: true, position: 5 }); // from before this worker
+  w.send({ type: "replayed", streamId: 1 });
   await w.advance();
+  assert.deepEqual(checked(w), [[0]]);
   w.feed(1, 15, { header: false, other: true });
   await w.advance();
   assert.deepEqual(w.changed(), [[0]]);

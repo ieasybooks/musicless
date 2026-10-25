@@ -100,7 +100,7 @@ function sessionSandbox({ video: props, settings = {}, streams = { "blob:a": 1 }
 // A separated chunk as the worker sends it.
 function chunk(k, validFrom = grid.chunkStart(k)) {
   const samples = { length: grid.WINDOW_SAMPLES }; // only its length is read here
-  return { type: "chunk", k, validFrom, left: samples, right: samples, timing: {} };
+  return { type: "chunk", k, validFrom, cut: Infinity, print: 100 + k, left: samples, right: samples, timing: {} };
 }
 
 test("a closed stream for the source still playing holds the video, then fails closed", () => {
@@ -302,11 +302,34 @@ test("chunks whose audio changed are made again, and the video holds instead of 
   assert.equal(session.intent.held, false);
 });
 
-test("the worker is told which chunks the page has", () => {
+test("the worker is told which chunks the page has, where they were cut and what they were made from", () => {
   const { session, engine } = sessionSandbox({ video: { currentTime: 3 } });
   engine.deliver({ ...chunk(0), streamId: session.workerId });
+  engine.deliver({ ...chunk(1), cut: 20, streamId: session.workerId });
   session.tick();
-  assert.equal(engine.wants().at(-1).have.join(), "0");
+  assert.deepEqual(plain(engine.wants().at(-1).have), [{ k: 0, cut: null, print: 100 }, { k: 1, cut: 20, print: 101 }]); // (Infinity as JSON: null)
+});
+
+test("chunks kept from an earlier worker play only once the new one has checked them", () => {
+  const { session, video, engine } = sessionSandbox({ video: { currentTime: 3 } });
+  engine.deliver({ ...chunk(0), streamId: session.workerId });
+  engine.deliver({ ...chunk(1), streamId: session.workerId });
+  session.tick();
+  assert.equal(session.intent.held, false);
+  engine.sessions.clear();
+  session.onEngineLost(); // a new worker, which has not seen the audio yet
+  session.onEntries(1, [{ kind: "buffer", bufferId: 2, mime: "audio/webm" }], { missed: false }); // the capture's replay
+  assert.deepEqual(engine.posts.slice(-2).map((message) => message.type), ["entries", "replayed"]);
+  session.tick();
+  assert.equal(session.intent.held, true, "held until they are checked");
+  assert.equal(video.paused, true);
+  assert.deepEqual(plain(engine.wants().at(-1).have.map((h) => h.k)), [0, 1], "the new worker is told of them");
+  engine.deliver({ type: "checked", streamId: session.workerId, chunks: [0] });
+  engine.deliver({ type: "changed", streamId: session.workerId, chunks: [1] }); // its audio is not the same
+  session.tick();
+  assert.equal(session.intent.held, false, "chunk 0 plays");
+  assert.equal(session.chunks.has(1), false);
+  assert.equal(engine.wants().at(-1).chunks[0].k, 1, "chunk 1 is made again");
 });
 
 test("Retry reloads the page for failures only a reload can help, keeping a watch page's position", () => {

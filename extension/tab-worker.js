@@ -27,7 +27,7 @@ const MODEL_SILENT_MS = 30000; // longer than the shared model ever runs one job
 
 let port = null;
 let model = null;
-// stream id -> { id, buffers, frames, removed, bytes, ended, duration, wanted, done, playing, position }
+// stream id -> { id, buffers, frames, removed, bytes, ended, duration, wanted, done, carried, replayed, playing, position }
 const streams = new Map();
 let busy = false;
 let current = null; // the job being separated
@@ -151,9 +151,20 @@ function newStream(id) {
   const stream = {
     id, buffers: new Map(), frames: [], removed: [], bytes: 0, ended: false, duration: Infinity,
     wanted: [], done: new Map(), playing: false, position: 0, // done: k -> where its audio was cut by the stream's end
+    carried: new Map(), replayed: false, // chunks an earlier worker made, until checked against this one's audio
   };
   streams.set(id, stream);
   return stream;
+}
+
+// A fingerprint of the audio a chunk is made from: its frames' times and bytes.
+function fingerprint(frames) {
+  let hash = 0x811c9dc5;
+  for (const { time, data } of frames) {
+    hash = Math.imul(hash ^ Math.round(time * 1e6), 0x01000193);
+    for (let i = 0; i < data.length; i++) hash = Math.imul(hash ^ data[i], 0x01000193);
+  }
+  return hash >>> 0;
 }
 
 const sameFrame = (a, b) => Math.abs(a.time - b.time) < 1e-4 && a.data.length === b.data.length &&
@@ -232,6 +243,29 @@ function invalidate(stream, { replaced, added }) {
   if (current?.stream === stream && changes(current.k, current.cut)) current.stale = true;
   const changed = [...stream.done].filter(([k, cut]) => changes(k, cut)).map(([k]) => k);
   for (const k of changed) stream.done.delete(k);
+  if (changed.length) send({ type: "changed", streamId: stream.id, chunks: changed });
+}
+
+// Chunks the page kept from an earlier worker (made before a sleep, or before
+// the engine started again) are trusted only if this worker, once it has the
+// capture's replay, holds the very audio they were made from: the page drops
+// the others and asks for them again. Audio may have changed while no worker
+// was watching (another audio track, a new buffer).
+function check(stream) {
+  const checked = [];
+  const changed = [];
+  for (const [k, { cut, print }] of stream.carried) {
+    const start = chunkStart(k);
+    const found = run(stream, Math.max(start - WARMUP_SECONDS, 0), Math.min(start + WINDOW_SECONDS, cut));
+    if (found && fingerprint(stream.frames.slice(found[0], found[1] + 1)) === print) {
+      stream.done.set(k, cut);
+      checked.push(k);
+    } else {
+      changed.push(k);
+    }
+  }
+  stream.carried.clear();
+  if (checked.length) send({ type: "checked", streamId: stream.id, chunks: checked });
   if (changed.length) send({ type: "changed", streamId: stream.id, chunks: changed });
 }
 
@@ -459,6 +493,7 @@ async function decodeWindow(stream, frames, windowStart) {
 async function separate(stream, job) {
   const t0 = performance.now();
   const frames = stream.frames.slice(job.range[0], job.range[1] + 1); // before anything can change the list
+  const print = fingerprint(frames);
   const windowStart = chunkStart(job.k);
   const end = streamEnd(stream);
   const decoded = await decodeWindow(stream, frames, windowStart);
@@ -485,6 +520,7 @@ async function separate(stream, job) {
   const t4 = performance.now();
   return {
     vocals,
+    print,
     timing: {
       decode: t1 - t0, stft: t2 - t1, model: ms, wait: t3 - t2 - ms, istft: t4 - t3, total: t4 - t0,
       holesMs: decoded.holesMs, frames: `${decoded.outputs}/${frames.length}`,
@@ -521,9 +557,10 @@ async function pump() {
       stream.done.set(job.k, job.cut);
       current = job;
       try {
-        const { vocals, timing } = await separate(stream, job);
+        const { vocals, print, timing } = await separate(stream, job);
         if (streams.get(stream.id) !== stream || job.stale) continue; // dropped, or its audio changed, while it ran
-        send({ type: "chunk", streamId: stream.id, k: job.k, validFrom: job.validFrom, left: vocals.left, right: vocals.right, timing },
+        // With where the stream's end cut it and what it was made from, for a later worker to check.
+        send({ type: "chunk", streamId: stream.id, k: job.k, validFrom: job.validFrom, cut: job.cut, print, left: vocals.left, right: vocals.right, timing },
           [vocals.left.buffer, vocals.right.buffer]);
       } catch (error) {
         if (streams.get(stream.id) !== stream || job.stale) continue;
@@ -577,6 +614,11 @@ function onMessage({ data }) {
       for (const entry of data.entries) onEntry(stream, entry);
       evict(stream);
       break;
+    case "replayed": // the capture's copy so far has arrived
+      if (!stream) return;
+      stream.replayed = true;
+      check(stream);
+      break;
     case "want":
       if (!stream) return;
       stream.wanted = data.chunks;
@@ -584,9 +626,14 @@ function onMessage({ data }) {
       stream.position = data.position ?? stream.position;
       if (Number.isFinite(data.duration)) stream.duration = data.duration;
       // Chunks the page evicted can be separated again when it asks later; the
-      // ones it has (also from before this worker) are watched for changes.
-      for (const k of data.forget ?? []) stream.done.delete(k);
-      for (const k of data.have ?? []) if (!stream.done.has(k)) stream.done.set(k, Infinity);
+      // ones it has are watched for changes, those from before this worker
+      // once checked.
+      for (const k of data.forget ?? []) {
+        stream.done.delete(k);
+        stream.carried.delete(k);
+      }
+      for (const { k, cut, print } of data.have ?? []) if (!stream.done.has(k)) stream.carried.set(k, { cut, print });
+      if (stream.replayed && stream.carried.size) check(stream);
       stream.removed = stream.removed.filter((frame) => [...stream.done.keys()].some((k) => inWindow(k, frame.time, frame.time + frame.duration)));
       evict(stream);
       break;
