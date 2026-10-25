@@ -15,23 +15,25 @@ const CONNECT_MS = 10 * 1000; // a new worker says it is connected well within t
 const PING_MS = 2000; // a worker quiet this long is asked whether it is still there
 const SILENT_MS = 15 * 1000; // longer than the worker ever stays busy before answering
 
-// A secret the hidden frame asks for before it takes a port, so that only
-// nomusic's content script can start a worker there: pages cannot read
-// extension storage (and a page can load the frame itself). Made on first use.
-async function engineToken() {
-  let { engineToken } = await chrome.storage.local.get("engineToken");
-  if (!engineToken) {
-    await chrome.storage.local.set({ engineToken: crypto.randomUUID() });
-    ({ engineToken } = await chrome.storage.local.get("engineToken")); // another tab may have made one too
+// The hidden frame takes a port only with a secret from extension storage,
+// which pages cannot read (a page can load the frame itself). background.js
+// makes it; it is asked for at the moment of use and never kept here.
+function handshake(frame, origin, port) {
+  let asked;
+  try {
+    asked = chrome.runtime.sendMessage({ type: "engine-token" });
+  } catch {
+    return; // the extension was updated or removed under this page
   }
-  return engineToken;
+  asked.then((answer) => {
+    if (answer?.token) frame.contentWindow?.postMessage({ type: "nomusic-port", token: answer.token }, origin, [port]);
+  }, () => {});
 }
 
 export class Engine {
   constructor() {
     this.frame = null;
     this.port = null;
-    this.token = null;
     this.sessions = new Map(); // stream id -> session
     this.ids = 0;
     this.model = null; // { seconds, shared } once loaded
@@ -57,15 +59,7 @@ export class Engine {
     frame.style.setProperty("display", "none", "important");
     const channel = new MessageChannel();
     channel.port1.onmessage = (event) => this.dispatch(event.data);
-    const token = (this.token ??= engineToken().catch((error) => {
-      this.token = null; // try again with the next frame
-      throw error;
-    }));
-    frame.addEventListener("load", () => {
-      token.then((value) => {
-        frame.contentWindow?.postMessage({ type: "nomusic-port", token: value }, origin, [channel.port2]);
-      }, () => {});
-    }, { once: true });
+    frame.addEventListener("load", () => handshake(frame, origin, channel.port2), { once: true });
     document.documentElement.appendChild(frame);
     this.frame = frame;
     this.port = channel.port1;

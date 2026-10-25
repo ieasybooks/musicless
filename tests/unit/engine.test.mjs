@@ -1,5 +1,6 @@
-// The hidden frame's handshake (separator.js) and the content script's side of
-// it (engine.js), with stand-ins for the DOM, workers and extension storage.
+// The hidden frame's handshake (separator.js), the content script's side of it
+// (engine.js) and the secret's one writer (background.js), with stand-ins for
+// the DOM, workers, messaging and extension storage.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { flush, load, plain } from "./sandbox.mjs";
@@ -40,10 +41,11 @@ class ChromeURL extends URL {
   }
 }
 
-// `gate` holds back reading the secret until it resolves.
-function engineSandbox({ stored = {}, gate = null } = {}) {
+// `token` is what background.js answers (asked for afresh each time); `gate`
+// holds the answer back until it resolves.
+function engineSandbox({ token = "secret", gate = null } = {}) {
   const frames = [];
-  const storage = { ...stored };
+  const asked = [];
   const ports = [];
   class Port {
     constructor() { this.sent = []; this.closed = false; ports.push(this); }
@@ -78,45 +80,87 @@ function engineSandbox({ stored = {}, gate = null } = {}) {
   const globals = {
     document,
     chrome: {
-      runtime: { getURL: (file) => `chrome-extension://id/${file}` },
-      storage: { local: {
-        get: async (key) => {
+      runtime: {
+        getURL: (file) => `chrome-extension://id/${file}`,
+        sendMessage: async (message) => {
+          asked.push(message.type);
           await gate;
-          return key in storage ? { [key]: storage[key] } : {};
+          return { token: env.token };
         },
-        set: async (values) => { Object.assign(storage, values); },
-      } },
+      },
     },
-    crypto: { randomUUID: () => "made-token" },
     MessageChannel: class { constructor() { this.port1 = new Port(); this.port2 = new Port(); } },
     performance: { now: () => now },
     URL: ChromeURL,
   };
   const { Engine } = load("engine.js", globals);
-  return { Engine, frames, storage, ports, advance: (ms) => { now += ms; } };
+  const env = { Engine, frames, ports, asked, token, advance: (ms) => { now += ms; } };
+  return env;
 }
 
-test("the engine hands its port to the frame with the token, making one the first time", async () => {
+test("the engine hands its port to the frame with the token, asked for when the frame loads", async () => {
   const env = engineSandbox();
   const engine = new env.Engine();
   engine.post({ type: "hello" });
+  assert.deepEqual(env.asked, [], "not before the frame is there");
   env.frames[0].load();
   await flush();
-  assert.deepEqual(plain(env.frames[0].contentWindow.posted.map((p) => p.message)), [{ type: "nomusic-port", token: "made-token" }]);
-  assert.equal(env.storage.engineToken, "made-token");
-
-  const again = engineSandbox({ stored: { engineToken: "kept" } });
-  const second = new again.Engine();
-  second.post({ type: "hello" });
-  again.frames[0].load();
+  assert.deepEqual(env.asked, ["engine-token"]);
+  assert.deepEqual(plain(env.frames[0].contentWindow.posted.map((p) => p.message)), [{ type: "nomusic-port", token: "secret" }]);
+  // Given up and started again: the token is asked for again, not kept.
+  env.token = "another";
+  engine.destroy();
+  engine.post({ type: "hello" });
+  env.frames[1].load();
   await flush();
-  assert.equal(again.frames[0].contentWindow.posted[0].message.token, "kept", "an existing token is reused");
+  assert.deepEqual(env.asked, ["engine-token", "engine-token"]);
+  assert.equal(env.frames[1].contentWindow.posted[0].message.token, "another");
+});
+
+// background.js with extension storage whose reads answer late (as when two
+// tabs start at once), and a counter for made tokens.
+function backgroundSandbox(stored = {}) {
+  const storage = { ...stored };
+  let made = 0;
+  let listener = null;
+  const later = () => new Promise((resolve) => setTimeout(resolve, 5));
+  load("background.js", {
+    chrome: {
+      runtime: { onInstalled: { addListener() {} }, onMessage: { addListener: (fn) => { listener = fn; } }, OnInstalledReason: {} },
+      storage: { local: {
+        get: async (key) => {
+          const value = storage[key]; // read now, answered later
+          await later();
+          return value === undefined ? {} : { [key]: value };
+        },
+        set: async (values) => {
+          await later();
+          Object.assign(storage, values);
+        },
+      } },
+    },
+    crypto: { randomUUID: () => `token-${++made}` },
+  });
+  const ask = () => new Promise((resolve) => assert.equal(listener({ type: "engine-token" }, {}, resolve), true));
+  return { storage, ask, made: () => made };
+}
+
+test("tabs asking for the token at once all get the one that is stored, made once", async () => {
+  const background = backgroundSandbox();
+  const answers = await Promise.all([background.ask(), background.ask(), background.ask()]);
+  assert.deepEqual(plain(answers), [{ token: "token-1" }, { token: "token-1" }, { token: "token-1" }]);
+  assert.equal(background.storage.engineToken, "token-1");
+  assert.equal(background.made(), 1);
+  const kept = backgroundSandbox({ engineToken: "kept" });
+  assert.deepEqual(plain(await Promise.all([kept.ask(), kept.ask()])), [{ token: "kept" }, { token: "kept" }]);
+  assert.equal(kept.storage.engineToken, "kept", "a stored token is never replaced");
+  assert.equal(kept.made(), 0);
 });
 
 test("the handshake only ever goes to the extension's own document, wherever the page points the frame", async () => {
   const where = (frame) => plain(frame.contentWindow.posted.map(({ origin, delivered }) => [origin, delivered]));
   // Pointed at a page of the site before it loads.
-  const early = engineSandbox({ stored: { engineToken: "secret" } });
+  const early = engineSandbox();
   new early.Engine().post({ type: "hello" });
   early.frames[0].src = "https://www.youtube.com/attacker";
   early.frames[0].load();
@@ -124,7 +168,7 @@ test("the handshake only ever goes to the extension's own document, wherever the
   assert.deepEqual(where(early.frames[0]), [["chrome-extension://id", false]], "posted to the extension's origin: not delivered");
   // Pointed elsewhere while the secret is being read.
   let open;
-  const late = engineSandbox({ stored: { engineToken: "secret" }, gate: new Promise((resolve) => { open = resolve; }) });
+  const late = engineSandbox({ gate: new Promise((resolve) => { open = resolve; }) });
   new late.Engine().post({ type: "hello" });
   late.frames[0].load();
   late.frames[0].src = "https://www.youtube.com/attacker";
@@ -133,7 +177,7 @@ test("the handshake only ever goes to the extension's own document, wherever the
   await flush();
   assert.deepEqual(where(late.frames[0]), [["chrome-extension://id", false]]);
   // Left alone, it reaches the frame.
-  const normal = engineSandbox({ stored: { engineToken: "secret" } });
+  const normal = engineSandbox();
   new normal.Engine().post({ type: "hello" });
   normal.frames[0].load();
   await flush();
