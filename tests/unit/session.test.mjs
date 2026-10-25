@@ -278,3 +278,20 @@ test("the worker is told which chunks the page has", () => {
   session.tick();
   assert.equal(engine.wants().at(-1).have.join(), "0");
 });
+
+test("Retry reloads the page for failures only a reload can help, keeping a watch page's position", () => {
+  const watch = sessionSandbox({ video: { currentTime: 75.6 } });
+  watch.session.fail("uncaptured");
+  watch.session.retry();
+  assert.deepEqual(watch.reloads, ["https://www.youtube.com/watch?v=abc&t=75s"]);
+  const embed = sessionSandbox();
+  embed.env.location.pathname = "/embed/abc";
+  embed.session.fail("engine");
+  embed.session.retry();
+  assert.deepEqual(embed.reloads, ["reload"]);
+  const slow = sessionSandbox();
+  slow.session.fail("slow");
+  slow.session.retry();
+  assert.deepEqual(slow.reloads, [], "other failures try again in place");
+  assert.equal(slow.session.failure, null);
+});

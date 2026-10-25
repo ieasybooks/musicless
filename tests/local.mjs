@@ -362,16 +362,32 @@ await failsClosed("copy-protected (ClearKey) audio: fails closed", "", "drm", "p
 await failsClosed("Media Source hidden in another frame: fails closed", "&realm=frame", BASE, "uncaptured");
 await failsClosed("Media Source in a worker (srcObject): fails closed", "&worker=1", BASE, "source");
 
-await step("retry after a failure", async () => {
+await step("retry after a failure tries again in place", async () => {
+  const page = await open("drm");
+  await play(page);
+  await waitFor(page, (s) => s.status === "failed", { timeout: 20000, label: "failure" });
+  await page.evaluate(() => { window.notReloaded = true; });
+  await chooseRecovery(page, "Retry");
+  const again = await waitFor(page, (s) => s.status === "failed", { timeout: 20000, label: "failure again" });
+  const inPlace = await page.evaluate(() => window.notReloaded === true);
+  const { paused } = await videoState(page);
+  report.record("retry after a failure tries again in place", inPlace && again.failure.reason === "protected" && paused,
+    { same_page: inPlace, reason: again.failure.reason, paused_again: paused });
+  await page.close();
+});
+
+await step("Retry reloads the page when only a reload can help (uncaptured)", async () => {
   const page = await open(BASE, "&realm=frame");
   await play(page);
   await waitFor(page, (s) => s.status === "failed", { timeout: 20000, label: "failure" });
+  const reloaded = page.waitForNavigation({ timeout: 15000 });
   await chooseRecovery(page, "Retry");
-  await sleep(500);
-  const retrying = await frameState(page);
-  const again = await waitFor(page, (s) => s.status === "failed", { timeout: 20000, label: "failure again" });
-  report.record("retry after a failure", retrying.status !== "failed" && again.failure.reason === "uncaptured",
-    { status_while_retrying: retrying.status, reason: again.failure.reason });
+  await reloaded;
+  await page.waitForFunction("window.playerReady === true", { timeout: 30000 });
+  await play(page);
+  const again = await waitFor(page, (s) => s.status === "failed", { timeout: 20000, label: "failure after the reload" });
+  report.record("Retry reloads the page when only a reload can help (uncaptured)", again.failure.reason === "uncaptured",
+    { reloaded: true, reason_after_reload: again.failure.reason });
   await page.close();
 });
 

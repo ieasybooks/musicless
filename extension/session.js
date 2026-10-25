@@ -49,6 +49,20 @@ const DEBUG = (() => {
 })();
 export const debugEnabled = () => DEBUG;
 
+// Failures only a fresh page can help: Retry reloads it.
+const RELOAD = new Set(["updated", "uncaptured", "engine"]);
+
+// Reload the page; a YouTube watch page keeps its position.
+function reloadPage(time) {
+  if (/^(www|m)\.youtube\.com$/.test(location.hostname) && location.pathname === "/watch" && time >= 1) {
+    const url = new URL(location.href);
+    url.searchParams.set("t", `${Math.floor(time)}s`);
+    location.replace(url.href);
+  } else {
+    location.reload();
+  }
+}
+
 // Media attached as an object (a worker's Media Source, a stream) has no URL:
 // give each object a stable name so a change is still a new source.
 const objectNames = new WeakMap();
@@ -168,8 +182,8 @@ export class Session {
   }
 
   retry() {
-    if (this.failure?.reason === "updated") {
-      location.reload();
+    if (RELOAD.has(this.failure?.reason)) {
+      reloadPage(this.video.currentTime);
       return;
     }
     this.failure = null;
