@@ -179,6 +179,7 @@ function onEntry(stream, entry) {
     stream.ended = true;
     return;
   }
+  if (entry.kind === "append") stream.ended = false; // appending reopens an ended Media Source
   let buffer = stream.buffers.get(entry.bufferId);
   if (entry.kind === "buffer" || entry.kind === "changeType") {
     try {

@@ -248,3 +248,19 @@ test("ahead of the playhead a late start counts as part of the window; at the pl
   await w.advance();
   assert.ok(Math.abs(w.chunks(2)[0].validFrom - (start + 0.1)) < 0.002, "at the playhead: from where the audio starts");
 });
+
+test("audio appended after the end reopens the stream", async () => {
+  const w = workerSandbox();
+  w.start();
+  w.ready();
+  w.stream(1);
+  w.feed(1, 15);
+  w.send({ type: "entries", streamId: 1, entries: [{ kind: "end" }] });
+  w.feed(1, 3, { from: 15, header: false }); // the player appends again: not the end after all
+  w.want(1, [{ k: 1, from: grid.chunkStart(1) }]);
+  await w.advance();
+  assert.equal(w.runs().length, 0, "chunk 1 waits for its audio instead of ending in silence at 18 s");
+  w.feed(1, 9, { from: 18, header: false });
+  await w.advance();
+  assert.equal(w.runs().length, 1);
+});

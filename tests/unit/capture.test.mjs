@@ -28,9 +28,13 @@ function sandbox({ streamLimit = 120_000, totalLimit = 400_000 } = {}) {
     close() { for (const fn of this.listeners.sourceclose ?? []) fn(); }
   }
   MediaSource.prototype.addSourceBuffer = function () { return new SourceBuffer(); };
-  MediaSource.prototype.endOfStream = function () {};
+  // Like the browser's, these refuse some calls (an append to a full buffer, ending while updating).
+  MediaSource.prototype.endOfStream = function () { if (this.updating) throw new Error("InvalidStateError"); };
   class SourceBuffer { constructor() { this.timestampOffset = 0; this.appended = 0; } }
-  SourceBuffer.prototype.appendBuffer = function (data) { this.appended += data.byteLength; };
+  SourceBuffer.prototype.appendBuffer = function (data) {
+    if (this.full) throw new Error("QuotaExceededError");
+    this.appended += data?.byteLength ?? 0;
+  };
   SourceBuffer.prototype.abort = function () {};
   let urls = 0;
   const context = {
@@ -164,4 +168,55 @@ test("a subscribed stream gets each new append live", () => {
   assert.equal(live[0].entry.segment, "media");
   assert.equal(live[0].entry.bytes.length, CLUSTERS[0].length);
   assert.ok(CLUSTER_SECONDS > 0);
+});
+
+test("calls the browser refuses are not recorded, and nomusic's own errors never reach the page", () => {
+  const env = sandbox();
+  const mediaSource = new env.context.MediaSource();
+  env.context.URL.createObjectURL(mediaSource);
+  const sb = mediaSource.addSourceBuffer(WEBM);
+  sb.appendBuffer(INIT);
+  sb.full = true;
+  assert.throws(() => sb.appendBuffer(CLUSTERS[0]), /QuotaExceededError/, "the page sees the browser's error");
+  sb.full = false;
+  mediaSource.updating = true;
+  assert.throws(() => mediaSource.endOfStream(), /InvalidStateError/);
+  mediaSource.updating = false;
+  sb.appendBuffer(Symbol("not a buffer")); // the browser took it; nomusic cannot copy it
+  const { entries } = replay(env, 1);
+  assert.equal(entries.map((e) => e.kind).join(), "buffer,append", "only what the browser accepted");
+});
+
+test("a Media Source opened again after it closed is a new stream", () => {
+  const env = sandbox();
+  const mediaSource = new env.context.MediaSource();
+  env.context.URL.createObjectURL(mediaSource);
+  mediaSource.addSourceBuffer(WEBM).appendBuffer(INIT);
+  mediaSource.close();
+  const sb = mediaSource.addSourceBuffer(WEBM); // the player attached it again (same URL)
+  sb.appendBuffer(INIT);
+  const reopened = env.posted.findLast((m) => m.type === "stream");
+  assert.notEqual(reopened.streamId, 1);
+  assert.equal(reopened.url, "blob:test/1", "announced under its URL");
+  assert.equal(replay(env, reopened.streamId).entries.filter((e) => e.kind === "append").length, 1);
+  const url = env.context.URL.createObjectURL(mediaSource);
+  assert.equal(env.posted.findLast((m) => m.type === "stream").url, url);
+});
+
+test("a format header split across appends is kept whole when older audio is trimmed", () => {
+  const env = sandbox();
+  const mediaSource = new env.context.MediaSource();
+  env.context.URL.createObjectURL(mediaSource);
+  const sb = mediaSource.addSourceBuffer(WEBM);
+  sb.appendBuffer(INIT.subarray(0, 16));
+  sb.appendBuffer(INIT.subarray(16));
+  for (let pass = 0; pass < 12; pass++) {
+    sb.timestampOffset = pass * 3;
+    for (const cluster of CLUSTERS) sb.appendBuffer(cluster);
+  }
+  const { entries, dropped } = replay(env, 1);
+  assert.equal(dropped, true);
+  const header = entries.filter((e) => e.kind === "append").slice(0, 2);
+  assert.equal(header[0].bytes.length + header[1].bytes.length, INIT.length);
+  assert.ok(demuxReplay(entries).length > 100, "the kept audio still decodes");
 });
