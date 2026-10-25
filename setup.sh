@@ -41,7 +41,9 @@ fetch "$SPLEETER_URL" "$work/spleeter.tar.bz2" "$SPLEETER_SHA256"
 mkdir "$work/spleeter"
 tar -xjf "$work/spleeter.tar.bz2" -C "$work/spleeter" --strip-components=1
 python3 -m venv "$work/venv"
-"$work/venv/bin/pip" install --quiet --disable-pip-version-check onnx==1.23.2 numpy
+# numpy is pinned to the same release as tests/requirements.txt. The model
+# hash below is only valid for this pin; do not float it.
+"$work/venv/bin/pip" install --quiet --disable-pip-version-check onnx==1.23.2 numpy==2.5.4
 mkdir -p extension/model
 "$work/venv/bin/python" tools/build_model.py "$work/spleeter" extension/model/spleeter-2stems.onnx
 if [[ "$(sha256 extension/model/spleeter-2stems.onnx)" != "$MODEL_SHA256" ]]; then
