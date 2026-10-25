@@ -58,13 +58,13 @@ function sandbox({ streamLimit = 120_000, totalLimit = 400_000 } = {}) {
 }
 
 // A long stream: the fixture's clusters over and over, each pass later in time.
-function playLong(env, passes, { split = 1 } = {}) {
+function playLong(env, passes, { split = 1, from = 0 } = {}) {
   const mediaSource = new env.context.MediaSource();
   env.context.URL.createObjectURL(mediaSource);
   const sb = mediaSource.addSourceBuffer(WEBM);
   sb.appendBuffer(INIT);
   for (let pass = 0; pass < passes; pass++) {
-    sb.timestampOffset = pass * 3;
+    sb.timestampOffset = (from + pass) * 3;
     if (pass === 2) sb.abort(); // like a seek
     for (const cluster of CLUSTERS) {
       const size = Math.ceil(cluster.length / split);
@@ -146,15 +146,49 @@ test("a detached Media Source frees its audio and says so", () => {
   assert.equal(env.posted.at(-1).type, "closed", "subscribing to a closed stream answers closed");
 });
 
-test("past the page-wide limit, streams nobody listens to are emptied, oldest first", () => {
+test("past the page-wide limit, every stream keeps its share of its newest audio, subscribed or not", () => {
   const env = sandbox({ streamLimit: 120_000, totalLimit: 200_000 });
   playLong(env, 6);
+  env.control({ type: "subscribe", streamId: 1 }); // being separated
+  playLong(env, 6, { from: 1 });
   playLong(env, 6);
-  playLong(env, 6);
-  const kept = [1, 3, 5].map((id) => bytesOf(replay(env, id).entries)); // stream ids (buffer ids come between)
-  const total = kept.reduce((sum, bytes) => sum + bytes, 0);
-  assert.ok(total <= 200_000 + 3 * INIT.length, `${total} bytes kept`);
-  assert.ok(kept[0] < kept[2], "the oldest stream went first");
+  const replays = [1, 3, 5].map((id) => replay(env, id)); // stream ids (buffer ids come between)
+  const kept = replays.map(({ entries }) => bytesOf(entries));
+  assert.ok(kept.reduce((sum, bytes) => sum + bytes, 0) <= 200_000 + 3 * INIT.length, `${kept} bytes kept`);
+  for (const { entries } of replays) assert.ok(demuxReplay(entries).length > 30, "each still decodes");
+});
+
+test("the page-wide limit holds with several streams being separated", () => {
+  const env = sandbox({ streamLimit: 16 * 2 ** 20, totalLimit: 48 * 2 ** 20 });
+  for (let i = 0; i < 4; i++) {
+    const mediaSource = new env.context.MediaSource();
+    env.context.URL.createObjectURL(mediaSource);
+    const sb = mediaSource.addSourceBuffer(WEBM);
+    env.control({ type: "subscribe", streamId: 1 + 2 * i });
+    for (let mb = 0; mb < 15; mb++) {
+      const bytes = new Uint8Array(2 ** 20);
+      bytes.set([0x1f, 0x43, 0xb6, 0x75]); // a cluster each
+      sb.appendBuffer(bytes);
+    }
+  }
+  const total = [1, 3, 5, 7].reduce((sum, id) => sum + bytesOf(replay(env, id).entries), 0);
+  assert.ok(total <= 48 * 2 ** 20, `${total / 2 ** 20} MiB kept`);
+});
+
+test("entries without audio and unused streams are bounded", () => {
+  const env = sandbox();
+  const mediaSource = new env.context.MediaSource();
+  env.context.URL.createObjectURL(mediaSource);
+  const sb = mediaSource.addSourceBuffer(WEBM);
+  sb.appendBuffer(INIT);
+  for (let i = 0; i < 20000; i++) sb.abort();
+  assert.equal(replay(env, 1).entries.length, 3, "repeated aborts are one");
+  for (let i = 0; i < 20000; i++) sb.remove(i, i + 1);
+  assert.ok(replay(env, 1).entries.length <= 10000);
+  for (let i = 0; i < 100; i++) env.context.URL.createObjectURL(new env.context.MediaSource());
+  const closed = env.posted.filter((m) => m.type === "closed").length;
+  assert.ok(closed >= 101 - 64, `${closed} unused streams let go`);
+  assert.equal(replay(env, 1).entries.length > 0, true, "a stream in use stays");
 });
 
 test("a subscribed stream gets each new append live", () => {

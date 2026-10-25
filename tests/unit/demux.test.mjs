@@ -90,3 +90,12 @@ test("encrypted MP4 (Common Encryption) is reported as protected", () => {
 test("unsupported containers are refused", () => {
   assert.throws(() => createDemuxer("audio/ogg"));
 });
+
+test("an element that never completes stops the stream instead of growing without end", () => {
+  const demuxer = createDemuxer(WEBM);
+  // An EBML header that claims 1 GiB.
+  demuxer.push(new Uint8Array([0x1a, 0x45, 0xdf, 0xa3, 0x01, 0x00, 0x00, 0x00, 0x40, 0x00, 0x00, 0x00]));
+  assert.throws(() => {
+    for (let i = 0; i < 40; i++) demuxer.push(new Uint8Array(2 ** 20));
+  }, /never completed/);
+});

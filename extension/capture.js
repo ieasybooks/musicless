@@ -6,8 +6,9 @@
 // anything. Nothing is stored beyond page memory.
 //
 // Memory is bounded: a stream's copy is dropped when its player detaches it,
-// and each live stream keeps only its most recent STREAM_LIMIT bytes (players
-// re-append audio after a seek to anything they no longer hold themselves).
+// each live stream keeps only its most recent STREAM_LIMIT bytes (players
+// re-append audio after a seek to anything they no longer hold themselves),
+// all streams together TOTAL_LIMIT, and entries and streams are counted too.
 //
 // Messages to the content script go through window.postMessage. The page can
 // see them, but they only contain the page's own media bytes.
@@ -28,6 +29,8 @@
   const AUDIO_CODECS = /mp4a|opus/i;
   const STREAM_LIMIT = 16 * 2 ** 20; // ~14 minutes of YouTube audio
   const TOTAL_LIMIT = 48 * 2 ** 20; // across all streams on the page
+  const MAX_ENTRIES = 10000; // per stream; a player's stay far below
+  const MAX_STREAMS = 64;
 
   const MAX_HEADER = 256 * 1024; // a format header is a few kilobytes: past this, parts are media
 
@@ -74,6 +77,11 @@
         if (streamIds.get(mediaSource) === id) streamIds.delete(mediaSource);
         if (streams.delete(id)) post({ type: "closed", streamId: id });
       }, { once: true });
+      // Media Sources that are never attached never close: past MAX_STREAMS the oldest unused one goes.
+      if (streams.size > MAX_STREAMS) {
+        const [oldest] = [...streams].find(([, stream]) => !stream.subscribed) ?? [];
+        if (streams.delete(oldest)) post({ type: "closed", streamId: oldest });
+      }
     }
     return id;
   }
@@ -137,15 +145,19 @@
     stream.bytes = bytes;
   }
 
-  // Past the page-wide limit, forget whole streams nobody is listening to, oldest first.
+  // Past the page-wide limit, every stream keeps its share (its newest audio),
+  // the ones being separated too: the worker already has their older audio.
   function enforceTotal() {
     let total = 0;
-    for (const stream of streams.values()) total += stream.bytes;
+    let holding = 0;
     for (const stream of streams.values()) {
-      if (total <= TOTAL_LIMIT) return;
-      if (stream.subscribed || !stream.bytes) continue;
-      total -= stream.bytes;
-      trim(stream, 0);
+      total += stream.bytes;
+      if (stream.bytes) holding++;
+    }
+    if (total <= TOTAL_LIMIT) return;
+    for (const stream of streams.values()) {
+      if (stream.bytes <= TOTAL_LIMIT / holding) continue;
+      trim(stream, TOTAL_LIMIT / holding);
       stream.dropped = true;
     }
   }
@@ -176,6 +188,8 @@
         return;
       }
     }
+    // A repeated abort says nothing new.
+    if (entry.kind === "abort" && stream.log.findLast((e) => e.bufferId === entry.bufferId)?.kind === "abort") return;
     if (entry.bytes) stream.bytes += entry.bytes.byteLength;
     stream.log.push(entry);
     if (stream.subscribed) {
@@ -186,6 +200,13 @@
     if (stream.bytes > STREAM_LIMIT) {
       trim(stream, STREAM_LIMIT);
       stream.dropped = true;
+    }
+    if (stream.log.length > MAX_ENTRIES) {
+      // Many small appends, or entries without audio piling up (removals).
+      trim(stream, stream.bytes / 2);
+      stream.dropped = true;
+      const cut = stream.log.length - MAX_ENTRIES / 2;
+      if (cut > 0) stream.log = stream.log.filter((e, at) => at >= cut || (e.kind !== "abort" && e.kind !== "remove"));
     }
     enforceTotal();
   }

@@ -111,6 +111,10 @@ export function workerSandbox({ supported = true, localModel = null } = {}) {
     chunks(id) { return content.sent.filter((message) => message.type === "chunk" && (id === undefined || message.streamId === id)); },
     changed() { return content.sent.filter((message) => message.type === "changed").map((message) => [...message.chunks]); },
     entry(id, entry) { w.send({ type: "entries", streamId: id, entries: [entry] }); },
+    held(id) {
+      const stream = inside.streams.get(id);
+      return { frames: stream.frames.length, bytes: stream.bytes, first: stream.frames[0]?.time, last: stream.frames.at(-1)?.time };
+    },
     // Frames straight into a stream, as its demuxer would give them.
     addRaw(id, frames) {
       const stream = inside.streams.get(id);
@@ -416,4 +420,22 @@ test("audio appended right after a made chunk does not change it", async () => {
   w.addRaw(1, frames(end, end + 5, 2));
   await w.advance();
   assert.deepEqual(w.changed(), []);
+});
+
+test("audio far from the playhead and past the byte limit is let go", async () => {
+  const w = workerSandbox();
+  w.start();
+  w.ready();
+  w.stream(1);
+  w.want(1, [], { position: 100 });
+  const frames = (from, count, size) => Array.from({ length: count }, (_, i) => ({ time: from + i * 0.02, duration: 0.02, data: new Uint8Array(size) }));
+  w.addRaw(1, frames(100, 50, 100));
+  w.addRaw(1, frames(1100, 50, 100)); // 1000 s ahead
+  await w.advance();
+  assert.equal(w.held(1).frames, 50);
+  assert.ok(w.held(1).last < 102);
+  w.addRaw(1, frames(102, 80, 2 ** 20)); // 80 MiB of "frames" right ahead of the playhead
+  await w.advance();
+  assert.ok(w.held(1).bytes <= 64 * 2 ** 20, `${w.held(1).bytes / 2 ** 20} MiB`);
+  assert.equal(w.held(1).first, 100, "the farthest went first");
 });

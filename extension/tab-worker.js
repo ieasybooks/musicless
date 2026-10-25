@@ -14,9 +14,11 @@ import { applyFades, chunkIndex, chunkStart, RATE, WINDOW_SAMPLES, WINDOW_SECOND
 const WARMUP_SECONDS = 0.25; // decoder pre-roll before a window starts
 const GAP_TOLERANCE = 0.005;
 const LEAD_TOLERANCE = 0.3; // the page asks from 0.25 s before the playhead
-// Encoded audio kept behind the playhead. Players hold at most ~10 minutes of
-// audio in their own buffers; seeking further back makes them append it again.
+// Encoded audio kept around the playhead. Players hold at most ~10 minutes of
+// audio in their own buffers; seeking further makes them append it again.
 const KEEP_BEHIND_SECONDS = 900;
+const KEEP_AHEAD_SECONDS = 900;
+const MAX_STREAM_BYTES = 64 * 2 ** 20; // far more than 30 minutes of the audio players send
 const SHARED_MODEL_TIMEOUT_MS = 20000;
 const LOAD_TIMEOUT_MS = 60000; // including a fallback to a copy of our own
 const RUN_TIMEOUT_MS = 120000;
@@ -144,7 +146,7 @@ function loadModel() {
 
 function newStream(id) {
   const stream = {
-    id, buffers: new Map(), frames: [], ended: false, duration: Infinity,
+    id, buffers: new Map(), frames: [], bytes: 0, ended: false, duration: Infinity,
     wanted: [], done: new Set(), playing: false, position: 0,
   };
   streams.set(id, stream);
@@ -177,14 +179,19 @@ function addFrames(stream, buffer, frames) {
     if (hi === lo + 1 && sameFrame(list[lo], frame)) continue;
     from = Math.min(from, frame.time);
     to = Math.max(to, end, hi > lo ? list[hi - 1].time + list[hi - 1].duration : end);
-    list.splice(lo, hi - lo, frame);
+    for (const replaced of list.splice(lo, hi - lo, frame)) stream.bytes -= replaced.data.length;
+    stream.bytes += frame.data.length;
   }
   return from < to ? [from, to] : null;
 }
 
 // Frames of `buffer` starting in [start, end): audio the player removed.
 function removeFrames(stream, buffer, start, end) {
-  stream.frames = stream.frames.filter((frame) => frame.buffer !== buffer || frame.time < start || frame.time >= end);
+  stream.frames = stream.frames.filter((frame) => {
+    const kept = frame.buffer !== buffer || frame.time < start || frame.time >= end;
+    if (!kept) stream.bytes -= frame.data.length;
+    return kept;
+  });
 }
 
 // Audio changed in [from, to): chunks made from what was there before must be
@@ -262,19 +269,22 @@ function onEntry(stream, entry) {
   }
 }
 
-// Old frames the page is unlikely to need again.
+// Frames far from the playhead, which the page is unlikely to need: beyond
+// KEEP_BEHIND/AHEAD_SECONDS, and the farthest past MAX_STREAM_BYTES.
 function evict(stream) {
-  const cutoff = stream.position - KEEP_BEHIND_SECONDS;
   const list = stream.frames;
-  if (!list.length || list[0].time + list[0].duration >= cutoff) return;
-  let lo = 0;
-  let hi = list.length;
-  while (lo < hi) {
-    const mid = (lo + hi) >> 1;
-    if (list[mid].time + list[mid].duration < cutoff) lo = mid + 1;
-    else hi = mid;
+  const { position } = stream;
+  let first = 0;
+  let end = list.length;
+  let bytes = stream.bytes;
+  while (first < end && list[first].time + list[first].duration < position - KEEP_BEHIND_SECONDS) bytes -= list[first++].data.length;
+  while (end > first && list[end - 1].time > position + KEEP_AHEAD_SECONDS) bytes -= list[--end].data.length;
+  while (end > first && bytes > MAX_STREAM_BYTES) {
+    if (position - list[first].time > list[end - 1].time - position) bytes -= list[first++].data.length;
+    else bytes -= list[--end].data.length;
   }
-  list.splice(0, lo);
+  if (first || end < list.length) stream.frames = list.slice(first, end);
+  stream.bytes = bytes;
 }
 
 // The run of contiguous frames that reaches `end`, extended back toward
@@ -505,6 +515,7 @@ function onMessage({ data }) {
     case "entries":
       if (!stream) return;
       for (const entry of data.entries) onEntry(stream, entry);
+      evict(stream);
       break;
     case "want":
       if (!stream) return;

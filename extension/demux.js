@@ -15,11 +15,16 @@ export function configKey(config) {
   return [config.codec, config.sampleRate, config.numberOfChannels, ...(config.description ?? [])].join(",");
 }
 
+// An element or box is parsed once complete; one that never completes would
+// grow the queue without end.
+const MAX_PENDING = 32 * 2 ** 20;
+
 class ByteQueue {
   constructor() {
     this.bytes = new Uint8Array(0);
   }
   push(chunk) {
+    if (this.bytes.length + chunk.length > MAX_PENDING) throw new Error("an element larger than 32 MiB never completed");
     const merged = new Uint8Array(this.bytes.length + chunk.length);
     merged.set(this.bytes);
     merged.set(chunk, this.bytes.length);
