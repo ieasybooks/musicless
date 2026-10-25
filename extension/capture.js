@@ -414,6 +414,9 @@
       consented = event.data.consented === true;
       if (!consented) for (const stream of streams.values()) dropMedia(stream);
     } else if (type === "subscribe") {
+      // From then on its appends go out as they come, until it closes: no
+      // message stops that (the page could post one), and the content script
+      // drops what no session watches.
       const stream = streams.get(streamId);
       if (!stream) {
         post({ type: "closed", streamId });
@@ -423,8 +426,6 @@
       const entries = stream.log.map((entry) => ({ ...entry, bytes: entry.bytes ? entry.bytes.slice() : null }));
       post({ type: "replay", streamId, dropped: !!stream.dropped, missed: !!stream.missed, entries },
         entries.filter((entry) => entry.bytes).map((entry) => entry.bytes.buffer));
-    } else if (type === "unsubscribe" && streams.has(streamId)) {
-      streams.get(streamId).subscribed = false;
     }
   });
 })();

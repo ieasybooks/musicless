@@ -4,6 +4,10 @@
 //
 // Anything in the page can post those messages, so they are checked before
 // they reach a session and the worker: shapes, types, finite numbers, sizes.
+// A page can post nomusic's own control messages too, so none of them may
+// leave a lasting failure: a stream's audio counts as missed only if nomusic
+// itself said no to keeping it, and no message stops a subscription (see
+// capture.js). A page that posts forgeries all the time can still interfere.
 
 const NS = "nomusic";
 const MAX_ENTRY_BYTES = 16 * 2 ** 20; // capture.js keeps no more than this per stream
@@ -49,6 +53,7 @@ export class CaptureBus {
     this.urls = new Map(); // object URL -> stream id
     this.subscribers = new Map(); // stream id -> session
     this.watchers = new Set(); // sessions told about new and closed streams
+    this.refused = false; // nomusic told capture.js to keep no audio (the user had not turned it on)
     window.addEventListener("message", (event) => {
       if (event.source !== window || event.data?.[NS] !== "capture") return;
       this.receive(event.data);
@@ -62,6 +67,7 @@ export class CaptureBus {
 
   // Whether the user turned nomusic on: capture.js keeps audio only then.
   consent(consented) {
+    if (consented === false) this.refused = true;
     this.control({ type: "consent", consented });
   }
 
@@ -86,9 +92,9 @@ export class CaptureBus {
     this.control({ type: "subscribe", streamId });
   }
 
+  // Live events for a stream nobody watches are dropped here.
   unsubscribe(streamId) {
-    if (!this.subscribers.delete(streamId)) return;
-    this.control({ type: "unsubscribe", streamId });
+    this.subscribers.delete(streamId);
   }
 
   receive(data) {
@@ -110,7 +116,8 @@ export class CaptureBus {
       case "replay": {
         if (!Array.isArray(data.entries) || data.entries.length > MAX_ENTRIES) return;
         const entries = data.entries.map(cleanEntry);
-        if (!entries.includes(null)) this.subscribers.get(data.streamId)?.onEntries(data.streamId, entries, { missed: data.missed === true });
+        const missed = data.missed === true && this.refused;
+        if (!entries.includes(null)) this.subscribers.get(data.streamId)?.onEntries(data.streamId, entries, { missed });
         break;
       }
       case "event": {

@@ -417,3 +417,15 @@ test("type changes, aborts and ends do not pile up, alone or between appends", (
   assert.ok(frames.length > 0, "the kept audio still decodes");
   assert.ok(Math.abs(frames.at(-1).time + frames.at(-1).duration - 50 * 3) < 0.05, "up to the newest audio");
 });
+
+test("an unsubscribe posted by the page does not stop a subscription", () => {
+  const env = sandbox();
+  const mediaSource = new env.context.MediaSource();
+  env.context.URL.createObjectURL(mediaSource);
+  const sb = mediaSource.addSourceBuffer(WEBM);
+  sb.appendBuffer(INIT);
+  env.control({ type: "subscribe", streamId: 1 });
+  env.control({ type: "unsubscribe", streamId: 1 });
+  sb.appendBuffer(CLUSTERS[0]);
+  assert.equal(env.posted.filter((m) => m.type === "event").length, 1, "the append still goes out");
+});

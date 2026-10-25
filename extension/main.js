@@ -135,13 +135,15 @@ function start() {
     resizeTimer = setTimeout(refresh, 250);
   });
   // SPA navigation without an event: poll the URL. Also give the engine a
-  // chance to release the model once nothing needs it.
+  // chance to release the model once nothing needs it, and say the consent
+  // answer again: a page can post a false one, which must not last.
   setInterval(() => {
     if (location.href !== lastUrl) {
       lastUrl = location.href;
       scheduleRefresh();
     }
     engine.tidy();
+    capture.consent(consented);
   }, 1000);
   // Players appear and resize without DOM changes we can see (layout, CSS).
   setInterval(() => {
