@@ -2,7 +2,8 @@
 # Package the extension for release: dist/nomusic-<version>.zip, the archive
 # to upload to a browser's add-on store or to share for "Load unpacked".
 # Run ./setup.sh first: the model and the runtime are built, not committed.
-# The zip is reproducible: sorted entries with fixed timestamps.
+# The zip is reproducible: sorted entries with fixed timestamps. The test-only
+# recorder (recorder.js) is left out.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -23,6 +24,7 @@ files = sorted(
     for name in names
     if not name.startswith(".")
 )
+files = [name for name in files if name != "recorder.js"]
 with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
     for name in files:
         info = zipfile.ZipInfo(name, date_time=(1980, 1, 1, 0, 0, 0))

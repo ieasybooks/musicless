@@ -151,16 +151,18 @@ onSettingsChanged(() => {
   }
 });
 
-// Test diagnostics (localStorage.nomusicDebug = "1"): state and recordings.
-window.addEventListener("message", (event) => {
-  if (event.source !== window || event.data?.[NS] !== "debug" || !debugEnabled()) return;
-  const sessions = [...controllers.values()].map((controller) => controller.session);
-  const session = sessions.find((s) => s.attached) ?? sessions.find((s) => s.on) ?? sessions[0];
-  let reply = null;
-  if (event.data.type === "dump") reply = session?.recorder?.dump(event.data.seconds ?? 20) ?? null;
-  else if (event.data.type === "state") reply = session ? session.snapshot() : null;
-  else if (event.data.type === "sessions") reply = sessions.map((s) => s.snapshot());
-  window.postMessage({ [NS]: "debug-reply", id: event.data.id, reply }, "*");
-});
+// Test diagnostics (the test harness's copy of the extension only): state and recordings.
+if (debugEnabled()) {
+  window.addEventListener("message", (event) => {
+    if (event.source !== window || event.data?.[NS] !== "debug") return;
+    const sessions = [...controllers.values()].map((controller) => controller.session);
+    const session = sessions.find((s) => s.attached) ?? sessions.find((s) => s.on) ?? sessions[0];
+    let reply = null;
+    if (event.data.type === "dump") reply = session?.recorder?.dump(event.data.seconds ?? 20) ?? null;
+    else if (event.data.type === "state") reply = session ? session.snapshot() : null;
+    else if (event.data.type === "sessions") reply = sessions.map((s) => s.snapshot());
+    window.postMessage({ [NS]: "debug-reply", id: event.data.id, reply }, "*");
+  });
+}
 
 loadSettings().finally(start);

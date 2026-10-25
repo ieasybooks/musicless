@@ -14,12 +14,26 @@ export const PYTHON = process.env.NOMUSIC_PYTHON ?? join(TESTS, ".venv", "bin", 
 const NS = "nomusic";
 mkdirSync(WORK, { recursive: true });
 
+// What the page-world capture keeps, for the tests (the release has no way to read it).
+const CAPTURE_DEBUG = `window.__nomusicCaptureDebug = () => [...streams].map(([id, s]) => ({ id, url: s.url,
+  buffers: [...s.buffers.values()], bytes: s.bytes, stored: s.log.length, subscribed: s.subscribed, dropped: !!s.dropped }));\n`;
+
 // The shipped manifest only matches YouTube; tests also allow the local server.
+// The test copy also turns on nomusic's diagnostics (state and recordings, which
+// the release cannot do): its manifest is marked, the recorder is made loadable
+// and the capture's state is readable from the page.
 // Each launch gets its own copy, so parallel runs never see each other's edits.
 function testExtension() {
   const dir = mkdtempSync(join(WORK, "extension-under-test-"));
   cpSync(EXTENSION, dir, { recursive: true, dereference: true }); // worktrees may link the built model and runtime
+  if (!existsSync(join(dir, "recorder.js"))) cpSync(new URL("../extension/recorder.js", import.meta.url), join(dir, "recorder.js"));
+  const capture = readFileSync(join(dir, "capture.js"), "utf8");
+  const inspected = capture.replace(/^( *const streams = new Map\(\);.*\n)/m, `$1${CAPTURE_DEBUG}`);
+  if (inspected === capture) throw new Error("capture.js no longer declares `const streams = new Map();`: update CAPTURE_DEBUG");
+  writeFileSync(join(dir, "capture.js"), inspected);
   const manifest = JSON.parse(readFileSync(join(dir, "manifest.json"), "utf8"));
+  manifest.nomusic_test = true;
+  manifest.web_accessible_resources[0].resources.push("recorder.js");
   for (const entry of [...manifest.content_scripts, ...manifest.web_accessible_resources]) {
     entry.matches.push("http://127.0.0.1/*");
   }
@@ -88,9 +102,6 @@ export async function setAutoStart(browser, extensionId, value) {
 
 export async function newPage(browser) {
   const page = await browser.newPage();
-  await page.evaluateOnNewDocument(() => {
-    try { localStorage.setItem("nomusicDebug", "1"); } catch { /* opaque origins */ }
-  });
   page.logs = [];
   page.on("console", (message) => page.logs.push(`[${message.type()}] ${message.text()}`));
   page.on("pageerror", (error) => page.logs.push(`[pageerror] ${error.message}`));
@@ -99,7 +110,7 @@ export async function newPage(browser) {
 
 export const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// Ask the page's nomusic content script (debug mode) for something.
+// Ask the page's nomusic content script (diagnostics are on in the test copy) for something.
 export function debugRequest(frame, type, extra = {}) {
   return frame.evaluate(({ NS, type, extra }) => new Promise((resolve) => {
     const id = Math.random().toString(36).slice(2);

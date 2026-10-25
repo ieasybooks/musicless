@@ -1,4 +1,5 @@
-// Debug recording (localStorage.nomusicDebug = "1"), loaded only for tests.
+// Debug recording for the browser tests. Not part of the release: the test
+// harness adds it to its own copy of the extension.
 // Taps the original element audio and nomusic's output on the same clock so
 // the browser tests can measure sync and leakage from what actually played.
 
@@ -42,6 +43,7 @@ export class Recorder {
 
   // Both tracks over the same clock span, as Int16 base64 for transport.
   dump(seconds) {
+    seconds = Math.min(Math.max(Number(seconds) || 0, 0), this.limit / this.rate);
     const end = Math.min(...["original", "output"].map((name) => {
       const track = this.tracks[name];
       const last = track[track.length - 1];

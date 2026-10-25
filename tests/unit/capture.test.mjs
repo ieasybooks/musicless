@@ -36,7 +36,6 @@ function sandbox({ streamLimit = 120_000, totalLimit = 400_000 } = {}) {
   const context = {
     MediaSource, SourceBuffer, Uint8Array, ArrayBuffer, Date, Map, Set, WeakMap, String, JSON,
     URL: { createObjectURL: () => `blob:test/${++urls}` },
-    localStorage: { getItem: () => "1" },
     postMessage: (message) => posted.push(message),
     addEventListener: (type, fn) => listeners.push(fn),
   };
@@ -74,6 +73,8 @@ function replay(env, streamId) {
   return env.posted.findLast((m) => m.type === "replay" && m.streamId === streamId);
 }
 
+const bytesOf = (entries) => entries.reduce((sum, entry) => sum + (entry.bytes?.length ?? 0), 0);
+
 function demuxReplay(entries) {
   const demuxers = new Map();
   const frames = [];
@@ -88,9 +89,9 @@ function demuxReplay(entries) {
 test("a long stream keeps only its most recent audio", () => {
   const env = sandbox();
   playLong(env, 12);
-  const [stream] = env.context.__nomusicCaptureDebug();
-  assert.ok(stream.dropped, "older audio was dropped");
-  assert.ok(stream.bytes <= 120_000 + INIT.length, `${stream.bytes} bytes kept`);
+  const { entries, dropped } = replay(env, 1);
+  assert.ok(dropped, "older audio was dropped");
+  assert.ok(bytesOf(entries) <= 120_000 + INIT.length, `${bytesOf(entries)} bytes kept`);
 });
 
 test("the trimmed copy starts with the format header and still decodes", () => {
@@ -135,7 +136,6 @@ test("a detached Media Source frees its audio and says so", () => {
   const { mediaSource } = playLong(env, 2);
   mediaSource.close();
   assert.ok(env.posted.some((m) => m.type === "closed" && m.streamId === 1));
-  assert.equal(env.context.__nomusicCaptureDebug().length, 0);
   env.control({ type: "subscribe", streamId: 1 });
   assert.equal(env.posted.at(-1).type, "closed", "subscribing to a closed stream answers closed");
 });
@@ -145,10 +145,10 @@ test("past the page-wide limit, streams nobody listens to are emptied, oldest fi
   playLong(env, 6);
   playLong(env, 6);
   playLong(env, 6);
-  const streams = env.context.__nomusicCaptureDebug();
-  const total = streams.reduce((sum, s) => sum + s.bytes, 0);
+  const kept = [1, 3, 5].map((id) => bytesOf(replay(env, id).entries)); // stream ids (buffer ids come between)
+  const total = kept.reduce((sum, bytes) => sum + bytes, 0);
   assert.ok(total <= 200_000 + 3 * INIT.length, `${total} bytes kept`);
-  assert.ok(streams[0].bytes < streams[2].bytes, "the oldest stream went first");
+  assert.ok(kept[0] < kept[2], "the oldest stream went first");
 });
 
 test("a subscribed stream gets each new append live", () => {

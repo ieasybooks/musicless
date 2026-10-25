@@ -38,10 +38,11 @@ const FAILURES = {
   updated: "nomusic was updated or turned off. Reload the page to continue.",
 };
 
-// Test diagnostics (localStorage.nomusicDebug = "1", set before the page loads).
+// Test diagnostics, only in the test harness's copy of the extension: it marks
+// its manifest, which no page can change.
 const DEBUG = (() => {
   try {
-    return localStorage.getItem("nomusicDebug") === "1";
+    return chrome.runtime.getManifest().nomusic_test === true;
   } catch {
     return false;
   }
@@ -236,7 +237,7 @@ export class Session {
     this.applyVolume();
     if (debugEnabled() && !this.recorder) {
       import(chrome.runtime.getURL("recorder.js")).then(({ Recorder }) => {
-        if (!this.recorder) this.recorder = new Recorder(this.graph.ctx, this.graph.element, this.graph.output, this.video);
+        if (!this.recorder && !this.disposed) this.recorder = new Recorder(this.graph.ctx, this.graph.element, this.graph.output, this.video);
       });
     }
     this.streamId = this.capture.streamFor(url);

@@ -46,7 +46,7 @@
     if (!id) {
       id = nextId++;
       streamIds.set(mediaSource, id);
-      streams.set(id, { url: null, buffers: new Map(), log: [], bytes: 0, subscribed: false, created: Date.now() });
+      streams.set(id, { url: null, buffers: new Map(), log: [], bytes: 0, subscribed: false });
       // A detached Media Source never plays again: free its audio.
       mediaSource.addEventListener("sourceclose", () => {
         if (!streams.delete(id)) return;
@@ -126,8 +126,6 @@
   function record(id, entry) {
     const stream = streams.get(id);
     if (!stream) return;
-    stream.counts ??= {};
-    stream.counts[entry.kind] = (stream.counts[entry.kind] ?? 0) + 1;
     if (entry.bytes) stream.bytes += entry.bytes.byteLength;
     stream.log.push(entry);
     if (stream.subscribed) {
@@ -208,16 +206,6 @@
       return nativeChangeType.apply(this, arguments);
     };
   }
-
-  // Test diagnostics (localStorage.nomusicDebug = "1"): what the player appended.
-  try {
-    if (localStorage.getItem("nomusicDebug") === "1") {
-      window.__nomusicCaptureDebug = () => [...streams].map(([id, s]) => ({
-        id, url: s.url, buffers: [...s.buffers.values()], counts: s.counts, bytes: s.bytes,
-        stored: s.log.length, subscribed: s.subscribed, dropped: !!s.dropped,
-      }));
-    }
-  } catch { /* storage unavailable */ }
 
   window.addEventListener("message", (event) => {
     if (event.source !== window || event.data?.[NS] !== "control") return;

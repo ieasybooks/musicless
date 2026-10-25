@@ -51,7 +51,6 @@
         "engine.js",
         "grid.js",
         "playback-intent.js",
-        "recorder.js",
         "session.js",
         "settings.js",
         "stretch.js",
