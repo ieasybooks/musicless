@@ -10,6 +10,7 @@
 
 import { resumeAudio, routeElement } from "./audio.js";
 import { CHUNK_SECONDS as CHUNK, chunkIndex, chunkStart, OVERLAP_SAMPLES, RATE } from "./grid.js";
+import { t } from "./i18n.js";
 import { PlaybackIntent } from "./playback-intent.js";
 import { settings } from "./settings.js";
 
@@ -26,17 +27,11 @@ const SLEEP_MS = 2 * 60 * 1000; // paused, ended or muted this long: let the eng
 const FADE_SECONDS = 0.004; // time constant of the fade when playback stops
 const OVERLAP_SECONDS = OVERLAP_SAMPLES / RATE;
 
-const FAILURES = {
-  protected: "This video is copy-protected, so nomusic can't read its audio.",
-  codec: "This browser can't decode this video's audio.",
-  uncaptured: "nomusic couldn't access this video's audio. Reloading the page usually fixes this.",
-  source: "nomusic can't access this player's audio.",
-  slow: "Removing the music is taking too long.",
-  engine: "nomusic couldn't start.",
-  error: "Something went wrong while removing the music.",
-  audio: "nomusic couldn't take over this video's sound.",
-  updated: "nomusic was updated or turned off. Reload the page to continue.",
-};
+// Why nomusic failed closed, in the user's language. Resolved now (see
+// i18n.js): the "updated" message shows after the extension itself is gone.
+const FAILURES = Object.fromEntries(
+  ["protected", "codec", "uncaptured", "source", "slow", "engine", "error", "audio", "updated"].map((reason) => [reason, t(`failure_${reason}`)]),
+);
 
 // Test diagnostics (localStorage.nomusicDebug = "1", set before the page loads).
 const DEBUG = (() => {
