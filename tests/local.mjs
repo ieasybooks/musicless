@@ -255,8 +255,12 @@ for (const variant of VARIANTS) {
   });
 
   // The page switches to another audio track (another language): the voice follows it.
+  // At 25 s, where both tracks have voice for the next half minute (vlog has
+  // stretches of music alone, e.g. 105-114 s, where a recording proves nothing).
   const other = SET === "vlog" ? "synth" : "vlog";
   if (existsSync(`${MEDIA}/${other}/${variant}/player.json`)) await step(`${tag} another audio track: the voice follows it`, async () => {
+    await seek(page, 25);
+    await settled(page, "at 25 s with the next chunk ready");
     await page.evaluate((other) => window.switchAudio(other), other);
     source = `${MEDIA}/${other}/${variant}/audio.${variant.startsWith("webm") ? "webm" : "mp4"}`;
     await sleep(6000);
