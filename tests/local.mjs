@@ -9,6 +9,7 @@ import {
   analyze, chooseRecovery, clickButton, dump, frameState, launch, memoryOfChrome, newPage, Report, setAutoStart,
   sleep, waitFor, WORK,
 } from "./harness.mjs";
+import { existsSync } from "node:fs";
 import { serve } from "./serve.mjs";
 
 const MEDIA = process.argv[2] ?? `${WORK}/media`;
@@ -224,6 +225,18 @@ for (const variant of VARIANTS) {
     const { ms, state } = await timeUntilOn(page, "re-enable");
     const a = await listen(page, `${variant}-reenable`, 12);
     report.record(`${tag} turn back on`, good(a) && state.originalGain === 0, { first_audio_ms: ms, ...a });
+  });
+
+  // The page switches to another audio track (another language): the voice follows it.
+  const other = SET === "vlog" ? "synth" : "vlog";
+  if (existsSync(`${MEDIA}/${other}/${variant}/player.json`)) await step(`${tag} another audio track: the voice follows it`, async () => {
+    await page.evaluate((other) => window.switchAudio(other), other);
+    source = `${MEDIA}/${other}/${variant}/audio.${variant.startsWith("webm") ? "webm" : "mp4"}`;
+    await sleep(6000);
+    const { ms } = await timeUntilOn(page, "after the switch");
+    const a = await listen(page, `${variant}-other-track`, 12);
+    report.record(`${tag} another audio track: the voice follows it`, good(a), { settle_ms: 6000 + ms, ...a });
+    source = audioFile(variant);
   });
 
   if (variant !== "mp4-aac") {

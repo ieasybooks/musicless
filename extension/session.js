@@ -303,6 +303,12 @@ export class Session {
   onEngine(message) {
     if (message.type === "chunk") {
       if (this.attached) this.addChunk(message);
+    } else if (message.type === "changed") {
+      // Their audio changed (the player switched audio tracks, say): they are
+      // made again, and the video holds rather than play the old voice meanwhile.
+      for (const k of message.chunks) this.chunks.delete(k);
+      this.requested = null;
+      this.tick();
     } else if (message.type === "unsupported") {
       this.fail(message.reason === "protected" ? "protected" : "codec", message.message);
     } else if (message.type === "error") {
@@ -344,7 +350,8 @@ export class Session {
     this.stats.made++;
     this.stats.timings.push({ k: message.k, ...message.timing });
     if (this.stats.timings.length > 40) this.stats.timings.shift();
-    if (this.anchor) this.schedule(message.k);
+    if (this.sources.has(message.k)) this.resync(); // a new version of what is playing
+    else if (this.anchor) this.schedule(message.k);
     this.tick();
   }
 
@@ -578,7 +585,10 @@ export class Session {
     if (!asked || forget.length || key !== asked.key || playing !== asked.playing || !Object.is(video.duration, asked.duration) ||
         Math.abs(time - asked.time) > 30) {
       this.requested = { key, playing, time, duration: video.duration };
-      this.engine.post({ type: "want", streamId: this.workerId, chunks: want, forget, duration: video.duration, playing, position: time });
+      this.engine.post({
+        type: "want", streamId: this.workerId, chunks: want, forget, have: [...this.chunks.keys()],
+        duration: video.duration, playing, position: time,
+      });
     }
 
     // Hold the video rather than play music while the audio it needs is missing.

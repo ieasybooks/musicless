@@ -252,3 +252,29 @@ test("a chunk is scheduled from where its audio starts", () => {
   assert.equal(next.offset, 0, "the next chunk from its start");
   assert.ok(Math.abs(next.when - (grid.chunkStart(k + 1) - 30)) < 1e-6);
 });
+
+test("chunks whose audio changed are made again, and the video holds instead of playing the old voice", () => {
+  const { session, video, engine, started } = sessionSandbox({ video: { currentTime: 3 } });
+  engine.deliver({ ...chunk(0), streamId: session.workerId });
+  engine.deliver({ ...chunk(1), streamId: session.workerId });
+  session.tick();
+  assert.equal(session.intent.held, false);
+  assert.equal(started.length >= 2, true);
+  engine.deliver({ type: "changed", streamId: session.workerId, chunks: [0, 1] });
+  assert.equal(session.chunks.size, 0);
+  assert.equal(session.intent.held, true);
+  assert.equal(video.paused, true);
+  const want = engine.wants().at(-1);
+  assert.equal(want.chunks.slice(0, 2).map((c) => c.k).join(), "0,1", "asked for again");
+  engine.deliver({ ...chunk(0), streamId: session.workerId });
+  engine.deliver({ ...chunk(1), streamId: session.workerId });
+  session.tick();
+  assert.equal(session.intent.held, false);
+});
+
+test("the worker is told which chunks the page has", () => {
+  const { session, engine } = sessionSandbox({ video: { currentTime: 3 } });
+  engine.deliver({ ...chunk(0), streamId: session.workerId });
+  session.tick();
+  assert.equal(engine.wants().at(-1).have.join(), "0");
+});

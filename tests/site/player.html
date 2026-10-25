@@ -17,7 +17,9 @@
 // cannot see), worker=1 (Media Source in a dedicated worker, attached through
 // srcObject), muted=1 (muted before the source loads), autoplay=1 (the page
 // starts playback itself, without a user gesture). A player.json with
-// "clearkey" plays ClearKey-encrypted media.
+// "clearkey" plays ClearKey-encrypted media. window.switchAudio(media) moves
+// the audio to another media set's track at the playhead, like a player
+// switching to another language.
 const video = document.getElementById("video");
 const log = (message) => { document.getElementById("log").textContent += message + "\n"; };
 const params = new URLSearchParams(location.search);
@@ -112,7 +114,8 @@ async function load(media, variant, slice = 200_000, gapMs = 0) {
   async function pump(track) {
     const epoch = track.epoch;
     while (!session.stopped && !session.starved && track.next < track.segments.length && track.segments[track.next].start < video.currentTime + AHEAD) {
-      const bytes = await fetchBytes(track.segments[track.next].url);
+      const bytes = track.base ? new Uint8Array(await (await fetch(track.base + track.segments[track.next].url)).arrayBuffer())
+        : await fetchBytes(track.segments[track.next].url);
       if (track.epoch !== epoch || session.stopped) return;
       await append(track.sb, bytes);
       if (track.epoch !== epoch) return;
@@ -154,6 +157,24 @@ async function load(media, variant, slice = 200_000, gapMs = 0) {
       track.next = Math.max(0, track.segments.findLastIndex((segment) => segment.start <= t + 1));
     }
     setTimeout(() => { session.starved = false; pumping = false; pumpAll(); }, ms);
+  };
+  // Another language: drop the audio buffered from the playhead on and append
+  // the other track's from the segment at the playhead.
+  window.switchAudio = async (other) => {
+    const track = tracks.find((t) => t.mime.startsWith("audio/"));
+    const otherBase = `/media/${other}/${variant}/`;
+    const replacement = (await (await fetch(otherBase + "player.json")).json()).tracks.find((t) => t.mime === track.mime);
+    track.epoch++;
+    await idle(track.sb);
+    track.sb.abort();
+    track.sb.remove(video.currentTime, mediaSource.duration);
+    await idle(track.sb);
+    track.base = otherBase;
+    track.segments = replacement.segments;
+    await append(track.sb, new Uint8Array(await (await fetch(otherBase + replacement.init)).arrayBuffer()));
+    track.next = Math.max(0, track.segments.findLastIndex((segment) => segment.start <= video.currentTime + 0.001));
+    pumping = false;
+    pumpAll();
   };
   session.timer = setInterval(pumpAll, 500);
   await pumpAll();

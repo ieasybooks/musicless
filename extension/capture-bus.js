@@ -31,7 +31,12 @@ export function cleanEntry(entry) {
       return whole && bytes.length <= MAX_ENTRY_BYTES && Number.isFinite(offset) && SEGMENTS.has(segment)
         ? { kind, bufferId, bytes, offset, segment } : null;
     }
+    case "remove": {
+      const { start, end } = entry; // the end may be Infinity
+      return Number.isFinite(start) && start >= 0 && end > start ? { kind, bufferId, start, end } : null;
+    }
     case "abort":
+    case "removeBuffer":
       return { kind, bufferId };
     default:
       return null;

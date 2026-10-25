@@ -36,6 +36,8 @@ function sandbox({ streamLimit = 120_000, totalLimit = 400_000 } = {}) {
     this.appended += data?.byteLength ?? 0;
   };
   SourceBuffer.prototype.abort = function () {};
+  SourceBuffer.prototype.remove = function (start, end) { if (!(end > start)) throw new TypeError("bad range"); };
+  MediaSource.prototype.removeSourceBuffer = function () {};
   let urls = 0;
   const context = {
     MediaSource, SourceBuffer, Uint8Array, ArrayBuffer, Date, Map, Set, WeakMap, String, JSON,
@@ -219,4 +221,22 @@ test("a format header split across appends is kept whole when older audio is tri
   const header = entries.filter((e) => e.kind === "append").slice(0, 2);
   assert.equal(header[0].bytes.length + header[1].bytes.length, INIT.length);
   assert.ok(demuxReplay(entries).length > 100, "the kept audio still decodes");
+});
+
+test("removed audio is recorded, and a removed buffer leaves the copy and its subscriber", () => {
+  const env = sandbox();
+  const mediaSource = new env.context.MediaSource();
+  env.context.URL.createObjectURL(mediaSource);
+  const sb = mediaSource.addSourceBuffer(WEBM);
+  sb.appendBuffer(INIT);
+  sb.appendBuffer(CLUSTERS[0]);
+  assert.throws(() => sb.remove(5, 1), /bad range/);
+  sb.remove(0, Infinity);
+  const first = replay(env, 1).entries;
+  assert.equal(first.map((e) => e.kind).join(), "buffer,append,append,remove", "only the removal the browser accepted");
+  assert.equal(first.at(-1).end, Infinity);
+  mediaSource.removeSourceBuffer(sb);
+  assert.equal(env.posted.at(-1).type, "event");
+  assert.equal(env.posted.at(-1).entry.kind, "removeBuffer");
+  assert.equal(replay(env, 1).entries.length, 0);
 });

@@ -114,8 +114,8 @@
         else latestHeader.get(entry.bufferId)?.push(at);
       }
       if (drop.has(at)) continue;
-      // An abort before a buffer's oldest kept audio no longer means anything.
-      if (entry.kind === "abort" && !started.has(entry.bufferId)) continue;
+      // An abort or removal before a buffer's oldest kept audio no longer means anything.
+      if ((entry.kind === "abort" || entry.kind === "remove") && !started.has(entry.bufferId)) continue;
       if (entry.kind === "append" && !started.has(entry.bufferId)) {
         started.add(entry.bufferId);
         const header = latestHeader.get(entry.bufferId);
@@ -201,6 +201,25 @@
     return sourceBuffer;
   };
 
+  // A removed buffer's audio is gone from the element: from the copy too, and
+  // from a subscriber's.
+  const nativeRemoveBuffer = msProto.removeSourceBuffer;
+  msProto.removeSourceBuffer = function (sourceBuffer) {
+    const result = nativeRemoveBuffer.apply(this, arguments);
+    safely(() => {
+      const info = buffers.get(sourceBuffer);
+      const stream = streams.get(info?.streamId);
+      if (!stream) return;
+      buffers.delete(sourceBuffer);
+      stream.buffers.delete(info.bufferId);
+      stream.headers.delete(info.bufferId);
+      stream.log = stream.log.filter((entry) => entry.bufferId !== info.bufferId);
+      stream.bytes = stream.log.reduce((sum, entry) => sum + (entry.bytes?.byteLength ?? 0), 0);
+      if (stream.subscribed) post({ type: "event", streamId: info.streamId, entry: { kind: "removeBuffer", bufferId: info.bufferId } });
+    });
+    return result;
+  };
+
   const nativeEnd = msProto.endOfStream;
   msProto.endOfStream = function () {
     const result = nativeEnd.apply(this, arguments);
@@ -227,6 +246,16 @@
         segment: segmentKind(bytes),
         bytes,
       });
+    });
+    return result;
+  };
+
+  const nativeRemove = sbProto.remove;
+  sbProto.remove = function (start, end) {
+    const result = nativeRemove.apply(this, arguments);
+    safely(() => {
+      const info = buffers.get(this);
+      if (info) record(info.streamId, { kind: "remove", bufferId: info.bufferId, start: Number(start), end: Number(end) });
     });
     return result;
   };

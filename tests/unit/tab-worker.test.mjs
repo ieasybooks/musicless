@@ -16,7 +16,8 @@ for (let i = 0; i + 4 <= opus.length; i++) {
 }
 const INIT = opus.subarray(0, starts[0]);
 const CLUSTERS = starts.map((start, i) => opus.subarray(start, starts[i + 1] ?? opus.length));
-const PASS_SECONDS = 3; // the fixture's length
+const fixtureFrames = createDemuxer(WEBM).push(opus);
+const PASS_SECONDS = fixtureFrames.at(-1).time + fixtureFrames.at(-1).duration; // the fixture's length, a little over 3 s
 
 class Port {
   constructor() { this.sent = []; this.onmessage = null; }
@@ -61,7 +62,10 @@ export function workerSandbox({ supported = true, localModel = null } = {}) {
     clearInterval: (timer) => timers.delete(timer),
     self: {},
   };
-  load("tab-worker.js", env, { rewrite: (source) => source.replace('import("./model.js")', "importModel()") });
+  const inside = load("tab-worker.js", env, {
+    rewrite: (source) => source.replace('import("./model.js")', "importModel()"),
+    expose: ["streams", "addFrames", "invalidate"],
+  });
   const content = new Port();
   const modelPort = new Port();
   const w = {
@@ -80,13 +84,18 @@ export function workerSandbox({ supported = true, localModel = null } = {}) {
     stream(id) { w.send({ type: "stream", streamId: id }); },
     // Captured audio as capture.js sends it, one entry per message: the fixture
     // over and over from `from` seconds (its clusters and timestamp offsets).
-    feed(id, seconds, { from = 0, bufferId = 2, header = true } = {}) {
+    // `other` makes it different audio at the same times (another audio track).
+    feed(id, seconds, { from = 0, bufferId = 2, header = true, other = false } = {}) {
       const entries = header ? [
         { kind: "buffer", bufferId, mime: WEBM },
         { kind: "append", bufferId, bytes: INIT.slice(), offset: 0, segment: "init" },
       ] : [];
       for (let at = from; at < from + seconds; at += PASS_SECONDS) {
-        for (const cluster of CLUSTERS) entries.push({ kind: "append", bufferId, bytes: cluster.slice(), offset: at, segment: "media" });
+        for (const cluster of CLUSTERS) {
+          const bytes = cluster.slice();
+          if (other) bytes[bytes.length - 1] ^= 0xff; // the last byte of its last frame
+          entries.push({ kind: "append", bufferId, bytes, offset: at, segment: "media" });
+        }
       }
       for (const entry of entries) w.send({ type: "entries", streamId: id, entries: [entry] });
     },
@@ -100,6 +109,17 @@ export function workerSandbox({ supported = true, localModel = null } = {}) {
       w.fromModel({ type: "result", id: run.id, mask: new Float32Array(8), ms: 1 });
     },
     chunks(id) { return content.sent.filter((message) => message.type === "chunk" && (id === undefined || message.streamId === id)); },
+    changed() { return content.sent.filter((message) => message.type === "changed").map((message) => [...message.chunks]); },
+    entry(id, entry) { w.send({ type: "entries", streamId: id, entries: [entry] }); },
+    // Frames straight into a stream, as its demuxer would give them.
+    addRaw(id, frames) {
+      const stream = inside.streams.get(id);
+      const buffer = stream.buffers.get(9) ?? stream.buffers.set(9, { id: 9 }).get(9);
+      for (const frame of frames) frame.config = { codec: "opus", sampleRate: 48000, numberOfChannels: 2 };
+      const changed = inside.addFrames(stream, buffer, frames);
+      if (changed) inside.invalidate(stream, changed);
+      w.send({ type: "entries", streamId: id, entries: [] }); // lets the worker look for work
+    },
     errors() { return content.sent.filter((message) => message.type === "error"); },
     // Moves the clock, running due timers in order and letting promises settle.
     async advance(ms = 0) {
@@ -263,4 +283,137 @@ test("audio appended after the end reopens the stream", async () => {
   w.feed(1, 9, { from: 18, header: false });
   await w.advance();
   assert.equal(w.runs().length, 1);
+});
+
+// A stream with chunk 0 made from 15 s of audio.
+async function madeChunk0() {
+  const w = workerSandbox();
+  w.start();
+  w.ready();
+  w.stream(1);
+  w.feed(1, 15);
+  w.want(1, [{ k: 0, from: 0 }]);
+  await w.advance();
+  w.answer();
+  await w.advance();
+  assert.equal(w.chunks(1).length, 1);
+  return w;
+}
+
+test("the same audio appended again (after a seek) changes nothing", async () => {
+  const w = await madeChunk0();
+  w.entry(1, { kind: "abort", bufferId: 2 });
+  w.feed(1, 15, { header: false });
+  await w.advance();
+  assert.deepEqual(w.changed(), []);
+  assert.equal(w.runs().length, 1);
+});
+
+test("other audio over a made chunk (another audio track) makes it again from the new audio", async () => {
+  const w = await madeChunk0();
+  w.feed(1, 15, { header: false, other: true });
+  await w.advance();
+  assert.deepEqual(w.changed(), [[0]]);
+  w.want(1, [{ k: 0, from: 0 }]); // the session dropped it and asks again
+  await w.advance();
+  assert.equal(w.runs().length, 2);
+  w.answer();
+  await w.advance();
+  assert.equal(w.chunks(1).length, 2);
+});
+
+test("removed audio is not separated again; other audio appended there changes the chunk", async () => {
+  const w = await madeChunk0();
+  w.entry(1, { kind: "remove", bufferId: 2, start: 0, end: Infinity });
+  await w.advance();
+  assert.deepEqual(w.changed(), [], "a removal alone changes no chunk (the player frees memory this way)");
+  w.want(1, [{ k: 0, from: 0 }], { forget: [0] });
+  await w.advance();
+  assert.equal(w.runs().length, 1, "no audio left to separate");
+  w.feed(1, 15, { header: false, other: true });
+  await w.advance();
+  assert.equal(w.runs().length, 2, "the new audio is separated");
+});
+
+test("a removed buffer's audio is gone", async () => {
+  const w = workerSandbox();
+  w.start();
+  w.ready();
+  w.stream(1);
+  w.feed(1, 15);
+  w.entry(1, { kind: "removeBuffer", bufferId: 2 });
+  w.want(1, [{ k: 0, from: 0 }]);
+  await w.advance();
+  assert.equal(w.runs().length, 0);
+});
+
+test("a chunk whose audio changes while it is made is not sent, and is made again", async () => {
+  const w = workerSandbox();
+  w.start();
+  w.ready();
+  w.stream(1);
+  w.feed(1, 15);
+  w.want(1, [{ k: 0, from: 0 }]);
+  await w.advance();
+  w.feed(1, 15, { header: false, other: true }); // the player switched tracks meanwhile
+  w.answer();
+  await w.advance();
+  assert.equal(w.chunks(1).length, 0, "made from the old audio: dropped");
+  assert.equal(w.runs().length, 2, "made again (it is still wanted)");
+  w.answer();
+  await w.advance();
+  assert.equal(w.chunks(1).length, 1);
+});
+
+test("the last chunk made against an end that was not the end is made again", async () => {
+  const w = workerSandbox();
+  w.start();
+  w.ready();
+  w.stream(1);
+  w.feed(1, 15);
+  w.entry(1, { kind: "end" });
+  w.want(1, [{ k: 1, from: grid.chunkStart(1) }]);
+  await w.advance();
+  w.answer();
+  await w.advance();
+  assert.equal(w.chunks(1).length, 1, "made with silence after 15 s");
+  w.feed(1, 3, { from: 15, header: false });
+  await w.advance();
+  assert.deepEqual(w.changed(), [[1]]);
+});
+
+test("chunks the page already has are watched for changes too", async () => {
+  const w = workerSandbox();
+  w.start();
+  w.ready();
+  w.stream(1);
+  w.feed(1, 15);
+  w.want(1, [{ k: 1, from: grid.chunkStart(1) }], { position: 5 });
+  w.send({ type: "want", streamId: 1, chunks: [], forget: [], have: [0], duration: 600, playing: true, position: 5 }); // from before this worker
+  await w.advance();
+  w.feed(1, 15, { header: false, other: true });
+  await w.advance();
+  assert.deepEqual(w.changed(), [[0]]);
+});
+
+test("audio appended right after a made chunk does not change it", async () => {
+  const w = workerSandbox();
+  w.start();
+  w.ready();
+  w.stream(1);
+  const end = grid.WINDOW_SECONDS - 0.004; // short of the window's end, within the tolerance
+  const frames = (from, to, byte) => {
+    const list = [];
+    for (let t = from; t < to - 1e-9; t += 0.02) list.push(t);
+    return list.map((time) => ({ time, duration: Math.min(0.02, to - time), data: new Uint8Array([byte]) }));
+  };
+  w.want(1, [{ k: 0, from: 0 }]);
+  w.addRaw(1, frames(0, end, 1));
+  await w.advance();
+  w.answer();
+  await w.advance();
+  assert.equal(w.chunks(1).length, 1);
+  w.addRaw(1, frames(end, end + 5, 2));
+  await w.advance();
+  assert.deepEqual(w.changed(), []);
 });

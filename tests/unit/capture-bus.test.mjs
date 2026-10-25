@@ -48,3 +48,14 @@ test("only blob URLs are mapped to streams", () => {
   assert.equal(capture.streamFor("blob:https://www.youtube.com/1"), 7);
   assert.equal(capture.streamFor("blob:https://www.youtube.com/2"), null);
 });
+
+test("removals pass on when well-formed", () => {
+  const { capture, received } = bus();
+  capture.receive({ type: "event", streamId: 5, entry: { kind: "remove", bufferId: 2, start: 0, end: Infinity } });
+  capture.receive({ type: "event", streamId: 5, entry: { kind: "removeBuffer", bufferId: 2 } });
+  capture.receive({ type: "event", streamId: 5, entry: { kind: "remove", bufferId: 2, start: 3, end: Number.NaN } });
+  capture.receive({ type: "event", streamId: 5, entry: { kind: "remove", bufferId: 2, start: -1, end: 4 } });
+  capture.receive({ type: "event", streamId: 5, entry: { kind: "remove", bufferId: 2, start: 4, end: 4 } });
+  assert.equal(received.length, 2);
+  assert.equal(received[0][0].end, Infinity);
+});

@@ -27,6 +27,7 @@ let port = null;
 let model = null;
 const streams = new Map(); // stream id -> { id, buffers, frames, ended, duration, wanted, done, playing, position }
 let busy = false;
+let current = null; // the job being separated
 
 const send = (message, transfer) => port.postMessage(message, transfer ?? []);
 
@@ -150,22 +151,52 @@ function newStream(id) {
   return stream;
 }
 
-// Frames stay sorted by time; a re-appended range replaces nothing, it is skipped.
+const sameFrame = (a, b) => Math.abs(a.time - b.time) < 1e-4 && a.data.length === b.data.length &&
+  a.data.every((byte, i) => byte === b.data[i]);
+
+// Frames stay sorted by time. As in the browser's own buffer, newer audio
+// replaces the frames it overlaps: appending the same audio again changes
+// nothing, other audio there (another audio track) replaces it. Returns the
+// span of time with new or different audio, if any.
 function addFrames(stream, buffer, frames) {
   const list = stream.frames;
+  let from = Infinity;
+  let to = -Infinity;
   for (const frame of frames) {
     frame.buffer = buffer;
+    const end = frame.time + frame.duration;
     let lo = 0;
     let hi = list.length;
     while (lo < hi) {
       const mid = (lo + hi) >> 1;
-      if (list[mid].time < frame.time) lo = mid + 1;
+      if (list[mid].time < frame.time - 1e-4) lo = mid + 1;
       else hi = mid;
     }
-    if (list[lo] && Math.abs(list[lo].time - frame.time) < 1e-4) continue;
-    if (list[lo - 1] && Math.abs(list[lo - 1].time - frame.time) < 1e-4) continue;
-    list.splice(lo, 0, frame);
+    hi = lo;
+    while (hi < list.length && list[hi].time < end - 1e-4) hi++;
+    if (hi === lo + 1 && sameFrame(list[lo], frame)) continue;
+    from = Math.min(from, frame.time);
+    to = Math.max(to, end, hi > lo ? list[hi - 1].time + list[hi - 1].duration : end);
+    list.splice(lo, hi - lo, frame);
   }
+  return from < to ? [from, to] : null;
+}
+
+// Frames of `buffer` starting in [start, end): audio the player removed.
+function removeFrames(stream, buffer, start, end) {
+  stream.frames = stream.frames.filter((frame) => frame.buffer !== buffer || frame.time < start || frame.time >= end);
+}
+
+// Audio changed in [from, to): chunks made from what was there before must be
+// made again. The page drops them and asks again; one being made now is dropped.
+// A window counts as covered to within GAP_TOLERANCE of its edges, so audio
+// appended right after it does not change it.
+function invalidate(stream, [from, to]) {
+  const overlaps = (k) => chunkStart(k) + GAP_TOLERANCE < to && chunkStart(k) + WINDOW_SECONDS - GAP_TOLERANCE > from;
+  if (current?.stream === stream && overlaps(current.k)) current.stale = true;
+  const changed = [...stream.done].filter(overlaps);
+  for (const k of changed) stream.done.delete(k);
+  if (changed.length) send({ type: "changed", streamId: stream.id, chunks: changed });
 }
 
 function report(stream, reason, message) {
@@ -179,12 +210,16 @@ function onEntry(stream, entry) {
     stream.ended = true;
     return;
   }
-  if (entry.kind === "append") stream.ended = false; // appending reopens an ended Media Source
+  if (entry.kind === "append" || entry.kind === "remove") stream.ended = false; // both reopen an ended Media Source
   let buffer = stream.buffers.get(entry.bufferId);
   if (entry.kind === "buffer" || entry.kind === "changeType") {
     try {
-      buffer = { id: entry.bufferId, mime: entry.mime, demuxer: createDemuxer(entry.mime) };
-      stream.buffers.set(entry.bufferId, buffer);
+      const demuxer = createDemuxer(entry.mime);
+      if (entry.kind === "buffer" || !buffer) {
+        buffer = { id: entry.bufferId };
+        stream.buffers.set(entry.bufferId, buffer);
+      }
+      Object.assign(buffer, { mime: entry.mime, demuxer, checkedConfig: null }); // a new type keeps the buffer's audio
     } catch {
       report(stream, "codec", "This video's audio format is not supported.");
     }
@@ -193,6 +228,13 @@ function onEntry(stream, entry) {
   if (!buffer) return;
   if (entry.kind === "abort") {
     buffer.demuxer.reset();
+    return;
+  }
+  if (entry.kind === "remove" || entry.kind === "removeBuffer") {
+    // Gone from the browser's buffer, so not separated again. Chunks already made
+    // stay: if other audio is appended there, that changes them.
+    removeFrames(stream, buffer, entry.start ?? -Infinity, entry.end ?? Infinity);
+    if (entry.kind === "removeBuffer") stream.buffers.delete(entry.bufferId);
     return;
   }
   try {
@@ -210,7 +252,8 @@ function onEntry(stream, entry) {
         AudioDecoder.isConfigSupported(config).then(({ supported }) => supported || unsupported(), unsupported);
       }
       for (const frame of frames) frame.config = config;
-      addFrames(stream, buffer, frames);
+      const changed = addFrames(stream, buffer, frames);
+      if (changed) invalidate(stream, changed);
     } else if (buffer.demuxer.unsupported) {
       report(stream, "codec", `This video's audio format (${buffer.demuxer.unsupported}) is not supported.`);
     }
@@ -404,9 +447,10 @@ async function pump() {
     for (let job = nextJob(); job; job = nextJob()) {
       const { stream } = job;
       stream.done.add(job.k);
+      current = job;
       try {
         const { vocals, timing } = await separate(stream, job);
-        if (streams.get(stream.id) !== stream) continue; // dropped while this chunk ran
+        if (streams.get(stream.id) !== stream || job.stale) continue; // dropped, or its audio changed, while it ran
         send({ type: "chunk", streamId: stream.id, k: job.k, validFrom: job.validFrom, left: vocals.left, right: vocals.right, timing },
           [vocals.left.buffer, vocals.right.buffer]);
       } catch (error) {
@@ -414,6 +458,8 @@ async function pump() {
         // Its session fails closed and drops it; the other streams go on.
         stream.failed = true;
         if (!stream.reported) send({ type: "error", streamId: stream.id, message: `Separation failed: ${error.message}` });
+      } finally {
+        current = null;
       }
     }
   } finally {
@@ -466,8 +512,10 @@ function onMessage({ data }) {
       stream.playing = !!data.playing;
       stream.position = data.position ?? stream.position;
       if (Number.isFinite(data.duration)) stream.duration = data.duration;
-      // Chunks the page evicted can be separated again when it asks later.
+      // Chunks the page evicted can be separated again when it asks later; the
+      // ones it has (also from before this worker) are watched for changes.
       for (const k of data.forget ?? []) stream.done.delete(k);
+      for (const k of data.have ?? []) stream.done.add(k);
       evict(stream);
       break;
     case "stats":
