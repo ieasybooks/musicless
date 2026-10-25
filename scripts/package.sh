@@ -20,7 +20,7 @@ os.makedirs("dist", exist_ok=True)
 out = f"dist/nomusic-{version}.zip"
 files = sorted(
     os.path.relpath(os.path.join(root, name), "extension")
-    for root, dirs, names in os.walk("extension")
+    for root, dirs, names in os.walk("extension", followlinks=True)  # worktrees may link the built model and runtime
     for name in names
     if not name.startswith(".")
 )
