@@ -2,9 +2,10 @@
 
 Windows of 524288 samples start every 522240 samples from media time 0. Each
 window gets a reflect-padded, centred STFT (n_fft 4096, hop 1024, periodic
-Hann); the model's vocal mask applies to bins below 1024 (the last frame reuses
-the previous frame's mask); and neighbouring windows crossfade linearly over
-their 2048-sample overlap. Needs numpy and onnxruntime only.
+Hann); the model reads its magnitude scaled to a -24 dBFS RMS window level; the
+model's vocal mask applies to bins below 1024 (the last frame reuses the
+previous frame's mask); and neighbouring windows crossfade linearly over their
+2048-sample overlap. Needs numpy and onnxruntime only.
 """
 
 from pathlib import Path
@@ -18,6 +19,8 @@ N_FFT, HOP, BINS, FRAMES = 4096, 1024, 1024, 512
 WINDOW = FRAMES * HOP
 OVERLAP = 2 * HOP
 STRIDE = WINDOW - OVERLAP
+INPUT_RMS = 10 ** (-24 / 20)  # the level the model sees each window at (extension/dsp.js)
+MAX_INPUT_GAIN = 10 ** (30 / 20)
 HANN = 0.5 - 0.5 * np.cos(2 * np.pi * np.arange(N_FFT) / N_FFT)
 _INDEX = np.arange(FRAMES + 1)[:, None] * HOP + np.arange(N_FFT)[None, :]
 _session = None
@@ -69,7 +72,8 @@ def vocals(stereo, first_window=0):
         segment = x[:, start : start + WINDOW]
         block[:, : segment.shape[1]] = segment
         spec = stft(block)
-        magnitude = np.abs(spec[:, None, :FRAMES]).astype(np.float32)
+        gain = np.clip(INPUT_RMS / (np.sqrt((block**2).mean()) + 1e-9), 1 / MAX_INPUT_GAIN, MAX_INPUT_GAIN)
+        magnitude = (np.abs(spec[:, None, :FRAMES]) * gain).astype(np.float32)
         mask = session().run(None, {"x": magnitude})[0][:, 0]
         mask = np.concatenate([mask, mask[:, -1:]], axis=1)
         y = istft(spec * mask)

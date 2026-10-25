@@ -36,6 +36,14 @@ test("the magnitude the model reads matches the sinusoid's bin", () => {
   assert.equal(best, 100);
 });
 
+test("the model reads every window at the same level", () => {
+  const scaled = (gain) => sine(WINDOW_SAMPLES, 440, RATE).map((v) => v * gain);
+  const quiet = analyze(scaled(0.05), scaled(0.05)).magnitude;
+  const loud = analyze(scaled(0.8), scaled(0.8)).magnitude;
+  const at = 200 * BINS + 41; // the 440 Hz bin
+  assert.ok(Math.abs(quiet[at] / loud[at] - 1) < 1e-4, `${quiet[at]} vs ${loud[at]}`);
+});
+
 test("48 kHz audio resamples to 44.1 kHz accurately", () => {
   const input = sine(48000, 1000, 48000);
   const [out] = resample([input], 48000, 0, 0.25, 4410);

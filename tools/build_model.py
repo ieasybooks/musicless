@@ -5,6 +5,11 @@ MIT-licensed weights from Deezer) into one graph that outputs the vocal soft
 mask directly, and stores the weights as fp16 with casts back to fp32 at load,
 which halves the download without changing the fp32 arithmetic.
 
+The mask is v / (v + 2a) of the two networks' magnitude estimates, where
+Spleeter's own is v^2 / (v^2 + a^2). It removes more of the music that plays
+under speech and scores better on voice quality (PESQ), at the cost of some
+signal fidelity (see docs/how-it-works.md).
+
 Usage: build_model.py <dir containing vocals.onnx and accompaniment.onnx> <out.onnx>
 """
 
@@ -18,6 +23,7 @@ import onnx
 from onnx import compose, helper, numpy_helper
 
 EPS = 1e-10
+MUSIC_WEIGHT = 2.0
 
 
 def prefixed(path: Path, prefix: str) -> onnx.GraphProto:
@@ -37,17 +43,17 @@ def main() -> None:
             node.input[:] = ["x" if name == graph.input[0].name else name for name in node.input]
             nodes.append(node)
 
-    # mask = (v^2 + eps/2) / (v^2 + a^2 + eps): Spleeter's Wiener-style ratio mask.
+    # mask = (v + eps/2) / (v + MUSIC_WEIGHT * a + eps)
     v, a = vocals.output[0].name, accomp.output[0].name
     nodes += [
-        helper.make_node("Mul", [v, v], ["v2"]),
-        helper.make_node("Mul", [a, a], ["a2"]),
-        helper.make_node("Add", ["v2", "half_eps"], ["num"]),
-        helper.make_node("Add", ["v2", "a2"], ["sum"]),
+        helper.make_node("Mul", [a, "music_weight"], ["wa"]),
+        helper.make_node("Add", [v, "half_eps"], ["num"]),
+        helper.make_node("Add", [v, "wa"], ["sum"]),
         helper.make_node("Add", ["sum", "eps"], ["den"]),
         helper.make_node("Div", ["num", "den"], ["mask"]),
     ]
     initializers = list(vocals.initializer) + list(accomp.initializer) + [
+        numpy_helper.from_array(np.array(MUSIC_WEIGHT, np.float32), "music_weight"),
         numpy_helper.from_array(np.array(EPS / 2, np.float32), "half_eps"),
         numpy_helper.from_array(np.array(EPS, np.float32), "eps"),
     ]

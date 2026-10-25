@@ -60,9 +60,22 @@ const fft = new FFT(N_FFT);
 
 const reflect = (i, n) => (i < 0 ? -i : i >= n ? 2 * (n - 1) - i : i);
 
+// The network's masks depend on how loud its input is, so every window is shown
+// to it at the same level; the mask still applies to the window as it is.
+const INPUT_RMS = 10 ** (-24 / 20);
+const MAX_INPUT_GAIN = 10 ** (30 / 20);
+
+export function inputGain(left, right) {
+  let sum = 0;
+  for (let i = 0; i < left.length; i++) sum += left[i] * left[i] + right[i] * right[i];
+  const rms = Math.sqrt(sum / (2 * left.length)) + 1e-9;
+  return Math.min(MAX_INPUT_GAIN, Math.max(1 / MAX_INPUT_GAIN, INPUT_RMS / rms));
+}
+
 // STFT of a stereo window. Returns the complex spectra of bins < BINS for all
-// FRAMES + 1 frames, and the model input |X| shaped (2, 1, FRAMES, BINS).
+// FRAMES + 1 frames, and the model input |X| * inputGain shaped (2, 1, FRAMES, BINS).
 export function analyze(left, right) {
+  const gain = inputGain(left, right);
   const frames = FRAMES + 1;
   const spec = new Float32Array(2 * 2 * frames * BINS); // [channel][re/im][frame][bin]
   const magnitude = new Float32Array(2 * FRAMES * BINS);
@@ -90,8 +103,8 @@ export function analyze(left, right) {
       spec[2 * plane + at] = rr;
       spec[3 * plane + at] = ri;
       if (f < FRAMES) {
-        magnitude[at] = Math.hypot(lr, li);
-        magnitude[FRAMES * BINS + at] = Math.hypot(rr, ri);
+        magnitude[at] = Math.hypot(lr, li) * gain;
+        magnitude[FRAMES * BINS + at] = Math.hypot(rr, ri) * gain;
       }
     }
   }

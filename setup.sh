@@ -19,7 +19,7 @@ SPLEETER_SHA256=e26401d9c1801f43c0229731d78d32c2e80085e3aceedeb25f29d2de5fa68ca2
 ORT_VERSION=1.30.0
 ORT_URL=https://registry.npmjs.org/onnxruntime-web/-/onnxruntime-web-$ORT_VERSION.tgz
 ORT_SHA256=d2228df7e4616bc3348bf504ee888f3bec43789a273f0a63f3e68d203ce3bf71
-MODEL_SHA256=fb9cd5b2cb210be7714dc032f6971842e79df1d24a8e988f90e3a2bff29d516c
+MODEL_SHA256=3dc5eaf764fc3c12daa4b69a295be426eb0870dbd400afe09c18d0f66e3a50de
 
 work=$(mktemp -d)
 trap 'rm -rf "$work"' EXIT
