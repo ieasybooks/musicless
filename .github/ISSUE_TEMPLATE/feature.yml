@@ -1,0 +1,25 @@
+name: Feature request
+description: Something nomusic should do differently.
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: The video, the habit, or the limit you hit.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What should change?
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Anything else
+      description: A video URL helps when the request is about a kind of audio.
+    validations:
+      required: false

@@ -10,5 +10,5 @@
   { "name": "Tests", "match": ["tests/**"] },
   { "name": "Docs", "match": ["docs/**", "**/*.md"] },
   { "name": "CI", "match": [".github/**"] },
-  { "name": "Tooling", "match": ["tools/**", "scripts/**", "*.sh"] }
+  { "name": "Tooling", "match": ["tools/**", "scripts/**", "*.sh", ".gitattributes"] }
 ]

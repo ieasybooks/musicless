@@ -1,0 +1,102 @@
+name: Bug report
+description: nomusic played the wrong audio, got stuck, or broke a YouTube page.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search the open issues first. For a security vulnerability, use the private report linked from SECURITY.md instead of this form.
+  - type: checkboxes
+    attributes:
+      label: Before you submit
+      options:
+        - label: I searched the existing issues and did not find this report.
+          required: true
+        - label: I can see this with nomusic as the only extension, or I have said below which other extensions were on.
+          required: true
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser
+      options:
+        - Google Chrome
+        - Microsoft Edge
+        - Brave
+        - Chromium
+        - Other (say which in the last box)
+    validations:
+      required: true
+  - type: input
+    id: browser-version
+    attributes:
+      label: Browser version
+      description: From the browser's About page, or chrome://version.
+      placeholder: "Example: 131.0.6778.85"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - ChromeOS
+        - Other (say which in the last box)
+    validations:
+      required: true
+  - type: input
+    id: extension-version
+    attributes:
+      label: nomusic version
+      description: chrome://extensions (edge://extensions in Edge). Also say whether you installed from the Chrome Web Store or from a GitHub Release zip.
+      placeholder: "Example: 1.0.0, from the Chrome Web Store"
+    validations:
+      required: true
+  - type: input
+    id: video-url
+    attributes:
+      label: Video URL
+      description: The YouTube watch, Shorts, live, or embed URL where it happened.
+      placeholder: "https://www.youtube.com/watch?v="
+    validations:
+      required: true
+  - type: dropdown
+    id: heard
+    attributes:
+      label: What did you hear?
+      options:
+        - The original music (nomusic should have removed it)
+        - Music still mixed under the voice
+        - Silence, and the video stayed paused
+        - The voice missing, distorted, or out of sync
+        - The original audio, because I turned nomusic off and that itself failed
+        - Something else (describe it below)
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps
+      description: What you did just before it happened. Seek, speed change, next video, Shorts, an ad, and a live stream all matter.
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Other extensions, a screenshot of the button's message, or the words nomusic showed on the player.
+    validations:
+      required: false
