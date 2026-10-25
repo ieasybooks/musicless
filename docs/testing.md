@@ -50,10 +50,10 @@ each block was heard) and output while the video is silent.
 It covers starting by itself, seeking, stalls, pausing (including during a
 hold), speed changes, volume, fullscreen, the button, the next video in the
 same player, three minutes of continuous play, preparing before play, muted
-videos, the setting, every failure path with Retry and Return to original, two
-tabs sharing one model, capture memory on a long stream, a paused video
-releasing the model, the browser's real autoplay policy, and the extension
-being removed while a video plays.
+videos, the setting, every failure path (Try again or Reload page, and Play
+with music), two tabs sharing one model, capture memory on a long stream, a
+paused video releasing the model, the browser's real autoplay policy, and the
+extension being removed while a video plays.
 
 Other browsers: `CHROME=/path/to/browser QUICK=1 node local.mjs`. Portable
 browser copies and CI containers need `NOMUSIC_NO_SANDBOX=1`. Browsers without

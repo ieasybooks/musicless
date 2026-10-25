@@ -31,7 +31,7 @@ video plays, and plays them in place of the original track.
 | `model-worker.js`, `model.js` | One copy of the model for every tab (a shared worker; WebCodecs is not available there, which is why decoding stays per tab). A priority queue puts the chunk a playing video needs first. If shared workers are unavailable, a tab loads its own copy. |
 | `grid.js` | The fixed window grid shared by both sides. |
 | `stretch.js`, `third_party/soundtouch` | Pitch-preserving time-stretch for speeds other than 1x. |
-| `popup.*`, `welcome.html`, `background.js`, `settings.js` | The toolbar setting, the welcome page on install, and the setting's storage. |
+| `popup.*`, `welcome.html`, `background.js`, `settings.js` | The toolbar setting, the welcome page, and storage for that setting and the first-run acknowledgement (**Turn on nomusic**). |
 
 ## Separation
 
@@ -73,7 +73,9 @@ nomusic never plays the original track by itself once it is on. If it cannot
 remove the music (copy-protected audio, audio it cannot capture, a codec the
 browser cannot decode, a chunk stuck for 30 s, or the extension being updated
 under an open page), the original stays silent, the video pauses, and the
-button's panel offers Retry or Return to original.
+button's panel offers **Try again** or **Play with music**. When the page
+itself has to be reloaded, the panel offers **Reload page** instead of Try
+again.
 
 ## Memory
 
