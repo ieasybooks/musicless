@@ -133,6 +133,9 @@ for (const variant of VARIANTS) {
   });
 
   await step(`${tag} network stall mid-play`, async () => {
+    // Where every media set has voice (vlog has a music-only stretch near 105 s).
+    await seek(page, 25);
+    await settled(page, "settled before the stall");
     const before = await frameState(page);
     await page.evaluate(() => window.stall(4000));
     await sleep(500);
@@ -217,6 +220,7 @@ for (const variant of VARIANTS) {
   });
 
   await step(`${tag} the auto-hidden button lets clicks through to the video`, async () => {
+    await settled(page, "on before the controls hide"); // working states stay visible by design
     // As in YouTube's player while its controls are hidden (".ytp-autohide").
     const hidden = await page.evaluate(async () => {
       const button = document.querySelector(".nomusic-btn");
