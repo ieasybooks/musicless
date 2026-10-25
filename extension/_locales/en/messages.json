@@ -39,7 +39,7 @@
 
   "consent_heading": { "message": "Turn on music removal" },
   "consent_text": {
-    "message": "nomusic reads the sound that YouTube has already loaded, removes most of the music on this computer, and plays the voices in its place. Audio is never uploaded or saved as a file. Your setting may sync through Chrome Sync.",
+    "message": "nomusic reads the sound that YouTube has already loaded, removes most of the music on this computer, and plays the voices in its place. Audio is never uploaded or saved as a file. Your nomusic settings may sync through Chrome Sync.",
     "description": "The disclosure shown before nomusic reads any audio."
   },
   "consent_accept": { "message": "Turn on nomusic", "description": "Primary button of the disclosure." },
@@ -49,12 +49,12 @@
 
   "popup_autostart_label": { "message": "Remove music from every video", "description": "The one switch in the toolbar popup." },
   "popup_autostart_hint": {
-    "message": "Every YouTube video starts with its music removed. When this is off, click “$LABEL$” on a video to start.",
+    "message": "nomusic starts by itself on every YouTube video. When this is off, click “$LABEL$” on a video to start.",
     "placeholders": { "label": { "content": "$1", "example": "Remove music" } }
   },
   "popup_autostart_note": { "message": "Videos already playing keep going until you click the button on them." },
-  "popup_results": { "message": "Voices stay, including speech and singing. Musical instruments are removed, though some quiet music can remain." },
-  "privacy_summary": { "message": "Audio is processed on this computer and is never uploaded. Your automatic-removal setting may sync through Chrome Sync. No analytics or tracking." },
+  "popup_results": { "message": "Voices stay, including speech and singing. Instrument sounds are removed, though some quiet music can remain." },
+  "privacy_summary": { "message": "Audio is processed on this computer and is never uploaded. Your nomusic settings may sync through Chrome Sync. No analytics or tracking." },
   "link_guide": { "message": "Guide", "description": "Link to the welcome page." },
   "link_help": { "message": "Help and feedback", "description": "Link to the project's issue tracker." },
   "link_licenses": { "message": "Licenses" },
@@ -69,11 +69,11 @@
   },
   "welcome_step_toolbar": { "message": "The nomusic icon in the browser toolbar has one setting: remove music from every video, or only when you click." },
   "welcome_expect": { "message": "What to expect" },
-  "welcome_expect_voices": { "message": "Voices stay, including speech and singing. Musical instruments are removed. Some quiet music can remain, most often under speech." },
+  "welcome_expect_voices": { "message": "Voices stay, including speech and singing. Instrument sounds are removed. Some quiet music can remain, most often under speech." },
   "welcome_expect_fail": { "message": "If nomusic can't remove the music, the video stays paused and silent, and nomusic asks whether to try again or play with music." },
   "welcome_limits": { "message": "Limits" },
   "welcome_limit_desktop": { "message": "Works on YouTube in Chrome, Edge, Brave and other Chromium browsers on a computer. Not on phones." },
   "welcome_limit_protected": { "message": "Copy-protected videos, such as rented movies, can't be processed." },
-  "welcome_limit_live": { "message": "A live stream watched right at its live point keeps pausing. A little behind it plays smoothly." },
-  "welcome_limit_memory": { "message": "While it works, nomusic uses about 450 MB of memory." }
+  "welcome_limit_live": { "message": "A live stream watched right at its live point keeps pausing. Watching a little behind it reduces the pauses." },
+  "welcome_limit_memory": { "message": "While it works, nomusic uses about 400 MB of memory." }
 }
