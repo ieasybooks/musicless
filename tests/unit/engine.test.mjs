@@ -33,7 +33,15 @@ test("the hidden frame starts a worker only for the content script's token, once
   assert.equal(frame.workers(), 1, "one connection per frame");
 });
 
-function engineSandbox({ stored = {} } = {}) {
+// URL as in Chrome, where an extension's pages have an origin of their own.
+class ChromeURL extends URL {
+  get origin() {
+    return this.protocol === "chrome-extension:" ? `${this.protocol}//${this.host}` : super.origin;
+  }
+}
+
+// `gate` holds back reading the secret until it resolves.
+function engineSandbox({ stored = {}, gate = null } = {}) {
   const frames = [];
   const storage = { ...stored };
   const ports = [];
@@ -47,11 +55,20 @@ function engineSandbox({ stored = {} } = {}) {
       const listeners = {};
       const frame = {
         src: "", style: { setProperty() {} }, isConnected: false, tabIndex: 0,
-        contentWindow: { posted: [], postMessage(message, origin) { this.posted.push({ message, origin }); } },
+        // The frame's document: its origin is where `src` pointed when it
+        // loaded, and the browser delivers a message only for that origin.
+        contentWindow: {
+          origin: null,
+          posted: [],
+          postMessage(message, origin) { this.posted.push({ message, origin, delivered: origin === this.origin }); },
+        },
         setAttribute() {},
         addEventListener(type, handler) { listeners[type] = handler; },
         remove() { this.isConnected = false; },
-        load() { listeners.load?.(); },
+        load() {
+          this.contentWindow.origin = new ChromeURL(this.src).origin;
+          listeners.load?.();
+        },
       };
       return frame;
     },
@@ -63,14 +80,17 @@ function engineSandbox({ stored = {} } = {}) {
     chrome: {
       runtime: { getURL: (file) => `chrome-extension://id/${file}` },
       storage: { local: {
-        get: async (key) => (key in storage ? { [key]: storage[key] } : {}),
+        get: async (key) => {
+          await gate;
+          return key in storage ? { [key]: storage[key] } : {};
+        },
         set: async (values) => { Object.assign(storage, values); },
       } },
     },
     crypto: { randomUUID: () => "made-token" },
     MessageChannel: class { constructor() { this.port1 = new Port(); this.port2 = new Port(); } },
     performance: { now: () => now },
-    URL,
+    URL: ChromeURL,
   };
   const { Engine } = load("engine.js", globals);
   return { Engine, frames, storage, ports, advance: (ms) => { now += ms; } };
@@ -91,6 +111,33 @@ test("the engine hands its port to the frame with the token, making one the firs
   again.frames[0].load();
   await flush();
   assert.equal(again.frames[0].contentWindow.posted[0].message.token, "kept", "an existing token is reused");
+});
+
+test("the handshake only ever goes to the extension's own document, wherever the page points the frame", async () => {
+  const where = (frame) => plain(frame.contentWindow.posted.map(({ origin, delivered }) => [origin, delivered]));
+  // Pointed at a page of the site before it loads.
+  const early = engineSandbox({ stored: { engineToken: "secret" } });
+  new early.Engine().post({ type: "hello" });
+  early.frames[0].src = "https://www.youtube.com/attacker";
+  early.frames[0].load();
+  await flush();
+  assert.deepEqual(where(early.frames[0]), [["chrome-extension://id", false]], "posted to the extension's origin: not delivered");
+  // Pointed elsewhere while the secret is being read.
+  let open;
+  const late = engineSandbox({ stored: { engineToken: "secret" }, gate: new Promise((resolve) => { open = resolve; }) });
+  new late.Engine().post({ type: "hello" });
+  late.frames[0].load();
+  late.frames[0].src = "https://www.youtube.com/attacker";
+  late.frames[0].contentWindow.origin = "https://www.youtube.com"; // the page's document replaced ours
+  open();
+  await flush();
+  assert.deepEqual(where(late.frames[0]), [["chrome-extension://id", false]]);
+  // Left alone, it reaches the frame.
+  const normal = engineSandbox({ stored: { engineToken: "secret" } });
+  new normal.Engine().post({ type: "hello" });
+  normal.frames[0].load();
+  await flush();
+  assert.deepEqual(where(normal.frames[0]), [["chrome-extension://id", true]]);
 });
 
 // A session as the engine sees it; `onLost` runs when the engine gives up.

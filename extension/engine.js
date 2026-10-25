@@ -44,8 +44,14 @@ export class Engine {
 
   ensure() {
     if (this.port) return;
+    // The frame is page DOM: the page can change its src. Where the handshake
+    // may go is fixed now, so the secret and the port only ever reach the
+    // extension's own document (anywhere else the browser drops the message,
+    // and the worker is given up when it does not connect).
+    const url = chrome.runtime.getURL("separator.html");
+    const origin = new URL(url).origin;
     const frame = document.createElement("iframe");
-    frame.src = chrome.runtime.getURL("separator.html");
+    frame.src = url;
     frame.tabIndex = -1;
     frame.setAttribute("aria-hidden", "true");
     frame.style.setProperty("display", "none", "important");
@@ -57,7 +63,7 @@ export class Engine {
     }));
     frame.addEventListener("load", () => {
       token.then((value) => {
-        frame.contentWindow?.postMessage({ type: "nomusic-port", token: value }, new URL(frame.src).origin, [channel.port2]);
+        frame.contentWindow?.postMessage({ type: "nomusic-port", token: value }, origin, [channel.port2]);
       }, () => {});
     }, { once: true });
     document.documentElement.appendChild(frame);
