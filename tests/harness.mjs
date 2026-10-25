@@ -18,7 +18,7 @@ mkdirSync(WORK, { recursive: true });
 // read it). `media` counts kept audio other than format headers.
 const CAPTURE_DEBUG = `window.__nomusicCaptureDebug = () => [...streams].map(([id, s]) => ({ id, url: s.url,
   buffers: [...s.buffers.values()], bytes: s.bytes, stored: s.log.length, subscribed: s.subscribed, dropped: !!s.dropped,
-  missed: !!s.missed, media: s.log.reduce((sum, e) => sum + (e.kind === "append" && !e.header ? e.bytes.length : 0), 0) }));\n`;
+  missed: !!s.missed, media: s.log.reduce((sum, e) => sum + (e.kind === "append" && !e.header ? e.bytes.length : 0), 0), consented }));\n`;
 
 // The shipped manifest only matches YouTube; tests also allow the local server.
 // The test copy also turns on nomusic's diagnostics (state and recordings, which

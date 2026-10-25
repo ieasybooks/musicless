@@ -221,14 +221,14 @@ for (const variant of VARIANTS) {
     const hidden = await page.evaluate(async () => {
       const button = document.querySelector(".nomusic-btn");
       const box = button.getBoundingClientRect();
-      const at = () => document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+      const at = () => button.contains(document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2));
       const host = button.parentElement;
       host.classList.add("ytp-autohide");
       await new Promise((resolve) => setTimeout(resolve, 400)); // its fade
       const style = getComputedStyle(button);
-      const result = { status: button.dataset.nomusicStatus, opacity: style.opacity, pointer_events: style.pointerEvents, target_is_button: at() === button };
+      const result = { status: button.dataset.nomusicStatus, opacity: style.opacity, pointer_events: style.pointerEvents, target_is_button: at() };
       host.classList.remove("ytp-autohide");
-      result.target_when_shown = at() === button;
+      result.target_when_shown = at();
       return result;
     });
     report.record(`${tag} the auto-hidden button lets clicks through to the video`,
@@ -266,6 +266,22 @@ for (const variant of VARIANTS) {
     const after = await frameState(page);
     report.record(`${tag} another audio track: the voice follows it`, good(a), { settle_ms: 6000 + ms, holds: after.holds - before.holds, ...a });
     source = audioFile(variant);
+  });
+
+  await step(`${tag} control messages a page forges leave no lasting failure`, async () => {
+    const { streamId } = await frameState(page);
+    // A page script posts nomusic's own control messages: no consent, no
+    // subscription, and a replay saying the audio went by before consent.
+    await page.evaluate((streamId) => {
+      for (const message of [{ type: "consent", consented: false }, { type: "unsubscribe", streamId }]) window.postMessage({ nomusic: "control", ...message }, "*");
+      window.postMessage({ nomusic: "capture", type: "replay", streamId, missed: true, entries: [] }, "*");
+    }, streamId);
+    await sleep(2000);
+    const state = await frameState(page);
+    const stream = (await page.evaluate(() => window.__nomusicCaptureDebug())).find((s) => s.id === streamId);
+    report.record(`${tag} control messages a page forges leave no lasting failure`,
+      state.status === "on" && !state.failure && stream?.subscribed === true && stream?.consented === true,
+      { status: state.status, failure: state.failure?.reason ?? null, still_subscribed: stream?.subscribed, consent_restored: stream?.consented });
   });
 
   if (variant !== "mp4-aac") {
