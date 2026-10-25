@@ -14,7 +14,7 @@ function separator() {
     SharedWorker: class { constructor() { this.port = { postMessage() {} }; } addEventListener() {} },
     MessageChannel: class { constructor() { this.port1 = {}; this.port2 = {}; } },
     URL,
-  }, (source) => source.replaceAll("import.meta.url", JSON.stringify("chrome-extension://id/separator.js")));
+  }, { rewrite: (source) => source.replaceAll("import.meta.url", JSON.stringify("chrome-extension://id/separator.js")) });
   const post = async (data, ports = [{}]) => {
     for (const handler of handlers) await handler({ data, ports, origin: "https://www.youtube.com" });
   };
@@ -91,4 +91,102 @@ test("the engine hands its port to the frame with the token, making one the firs
   again.frames[0].load();
   await flush();
   assert.equal(again.frames[0].contentWindow.posted[0].message.token, "kept", "an existing token is reused");
+});
+
+// A session as the engine sees it; `onLost` runs when the engine gives up.
+function sessionStub(onLost = () => {}) {
+  return { lost: 0, messages: [], onEngine(message) { this.messages.push(message); }, onEngineLost() { this.lost++; onLost(this); } };
+}
+
+function connected(env, engine, streamId = 1, session = sessionStub()) {
+  engine.attach(streamId, session);
+  engine.port.onmessage({ data: { type: "connected" } });
+  return session;
+}
+
+test("a worker that never connects is given up and its sessions start again", () => {
+  const env = engineSandbox();
+  const engine = new env.Engine();
+  const session = sessionStub();
+  engine.attach(1, session);
+  env.advance(9000);
+  engine.tidy();
+  assert.equal(session.lost, 0);
+  env.advance(2000);
+  engine.tidy();
+  assert.equal(session.lost, 1);
+  assert.equal(env.frames[0].isConnected, false, "the frame is removed");
+  assert.equal(env.ports[0].closed, true);
+  assert.equal(engine.port, null);
+});
+
+test("a removed frame is noticed at once", () => {
+  const env = engineSandbox();
+  const engine = new env.Engine();
+  const session = connected(env, engine);
+  env.frames[0].remove(); // the page removed it
+  env.advance(1000);
+  engine.tidy();
+  assert.equal(session.lost, 1);
+});
+
+test("a quiet worker is pinged: one that answers stays, one that does not is given up", () => {
+  const env = engineSandbox();
+  const engine = new env.Engine();
+  const session = connected(env, engine);
+  const pings = () => env.ports[0].sent.filter((message) => message.type === "ping").length;
+  env.advance(1000);
+  engine.tidy();
+  assert.equal(pings(), 0, "not while it was heard from lately");
+  env.advance(2000);
+  engine.tidy();
+  assert.equal(pings(), 1);
+  env.advance(5000);
+  engine.port.onmessage({ data: { type: "pong" } });
+  env.advance(1000);
+  engine.tidy();
+  assert.equal(session.lost, 0);
+  env.advance(2000);
+  engine.tidy();
+  assert.equal(pings(), 2);
+  env.advance(60000); // timers in a background tab may run this rarely: what counts is the unanswered ping
+  engine.tidy();
+  assert.equal(session.lost, 1);
+});
+
+test("a fatal error from the worker gives it up", () => {
+  const env = engineSandbox();
+  const engine = new env.Engine();
+  const session = connected(env, engine);
+  engine.port.onmessage({ data: { type: "error", fatal: true, message: "The model failed to load" } });
+  assert.equal(session.lost, 1);
+  assert.equal(session.messages.length, 0);
+  assert.equal(engine.port, null);
+});
+
+test("sessions that attach again when the engine is given up get a new engine", () => {
+  const env = engineSandbox();
+  const engine = new env.Engine();
+  const session = sessionStub((self) => engine.attach(2, self));
+  connected(env, engine, 1, session);
+  env.frames[0].remove();
+  engine.tidy();
+  assert.equal(session.lost, 1);
+  assert.equal(engine.sessions.get(2), session, "its new attachment is kept");
+  assert.equal(env.frames.length, 2, "on a new frame");
+  assert.equal(env.frames[1].isConnected, true);
+});
+
+test("an engine nobody uses is removed after 30 seconds", () => {
+  const env = engineSandbox();
+  const engine = new env.Engine();
+  connected(env, engine);
+  engine.detach(1);
+  env.advance(29000);
+  engine.tidy();
+  assert.notEqual(engine.port, null);
+  env.advance(2000);
+  engine.tidy();
+  assert.equal(engine.port, null);
+  assert.equal(env.frames[0].isConnected, false);
 });

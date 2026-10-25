@@ -87,6 +87,7 @@ export class Session {
     this.asleep = false; // let the engine go while paused; wakes on play, seek or unmute
     this.unknownSince = null;
     this.idleSince = null;
+    this.engineLosses = 0;
     this.holdStarted = 0;
     this.lastClock = -1;
     this.lastClockChange = 0;
@@ -217,6 +218,7 @@ export class Session {
   startSource() {
     this.stopProcessing();
     this.holdStarted = performance.now(); // a hold carried over from before gets a fresh deadline
+    this.engineLosses = 0;
     const url = this.sourceUrl;
     this.stats.started = performance.now();
     if (!url) return; // nothing loaded yet: wait for the next source
@@ -308,8 +310,14 @@ export class Session {
     }
   }
 
+  // The engine's worker is gone (its frame was removed, it crashed, or the
+  // model failed): attach to a new one once, then fail closed.
   onEngineLost() {
+    if (!this.attached) return;
     this.attached = false;
+    this.capture.unsubscribe(this.streamId); // subscribing again replays the audio to the new worker
+    if (++this.engineLosses > 1) this.fail("engine");
+    else this.tick();
   }
 
   fail(reason, detail) {

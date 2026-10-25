@@ -162,3 +162,18 @@ test("a changed duration is passed on to the worker", () => {
   session.tick();
   assert.equal(engine.wants().at(-1).duration, 500);
 });
+
+test("a lost engine is joined again once, then the session fails closed", () => {
+  const { session, engine, capture } = sessionSandbox();
+  assert.equal(session.attached, true);
+  engine.sessions.delete(1);
+  session.onEngineLost();
+  assert.equal(session.attached, true, "attached to a new engine");
+  assert.equal(engine.sessions.get(1), session);
+  assert.equal(capture.subscribed.get(1), session, "subscribed again, so the new worker gets the audio");
+  assert.equal(session.failure, null);
+  engine.sessions.delete(1);
+  session.onEngineLost();
+  assert.equal(session.failure?.reason, "engine");
+  assert.equal(session.intent.held, true);
+});

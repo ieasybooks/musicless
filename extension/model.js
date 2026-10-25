@@ -44,6 +44,9 @@ export function createModel() {
     busy = true;
     try {
       while (queue.length) {
+        // A run holds this thread until it ends, so jobs posted meanwhile (from
+        // any tab) are still waiting as messages: let them in, then pick.
+        await new Promise((resolve) => setTimeout(resolve, 0));
         try {
           await load();
         } catch (error) {

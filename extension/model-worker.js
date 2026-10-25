@@ -14,6 +14,8 @@ function serve(port) {
         (seconds) => port.postMessage({ type: "ready", seconds }),
         (error) => port.postMessage({ type: "failed", message: error.message }),
       );
+    } else if (data?.type === "ping") {
+      port.postMessage({ type: "pong" });
     } else if (data?.type === "run") {
       try {
         const { mask, ms } = await model.run(data.magnitude, data.priority);
