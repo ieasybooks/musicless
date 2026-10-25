@@ -33,7 +33,8 @@ export function cleanEntry(entry) {
     }
     case "remove": {
       const { start, end } = entry; // the end may be Infinity
-      return Number.isFinite(start) && start >= 0 && end > start ? { kind, bufferId, start, end } : null;
+      const ends = end === Infinity || (Number.isFinite(end) && end > start);
+      return Number.isFinite(start) && start >= 0 && ends ? { kind, bufferId, start, end } : null;
     }
     case "abort":
     case "removeBuffer":

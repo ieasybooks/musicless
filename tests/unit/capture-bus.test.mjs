@@ -56,6 +56,8 @@ test("removals pass on when well-formed", () => {
   capture.receive({ type: "event", streamId: 5, entry: { kind: "remove", bufferId: 2, start: 3, end: Number.NaN } });
   capture.receive({ type: "event", streamId: 5, entry: { kind: "remove", bufferId: 2, start: -1, end: 4 } });
   capture.receive({ type: "event", streamId: 5, entry: { kind: "remove", bufferId: 2, start: 4, end: 4 } });
+  capture.receive({ type: "event", streamId: 5, entry: { kind: "remove", bufferId: 2, start: 4, end: "9".repeat(400) } }); // a number only when compared
+  capture.receive({ type: "event", streamId: 5, entry: { kind: "remove", bufferId: 2, start: 4, end: [10] } });
   assert.equal(received.length, 2);
   assert.equal(received[0][0].end, Infinity);
 });
