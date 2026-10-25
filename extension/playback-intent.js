@@ -49,6 +49,7 @@ export class PlaybackIntent {
   hold() {
     if (this.disposed) return;
     this.held = true;
+    this.video.dataset.nomusicPlaybackTrack = "1"; // in case the page removed it: intent.js needs it
     if (!this.video.paused) this._command("pause");
   }
 

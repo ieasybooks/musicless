@@ -335,3 +335,35 @@ test("a stream whose audio went by before consent fails as uncaptured", () => {
   assert.equal(session.failure?.reason, "uncaptured");
   assert.equal(session.intent.held, true);
 });
+
+test("while the browser keeps the sound from playing, the video is held (not failed) until it can", () => {
+  for (const state of ["suspended", "interrupted"]) {
+    const { session, video, engine, ctx, advance } = sessionSandbox({ video: { currentTime: 3 } });
+    engine.deliver({ ...chunk(0), streamId: session.workerId });
+    engine.deliver({ ...chunk(1), streamId: session.workerId });
+    session.tick();
+    assert.equal(session.intent.held, false);
+    ctx.state = state; // no click yet, or another app took the audio device
+    session.tick();
+    assert.equal(session.intent.held, true, state);
+    assert.equal(video.paused, true);
+    assert.equal(session.status, "blocked");
+    advance(40000);
+    session.tick();
+    assert.equal(session.failure, null, "waiting for a click is not too slow");
+    ctx.state = "running";
+    session.tick();
+    assert.equal(session.intent.held, false);
+    assert.equal(session.status, "on");
+  }
+});
+
+test("the user's own choice does not carry over to the next video", () => {
+  const { session, video, capture } = sessionSandbox();
+  session.toggle(); // off for this video
+  assert.equal(session.userChoice, true);
+  capture.urls.set("blob:b", 3);
+  video.currentSrc = video.src = "blob:b";
+  session.checkSource();
+  assert.equal(session.userChoice, false);
+});

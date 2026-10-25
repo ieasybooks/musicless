@@ -233,7 +233,8 @@ export class Session {
     if (url !== this.sourceUrl) {
       this.stopProcessing();
       this.sourceUrl = url;
-      this.failure = null; // a failure belonged to the previous source
+      this.failure = null; // a failure and the user's choice belonged to the previous source
+      this.userChoice = false;
       this.stats.firstAudioMs = null;
       // Each new video starts on if the user wants nomusic on every video, or
       // had it on for the previous one in this player.
@@ -627,17 +628,20 @@ export class Session {
       });
     }
 
-    // Hold the video rather than play music while the audio it needs is missing.
+    // Hold the video rather than play music while the audio it needs is missing,
+    // or while the browser keeps the audio from playing (until a click).
     // A held video waits for a few seconds of audio, not to be held again at once.
+    const blocked = this.graph.ctx.state !== "running";
     const lead = this.intent.held ? 3 : 0.5;
-    const needed = this.playable(k, time) &&
+    const needed = !blocked && this.playable(k, time) &&
       (k >= last || time < chunkStart(k + 1) - lead || this.playable(k + 1, chunkStart(k + 1)));
     if (needed || !playing || !audible) {
       if (this.intent.held) this.intent.release();
-    } else if (video.readyState >= 3 || this.intent.held) {
+    } else if (video.readyState >= 3 || this.intent.held || blocked) {
       // A video still buffering is left to the site until it could play.
       this.hold();
     }
+    if (blocked) this.holdStarted = performance.now(); // waiting for the user, not for nomusic
     if (this.intent.held && performance.now() - this.holdStarted > HOLD_LIMIT_MS) {
       this.fail("slow");
       return;
@@ -686,7 +690,8 @@ export class Session {
     if (!this.on) return "off";
     if (this.failure) return "failed";
     const ctx = this.graph?.ctx;
-    if (ctx && ctx.state !== "running" && !this.video.paused && !this.video.muted) return "blocked";
+    const { ended, muted, volume } = this.video;
+    if (ctx && ctx.state !== "running" && this.intent.wantsPlay && !ended && !muted && volume > 0) return "blocked";
     if (this.intent.held) return this.stats.made ? "buffering" : "starting";
     return "on";
   }

@@ -123,3 +123,18 @@ test("native controls keep working without the bridge", async () => {
   await flush();
   assert.equal(video.paused, false, "disposing with restore resumes a held video the user wanted playing");
 });
+
+test("a hold puts back the attribute the page bridge needs", async () => {
+  const MediaElement = mediaClass({ bridge: true });
+  const video = new MediaElement();
+  const intent = new PlaybackIntent(video);
+  delete video.dataset.nomusicPlaybackTrack; // a page script removed it
+  intent.hold();
+  assert.equal(video.dataset.nomusicPlaybackTrack, "1");
+  video.pause(); // the user pauses during the hold: still reported
+  intent.release();
+  await flush();
+  assert.equal(intent.wantsPlay, false);
+  assert.equal(video.paused, true);
+  intent.dispose();
+});

@@ -15,8 +15,9 @@ export function audioContext() {
   return context;
 }
 
+// Suspended (no gesture yet) or interrupted (another app took the audio device).
 export function resumeAudio() {
-  if (context?.state === "suspended") context.resume().catch(() => {});
+  if (context?.state === "suspended" || context?.state === "interrupted") context.resume().catch(() => {});
 }
 
 // Route a media element through Web Audio: its own track goes through
