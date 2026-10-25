@@ -31,12 +31,18 @@ for (let minute = 1; minute <= minutes; minute++) {
   console.log(JSON.stringify(samples.at(-1)));
 }
 const a = analyze(await dump(page, 25), "soak", { source: `${MEDIA}/${SET}/webm-opus/audio.webm` });
+// nomusic's own memory must stay flat: its extension process, the captured copy
+// (16 MiB at most) and the worker's audio (15 minutes behind the playhead at most).
+// The whole browser also grows slowly while playing a long Media Source stream,
+// by about as much without nomusic, so that is reported but not judged.
 const first = samples[Math.min(2, samples.length - 1)];
 const last = samples.at(-1);
-const growth = last.total_mb - first.total_mb;
+const extensionGrowth = last.extension_mb - first.extension_mb;
 report.record(`${minutes} minutes of continuous play`,
-  growth < 150 && last.holds <= 2 && last.status === "on" && Math.abs(a.media_env_lag_ms) <= 30 && a.media_env_corr >= 0.8 && a.media_dropouts === 0,
-  { memory_growth_after_minute_3_mb: growth, holds: last.holds, resyncs: last.resyncs, samples, end: a });
+  extensionGrowth < 100 && last.capture_mb <= 16.5 && last.worker_mb <= 40 && last.holds <= 2 && last.status === "on" &&
+    Math.abs(a.media_env_lag_ms) <= 30 && a.media_env_corr >= 0.8 && a.media_dropouts === 0,
+  { extension_growth_after_minute_3_mb: extensionGrowth, browser_growth_after_minute_3_mb: last.total_mb - first.total_mb,
+    holds: last.holds, resyncs: last.resyncs, samples, end: a });
 report.save();
 await browser.close();
 server.close();

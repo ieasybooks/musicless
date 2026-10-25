@@ -65,7 +65,10 @@ Results go to `.work/results/<REPORT>.json` and recordings to
 release package) and `PORT` lets several browsers run side by side.
 
 `soak.mjs [minutes]` plays a long stream (`LONG_SET`, built with
-`build_media.py long`) and checks that memory stays flat and sync holds.
+`build_media.py long`) and checks that nomusic's own memory stays flat and
+sync holds. (The whole browser grows slowly while playing a long Media Source
+stream, by about as much without nomusic: 61 MB with nomusic off against 80 MB
+with it on over the same 12 minutes.)
 
 ## YouTube
 
