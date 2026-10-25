@@ -246,6 +246,18 @@ function invalidate(stream, { replaced, added }) {
   if (changed.length) send({ type: "changed", streamId: stream.id, chunks: changed });
 }
 
+// Audio in chunk k's window after `cut`, where the stream's end cut it short:
+// the end was not the end after all (the player went on, maybe while no
+// worker was watching), and the chunk's silence there is wrong.
+function pastCut(stream, k, cut) {
+  const end = chunkStart(k) + WINDOW_SECONDS;
+  if (cut >= end) return false;
+  const list = stream.frames;
+  const at = firstFrom(list, cut);
+  const before = list[at - 1];
+  return (before && before.time + before.duration > cut + GAP_TOLERANCE) || (at < list.length && list[at].time < end - GAP_TOLERANCE);
+}
+
 // Chunks the page kept from an earlier worker (made before a sleep, or before
 // the engine started again) are trusted only if this worker, once it has the
 // capture's replay, holds the very audio they were made from: the page drops
@@ -257,7 +269,7 @@ function check(stream) {
   for (const [k, { cut, print }] of stream.carried) {
     const start = chunkStart(k);
     const found = run(stream, Math.max(start - WARMUP_SECONDS, 0), Math.min(start + WINDOW_SECONDS, cut));
-    if (found && fingerprint(stream.frames.slice(found[0], found[1] + 1)) === print) {
+    if (found && !pastCut(stream, k, cut) && fingerprint(stream.frames.slice(found[0], found[1] + 1)) === print) {
       stream.done.set(k, cut);
       checked.push(k);
     } else {

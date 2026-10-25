@@ -420,6 +420,30 @@ test("a chunk an earlier worker cut short at the stream's end is made again when
   assert.deepEqual(w.changed(), [[1]]);
 });
 
+test("a chunk cut short at an end the stream went on from while no worker watched is made again", async () => {
+  const first = workerSandbox();
+  first.start();
+  first.ready();
+  first.stream(1);
+  first.feed(1, 15);
+  first.entry(1, { kind: "end" });
+  first.want(1, [{ k: 1, from: grid.chunkStart(1) }]);
+  await first.advance();
+  first.answer();
+  await first.advance();
+  const [made] = first.chunks(1); // its audio stops at the end, ~15.1 s; silence after
+  // Asleep: the player appended more from that end on. The capture's copy, with
+  // the same audio up to the old end, replays to the new worker before it checks.
+  const w = await laterWorker([made]);
+  w.feed(1, 15);
+  w.entry(1, { kind: "end" });
+  w.feed(1, 12, { from: 5 * PASS_SECONDS, header: false });
+  w.send({ type: "replayed", streamId: 1 });
+  await w.advance();
+  assert.deepEqual(w.changed(), [[1]], "its silence after the old end is wrong now");
+  assert.deepEqual(checked(w), []);
+});
+
 test("a buffer replayed again to the same worker keeps following its removals", async () => {
   const w = await madeChunk0();
   w.feed(1, 15); // the same copy again (a page asked capture.js for another replay)
