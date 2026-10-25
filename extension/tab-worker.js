@@ -66,6 +66,10 @@ function sharedModel(modelPort) {
     }
   };
   modelPort.postMessage({ type: "load" });
+  const failed = (message) => {
+    clearTimeout(timer);
+    settle.reject(new Error(message));
+  };
   const loaded = ready.catch(() => {
     fallback = localModel();
     return fallback.load();
@@ -74,6 +78,7 @@ function sharedModel(modelPort) {
     get shared() {
       return !fallback;
     },
+    failed,
     load: () => loaded,
     async run(magnitude, priority) {
       await loaded;
@@ -432,6 +437,10 @@ function onMessage({ data }) {
 }
 
 self.onmessage = (event) => {
+  if (event.data?.type === "shared-model-failed") {
+    model?.failed?.("the shared model could not start");
+    return;
+  }
   if (event.data?.type !== "port") return;
   [port] = event.ports;
   model = event.ports[1] ? sharedModel(event.ports[1]) : localModel();

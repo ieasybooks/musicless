@@ -9,6 +9,8 @@ window.addEventListener("message", (event) => {
   const ports = [event.ports[0]];
   try {
     const shared = new SharedWorker(new URL("./model-worker.js", import.meta.url), { type: "module", name: "nomusic-model" });
+    // If it cannot start (e.g. blocked by policy), fall back at once rather than after a timeout.
+    shared.addEventListener("error", () => worker.postMessage({ type: "shared-model-failed" }));
     const channel = new MessageChannel();
     shared.port.postMessage({ type: "client" }, [channel.port2]);
     ports.push(channel.port1);
