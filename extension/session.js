@@ -423,10 +423,12 @@ export class Session {
     }
     const ctx = this.graph.ctx;
     const now = ctx.currentTime + 0.01;
-    let when = this.anchor.ctx + (chunkStart(k) - this.anchor.media) / rate;
-    let offset = 0;
+    // Before validFrom the chunk holds no captured audio: it starts there.
+    const lead = Math.max(0, chunk.validFrom - chunkStart(k)) / rate;
+    let when = this.anchor.ctx + (chunkStart(k) - this.anchor.media) / rate + lead;
+    let offset = lead * sourceRate;
     if (when < now) {
-      offset = (now - when) * sourceRate;
+      offset += (now - when) * sourceRate;
       when = now;
     }
     if (offset >= buffer.duration) return;
@@ -556,22 +558,19 @@ export class Session {
     const k = chunkIndex(time);
     const last = Number.isFinite(video.duration) ? chunkIndex(Math.max(0, video.duration - 0.001)) : Infinity;
 
-    // A chunk made after a seek may start late; going back before that needs a redo.
+    // A chunk made after a seek may start late (from where that playhead was):
+    // going back before that, or coming to it from an earlier chunk, needs a redo.
     const forget = [];
-    if (this.chunks.has(k) && !this.playable(k, time)) {
-      this.chunks.delete(k);
-      forget.push(k);
+    for (const i of this.chunks.keys()) {
+      if (i < k - BEHIND || i > k + AHEAD + 1 || (i >= k && !this.playable(i, i === k ? time : chunkStart(i)))) {
+        this.chunks.delete(i);
+        forget.push(i);
+      }
     }
     // Ask for the current chunk first (from the playhead), then the ones ahead.
     const want = [];
     for (let i = k; i <= Math.min(k + AHEAD, last); i++) {
       if (!this.chunks.has(i)) want.push({ k: i, from: i === k ? Math.max(0, time - 0.25) : chunkStart(i) });
-    }
-    for (const i of this.chunks.keys()) {
-      if (i < k - BEHIND || i > k + AHEAD + 1) {
-        this.chunks.delete(i);
-        forget.push(i);
-      }
     }
     const playing = this.intent.wantsPlay && !video.ended;
     const key = want.map((w) => w.k).join();
@@ -585,7 +584,8 @@ export class Session {
     // Hold the video rather than play music while the audio it needs is missing.
     // A held video waits for a few seconds of audio, not to be held again at once.
     const lead = this.intent.held ? 3 : 0.5;
-    const needed = this.playable(k, time) && (k >= last || time < chunkStart(k + 1) - lead || this.chunks.has(k + 1));
+    const needed = this.playable(k, time) &&
+      (k >= last || time < chunkStart(k + 1) - lead || this.playable(k + 1, chunkStart(k + 1)));
     if (needed || !playing || !audible) {
       if (this.intent.held) this.intent.release();
     } else if (video.readyState >= 3 || this.intent.held) {

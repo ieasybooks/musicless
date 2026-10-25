@@ -4,7 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as grid from "../../extension/grid.js";
 import { PlaybackIntent } from "../../extension/playback-intent.js";
-import { flush, load } from "./sandbox.mjs";
+import { flush, load, plain } from "./sandbox.mjs";
 
 class Video extends EventTarget {
   constructor(props = {}) {
@@ -95,7 +95,8 @@ export function sessionSandbox({ video: props, settings = {}, streams = { "blob:
 
 // A separated chunk as the worker sends it.
 export function chunk(k, validFrom = grid.chunkStart(k)) {
-  return { type: "chunk", k, validFrom, left: new Float32Array(16), right: new Float32Array(16), timing: {} };
+  const samples = { length: grid.WINDOW_SAMPLES }; // only its length is read here
+  return { type: "chunk", k, validFrom, left: samples, right: samples, timing: {} };
 }
 
 test("a closed stream for the source still playing holds the video, then fails closed", () => {
@@ -216,4 +217,38 @@ test("a failed speed change fails closed, unless the chunk was replaced since", 
   pending.shift()(new Error("stretch failed"));
   await flush();
   assert.equal(session.failure?.reason, "error");
+});
+
+test("a chunk ahead that starts late (made after a seek) is asked for again, and the video holds before it", () => {
+  const { session, video, engine } = sessionSandbox({ video: { currentTime: 1 } });
+  engine.deliver({ ...chunk(0), streamId: session.workerId });
+  engine.deliver({ ...chunk(1, grid.chunkStart(1) + 2), streamId: session.workerId }); // made for a playhead 2 s into it
+  session.tick();
+  assert.equal(session.chunks.has(1), false, "dropped");
+  const want = engine.wants().at(-1);
+  assert.deepEqual(plain(want.forget), [1]);
+  assert.equal(want.chunks[0].k, 1);
+  assert.equal(want.chunks[0].from, grid.chunkStart(1));
+  video.currentTime = grid.chunkStart(1) - 0.4;
+  session.tick();
+  assert.equal(session.intent.held, true, "held before the seam until chunk 1 is whole");
+  engine.deliver({ ...chunk(1), streamId: session.workerId });
+  session.tick();
+  assert.equal(session.intent.held, false);
+});
+
+test("a chunk is scheduled from where its audio starts", () => {
+  const { session, engine, started } = sessionSandbox({ video: { currentTime: 30 } });
+  const k = grid.chunkIndex(30);
+  engine.deliver({ ...chunk(k, 30.04), streamId: session.workerId }); // its audio starts 40 ms after the playhead
+  session.tick();
+  const first = started.at(-1);
+  assert.ok(first, "scheduled");
+  assert.ok(Math.abs(first.offset - (30.04 - grid.chunkStart(k))) < 1e-6, `from validFrom, offset ${first.offset}`);
+  assert.ok(Math.abs(first.when - 0.04) < 1e-6, `at validFrom on the clock, ${first.when}`);
+  engine.deliver({ ...chunk(k + 1), streamId: session.workerId });
+  session.tick();
+  const next = started.at(-1);
+  assert.equal(next.offset, 0, "the next chunk from its start");
+  assert.ok(Math.abs(next.when - (grid.chunkStart(k + 1) - 30)) < 1e-6);
 });

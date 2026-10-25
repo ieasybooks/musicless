@@ -208,3 +208,43 @@ test("one stream's failure does not stall the others", async () => {
   await w.advance();
   assert.equal(w.runs().length, 2, "the failed stream is not tried again");
 });
+
+test("the chunk a playing video waits for goes before another video's look-ahead", async () => {
+  const w = workerSandbox();
+  w.start();
+  w.ready();
+  w.stream(1); // has chunk 0 already and asks for the next one
+  w.feed(1, 30);
+  w.want(1, [{ k: 1, from: grid.chunkStart(1) }], { position: 5 });
+  w.stream(2); // waits for the chunk at its playhead
+  w.feed(2, 15);
+  w.want(2, [{ k: 0, from: 0 }], { position: 0 });
+  await w.advance();
+  assert.equal(w.runs()[0].priority, 0);
+  w.answer();
+  await w.advance();
+  assert.deepEqual(w.chunks().map((message) => [message.streamId, message.k]), [[2, 0]]);
+  assert.equal(w.runs()[1].priority, 1, "then the look-ahead");
+});
+
+test("ahead of the playhead a late start counts as part of the window; at the playhead it is kept", async () => {
+  const w = workerSandbox();
+  w.start();
+  w.ready();
+  const start = grid.chunkStart(1);
+  // Audio from 0.1 s into chunk 1's window (as after a seek there), to well past it.
+  w.stream(1);
+  w.feed(1, 15, { from: start + 0.1 });
+  w.want(1, [{ k: 1, from: start }], { position: start - 2 });
+  await w.advance();
+  w.answer();
+  await w.advance();
+  assert.equal(w.chunks(1)[0].validFrom, start, "look-ahead: valid from the window start");
+  w.stream(2);
+  w.feed(2, 15, { from: start + 0.1 });
+  w.want(2, [{ k: 1, from: start + 0.05 }], { position: start + 0.3 });
+  await w.advance();
+  w.answer();
+  await w.advance();
+  assert.ok(Math.abs(w.chunks(2)[0].validFrom - (start + 0.1)) < 0.002, "at the playhead: from where the audio starts");
+});

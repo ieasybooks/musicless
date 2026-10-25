@@ -9,7 +9,7 @@
 
 import { configKey, createDemuxer } from "./demux.js";
 import { analyze, resample, synthesize } from "./dsp.js";
-import { applyFades, chunkStart, RATE, WINDOW_SAMPLES, WINDOW_SECONDS } from "./grid.js";
+import { applyFades, chunkIndex, chunkStart, RATE, WINDOW_SAMPLES, WINDOW_SECONDS } from "./grid.js";
 
 const WARMUP_SECONDS = 0.25; // decoder pre-roll before a window starts
 const GAP_TOLERANCE = 0.005;
@@ -275,10 +275,14 @@ function ready(stream, k, from) {
   const found = run(stream, Math.max(start - WARMUP_SECONDS, 0), stop);
   if (!found) return null;
   const [first, last, runStart] = found;
-  // Audio may begin a little after the requested point (muxing offsets put the
-  // first frame at e.g. 0.01 s); the page only plays a chunk from where it is valid.
+  // Audio may begin a little after the requested point. Ahead of the playhead
+  // that is a gap in the media (muxing offsets put the first frame at e.g.
+  // 0.01 s), silent in the browser too: the chunk counts from its start. At the
+  // playhead the earlier audio may just not be captured (after a seek), so the
+  // page plays the chunk only from where its audio starts.
   if (runStart > Math.max(from, start, 0) + LEAD_TOLERANCE) return null;
-  return { range: [first, last], validFrom: runStart <= start + GAP_TOLERANCE ? start : runStart };
+  const late = from > start && runStart > start + GAP_TOLERANCE;
+  return { range: [first, last], validFrom: late ? runStart : start };
 }
 
 async function decode(stream, range) {
@@ -372,18 +376,19 @@ async function separate(stream, job) {
   };
 }
 
-// The most urgent separable chunk across the tab's streams: a playing video's
-// first wanted chunk before anything else, then look-ahead in request order.
+// The most urgent separable chunk across the tab's streams: the nearest to its
+// playhead (the chunk a video is at first), a playing video's before a paused
+// one's. The shared model orders every tab's jobs by the same numbers.
 function nextJob() {
   let best = null;
   for (const stream of streams.values()) {
     if (stream.reported || stream.failed) continue;
-    for (let i = 0; i < stream.wanted.length; i++) {
-      const { k, from } = stream.wanted[i];
+    const here = chunkIndex(stream.position);
+    for (const { k, from } of stream.wanted) {
       if (stream.done.has(k)) continue;
       const found = ready(stream, k, from);
       if (!found) continue;
-      const priority = (stream.playing ? 0 : 10) + i;
+      const priority = (stream.playing ? 0 : 10) + Math.max(0, k - here);
       if (!best || priority < best.priority) best = { stream, k, priority, ...found };
       break;
     }
