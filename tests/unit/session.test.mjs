@@ -130,6 +130,31 @@ test("a stream that reopens under the same URL is attached again", () => {
   assert.equal(session.failure, null);
 });
 
+test("a stream that closed and reopened under the same URL while the session slept is found again", async () => {
+  const { session, video, capture, engine, advance } = sessionSandbox({ video: { currentTime: 3 } });
+  engine.deliver({ ...chunk(0), streamId: session.workerId });
+  engine.deliver({ ...chunk(1), streamId: session.workerId });
+  session.tick();
+  video.pause(); // the user pauses
+  await flush();
+  session.tick();
+  advance(2 * 60 * 1000 + 1000);
+  session.tick();
+  assert.equal(session.attached, false, "asleep");
+  capture.urls.set("blob:a", 7); // stream 1 closed unseen; the player opened 7 under the same URL
+  session.checkSource(); // the bus announces it
+  video.play();
+  await flush();
+  assert.equal(session.attached, true);
+  session.onCaptureClosed(1); // what capture.js answers to subscribing to the closed stream
+  assert.equal(session.streamId, 7);
+  assert.equal(session.attached, true);
+  assert.equal(capture.subscribed.has(7), true);
+  advance(2500);
+  session.tick();
+  assert.equal(session.failure, null, "not uncaptured");
+});
+
 test("a closed stream that is not the session's changes nothing", () => {
   const { session } = sessionSandbox();
   session.onCaptureClosed(99);

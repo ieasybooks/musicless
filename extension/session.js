@@ -324,11 +324,13 @@ export class Session {
 
   // The player closed this Media Source. A new one usually follows with a new
   // URL (checkSource); if the element keeps this URL, a stream that reopens
-  // under it is attached, and without one the session fails closed.
+  // under it is attached (it may be there already: one that reopened while
+  // this session slept), and without one the session fails closed.
   onCaptureClosed(streamId) {
     if (streamId !== this.streamId) return;
     this.stopProcessing();
-    this.unknownSince = performance.now();
+    this.streamId = this.capture.streamFor(this.sourceUrl);
+    this.unknownSince = this.streamId ? null : performance.now();
     this.tick();
   }
 
