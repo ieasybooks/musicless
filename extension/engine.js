@@ -1,6 +1,8 @@
 // The page's connection to its separation worker, which runs in a hidden
 // extension frame (separator.html). Created on first use and shared by every
-// video on the page; messages are routed to sessions by stream id. Once no
+// video on the page; messages are routed to sessions by the worker's stream
+// id, a new one for every attachment (so nothing meant for an earlier one, a
+// late chunk or error, reaches a session that started over). Once no
 // session has used it for a while the frame is removed, which stops the
 // workers and frees the model's memory (unless another tab still shares it).
 //
@@ -31,6 +33,7 @@ export class Engine {
     this.port = null;
     this.token = null;
     this.sessions = new Map(); // stream id -> session
+    this.ids = 0;
     this.model = null; // { seconds, shared } once loaded
     this.connected = false;
     this.queue = []; // messages held until the worker has its port
@@ -79,10 +82,13 @@ export class Engine {
     else this.queue.push([message, transfer]);
   }
 
-  attach(streamId, session) {
+  // Returns the stream id for the session's messages to the worker.
+  attach(session) {
     if (!this.sessions.size) this.heard = performance.now(); // it is watched again from now on
+    const streamId = ++this.ids;
     this.sessions.set(streamId, session);
     this.post({ type: "stream", streamId });
+    return streamId;
   }
 
   detach(streamId) {

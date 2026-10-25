@@ -70,7 +70,11 @@ export function workerSandbox({ supported = true, localModel = null } = {}) {
     start({ shared = true } = {}) {
       env.self.onmessage({ data: { type: "port" }, ports: shared ? [content, modelPort] : [content] });
     },
-    fromModel(data) { modelPort.onmessage({ data }); },
+    fromModel(data) {
+      const run = w.runs().find((message) => message.id === data.id);
+      if (run) run.answered = true;
+      modelPort.onmessage({ data });
+    },
     ready() { w.fromModel({ type: "ready", seconds: 1 }); },
     send(data) { content.onmessage({ data }); },
     stream(id) { w.send({ type: "stream", streamId: id }); },
@@ -93,7 +97,6 @@ export function workerSandbox({ supported = true, localModel = null } = {}) {
     // Answers the shared model's oldest unanswered run.
     answer(index = 0) {
       const run = w.runs().filter((message) => !message.answered)[index];
-      run.answered = true;
       w.fromModel({ type: "result", id: run.id, mask: new Float32Array(8), ms: 1 });
     },
     chunks(id) { return content.sent.filter((message) => message.type === "chunk" && (id === undefined || message.streamId === id)); },
@@ -167,4 +170,41 @@ test("the worker answers the content script's pings", async () => {
   w.start();
   w.send({ type: "ping" });
   assert.equal(w.content.sent.at(-1).type, "pong");
+});
+
+test("an error for a stream dropped meanwhile is not sent", async () => {
+  const w = workerSandbox();
+  w.start();
+  w.ready();
+  w.stream(1);
+  w.feed(1, 15);
+  w.want(1, [{ k: 0, from: 0 }]);
+  await w.advance();
+  w.send({ type: "drop", streamId: 1 }); // its session timed out or moved on
+  w.fromModel({ type: "error", id: w.runs()[0].id, message: "the old job failed" });
+  await w.advance();
+  assert.equal(w.errors().length, 0);
+});
+
+test("one stream's failure does not stall the others", async () => {
+  const w = workerSandbox();
+  w.start();
+  w.ready();
+  for (const id of [1, 2]) {
+    w.stream(id);
+    w.feed(id, 15);
+    w.want(id, [{ k: 0, from: 0 }]);
+  }
+  await w.advance();
+  assert.equal(w.runs().length, 1);
+  w.fromModel({ type: "error", id: w.runs()[0].id, message: "this one failed" });
+  await w.advance();
+  assert.deepEqual(w.errors().map((message) => message.streamId), [1]);
+  assert.equal(w.runs().length, 2, "the other stream's chunk runs");
+  w.answer();
+  await w.advance();
+  assert.deepEqual(w.chunks().map((message) => message.streamId), [2]);
+  w.want(1, [{ k: 1, from: grid.chunkStart(1) }]);
+  await w.advance();
+  assert.equal(w.runs().length, 2, "the failed stream is not tried again");
 });

@@ -4,7 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as grid from "../../extension/grid.js";
 import { PlaybackIntent } from "../../extension/playback-intent.js";
-import { load } from "./sandbox.mjs";
+import { flush, load } from "./sandbox.mjs";
 
 class Video extends EventTarget {
   constructor(props = {}) {
@@ -29,7 +29,7 @@ class Video extends EventTarget {
   }
 }
 
-export function sessionSandbox({ video: props, settings = {}, streams = { "blob:a": 1 } } = {}) {
+export function sessionSandbox({ video: props, settings = {}, streams = { "blob:a": 1 }, stretch = async (channels) => ({ channels }) } = {}) {
   let now = 1000;
   const param = () => ({ value: 1, setTargetAtTime() {}, setValueAtTime() {}, linearRampToValueAtTime() {}, cancelScheduledValues() {} });
   const started = [];
@@ -59,8 +59,11 @@ export function sessionSandbox({ video: props, settings = {}, streams = { "blob:
       reload: () => reloads.push("reload"), replace: (url) => reloads.push(String(url)),
     },
     URL,
+    importStretch: async () => ({ StretchClient: class { stretch(...args) { return stretch(...args); } } }),
   };
-  const { Session } = load("session.js", env);
+  const { Session } = load("session.js", env, {
+    rewrite: (source) => source.replace('import(chrome.runtime.getURL("stretch.js"))', "importStretch()"),
+  });
   const capture = {
     urls: new Map(Object.entries(streams)),
     subscribed: new Map(),
@@ -74,10 +77,13 @@ export function sessionSandbox({ video: props, settings = {}, streams = { "blob:
     sessions: new Map(),
     posts: [],
     model: null,
-    attach(streamId, session) { this.sessions.set(streamId, session); },
+    ids: 0,
+    attach(session) { this.sessions.set(++this.ids, session); return this.ids; },
     detach(streamId) { this.sessions.delete(streamId); },
     post(message) { this.posts.push(message); },
     wants() { return this.posts.filter((message) => message.type === "want"); },
+    // A message from the worker, routed like the engine does.
+    deliver(message) { this.sessions.get(message.streamId)?.onEngine(message); },
   };
   const video = new Video(props);
   const session = new Session(video, { capture, engine });
@@ -166,14 +172,48 @@ test("a changed duration is passed on to the worker", () => {
 test("a lost engine is joined again once, then the session fails closed", () => {
   const { session, engine, capture } = sessionSandbox();
   assert.equal(session.attached, true);
-  engine.sessions.delete(1);
+  engine.sessions.clear();
   session.onEngineLost();
   assert.equal(session.attached, true, "attached to a new engine");
-  assert.equal(engine.sessions.get(1), session);
+  assert.equal(engine.sessions.get(session.workerId), session);
   assert.equal(capture.subscribed.get(1), session, "subscribed again, so the new worker gets the audio");
   assert.equal(session.failure, null);
-  engine.sessions.delete(1);
+  engine.sessions.clear();
   session.onEngineLost();
   assert.equal(session.failure?.reason, "engine");
   assert.equal(session.intent.held, true);
+});
+
+test("after Retry, a late error or chunk for the earlier attachment does not reach the session", () => {
+  const { session, engine, advance } = sessionSandbox();
+  const first = session.workerId;
+  advance(31000);
+  session.tick();
+  assert.equal(session.failure?.reason, "slow");
+  session.retry();
+  assert.equal(session.failure, null);
+  assert.notEqual(session.workerId, first, "the same captured stream gets a new worker id");
+  engine.deliver({ type: "error", streamId: first, message: "Separation failed: the earlier job" });
+  engine.deliver({ ...chunk(0), streamId: first });
+  assert.equal(session.failure, null);
+  assert.equal(session.chunks.size, 0);
+  engine.deliver({ ...chunk(0), streamId: session.workerId });
+  assert.equal(session.chunks.size, 1);
+});
+
+test("a failed speed change fails closed, unless the chunk was replaced since", async () => {
+  const pending = [];
+  const { session, engine } = sessionSandbox({ stretch: () => new Promise((resolve, reject) => pending.push(reject)) });
+  engine.deliver({ ...chunk(0), streamId: session.workerId });
+  session.stretch(0, 1.5);
+  await flush();
+  engine.deliver({ ...chunk(0), streamId: session.workerId }); // made again meanwhile (after a seek, say)
+  pending.shift()(new Error("stretch failed"));
+  await flush();
+  assert.equal(session.failure, null);
+  session.stretch(0, 1.5);
+  await flush();
+  pending.shift()(new Error("stretch failed"));
+  await flush();
+  assert.equal(session.failure?.reason, "error");
 });

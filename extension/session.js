@@ -82,7 +82,8 @@ export class Session {
     this.requested = null; // the last request sent to the worker
     this.anchor = null;
     this.sourceUrl = null;
-    this.streamId = null;
+    this.streamId = null; // the captured stream
+    this.workerId = null; // the worker's copy of it, while attached
     this.attached = false;
     this.asleep = false; // let the engine go while paused; wakes on play, seek or unmute
     this.unknownSince = null;
@@ -268,14 +269,15 @@ export class Session {
     this.attached = true;
     this.idleSince = null;
     this.requested = null; // forces a fresh request list
-    this.engine.attach(this.streamId, this);
+    this.workerId = this.engine.attach(this);
     this.capture.subscribe(this.streamId, this);
   }
 
   detach() {
     if (!this.attached) return;
     this.attached = false;
-    this.engine.detach(this.streamId);
+    this.engine.detach(this.workerId);
+    this.workerId = null;
     this.capture.unsubscribe(this.streamId);
   }
 
@@ -284,7 +286,7 @@ export class Session {
   onEntries(streamId, entries) {
     if (!this.attached || streamId !== this.streamId) return;
     for (const entry of entries) {
-      this.engine.post({ type: "entries", streamId, entries: [entry] }, entry.bytes ? [entry.bytes.buffer] : []);
+      this.engine.post({ type: "entries", streamId: this.workerId, entries: [entry] }, entry.bytes ? [entry.bytes.buffer] : []);
     }
   }
 
@@ -300,7 +302,7 @@ export class Session {
 
   onEngine(message) {
     if (message.type === "chunk") {
-      if (message.streamId === this.streamId && this.attached) this.addChunk(message);
+      if (this.attached) this.addChunk(message);
     } else if (message.type === "unsupported") {
       this.fail(message.reason === "protected" ? "protected" : "codec", message.message);
     } else if (message.type === "error") {
@@ -315,6 +317,7 @@ export class Session {
   onEngineLost() {
     if (!this.attached) return;
     this.attached = false;
+    this.workerId = null;
     this.capture.unsubscribe(this.streamId); // subscribing again replays the audio to the new worker
     if (++this.engineLosses > 1) this.fail("engine");
     else this.tick();
@@ -477,6 +480,7 @@ export class Session {
         this.schedule(k);
       })
       .catch((error) => {
+        if (this.chunks.get(k) !== chunk) return; // replaced since (a new source, a seek)
         chunk.stretching = null;
         this.fail("error", `speed change failed: ${error.message}`);
       });
@@ -547,7 +551,7 @@ export class Session {
       this.idleSince = null;
     }
 
-    if (debugEnabled() && ++this.ticks % 8 === 0) this.engine.post({ type: "stats", streamId: this.streamId });
+    if (debugEnabled() && ++this.ticks % 8 === 0) this.engine.post({ type: "stats", streamId: this.workerId });
     const time = video.currentTime;
     const k = chunkIndex(time);
     const last = Number.isFinite(video.duration) ? chunkIndex(Math.max(0, video.duration - 0.001)) : Infinity;
@@ -575,7 +579,7 @@ export class Session {
     if (!asked || forget.length || key !== asked.key || playing !== asked.playing || !Object.is(video.duration, asked.duration) ||
         Math.abs(time - asked.time) > 30) {
       this.requested = { key, playing, time, duration: video.duration };
-      this.engine.post({ type: "want", streamId: this.streamId, chunks: want, forget, duration: video.duration, playing, position: time });
+      this.engine.post({ type: "want", streamId: this.workerId, chunks: want, forget, duration: video.duration, playing, position: time });
     }
 
     // Hold the video rather than play music while the audio it needs is missing.

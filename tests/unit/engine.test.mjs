@@ -98,8 +98,8 @@ function sessionStub(onLost = () => {}) {
   return { lost: 0, messages: [], onEngine(message) { this.messages.push(message); }, onEngineLost() { this.lost++; onLost(this); } };
 }
 
-function connected(env, engine, streamId = 1, session = sessionStub()) {
-  engine.attach(streamId, session);
+function connected(env, engine, session = sessionStub()) {
+  engine.attach(session);
   engine.port.onmessage({ data: { type: "connected" } });
   return session;
 }
@@ -108,7 +108,7 @@ test("a worker that never connects is given up and its sessions start again", ()
   const env = engineSandbox();
   const engine = new env.Engine();
   const session = sessionStub();
-  engine.attach(1, session);
+  engine.attach(session);
   env.advance(9000);
   engine.tidy();
   assert.equal(session.lost, 0);
@@ -167,12 +167,12 @@ test("a fatal error from the worker gives it up", () => {
 test("sessions that attach again when the engine is given up get a new engine", () => {
   const env = engineSandbox();
   const engine = new env.Engine();
-  const session = sessionStub((self) => engine.attach(2, self));
-  connected(env, engine, 1, session);
+  const session = sessionStub((self) => { self.id = engine.attach(self); });
+  connected(env, engine, session);
   env.frames[0].remove();
   engine.tidy();
   assert.equal(session.lost, 1);
-  assert.equal(engine.sessions.get(2), session, "its new attachment is kept");
+  assert.equal(engine.sessions.get(session.id), session, "its new attachment is kept");
   assert.equal(env.frames.length, 2, "on a new frame");
   assert.equal(env.frames[1].isConnected, true);
 });
@@ -189,4 +189,21 @@ test("an engine nobody uses is removed after 30 seconds", () => {
   engine.tidy();
   assert.equal(engine.port, null);
   assert.equal(env.frames[0].isConnected, false);
+});
+
+test("every attachment gets its own stream id, and messages go only to the current one", () => {
+  const env = engineSandbox();
+  const engine = new env.Engine();
+  const session = sessionStub();
+  const first = engine.attach(session);
+  engine.port.onmessage({ data: { type: "connected" } });
+  engine.detach(first);
+  const second = engine.attach(session);
+  assert.notEqual(first, second);
+  assert.deepEqual(env.ports[0].sent.filter((m) => m.type !== "ping").map((m) => `${m.type}:${m.streamId}`),
+    [`stream:${first}`, `drop:${first}`, `stream:${second}`]);
+  engine.port.onmessage({ data: { type: "error", streamId: first, message: "late" } });
+  assert.equal(session.messages.length, 0);
+  engine.port.onmessage({ data: { type: "chunk", streamId: second, k: 0 } });
+  assert.equal(session.messages.length, 1);
 });

@@ -377,7 +377,7 @@ async function separate(stream, job) {
 function nextJob() {
   let best = null;
   for (const stream of streams.values()) {
-    if (stream.reported) continue;
+    if (stream.reported || stream.failed) continue;
     for (let i = 0; i < stream.wanted.length; i++) {
       const { k, from } = stream.wanted[i];
       if (stream.done.has(k)) continue;
@@ -400,13 +400,14 @@ async function pump() {
       stream.done.add(job.k);
       try {
         const { vocals, timing } = await separate(stream, job);
-        if (streams.get(stream.id) !== stream) continue; // the video changed while this chunk ran
+        if (streams.get(stream.id) !== stream) continue; // dropped while this chunk ran
         send({ type: "chunk", streamId: stream.id, k: job.k, validFrom: job.validFrom, left: vocals.left, right: vocals.right, timing },
           [vocals.left.buffer, vocals.right.buffer]);
       } catch (error) {
-        stream.done.delete(job.k);
-        send({ type: "error", streamId: stream.id, message: `Separation failed: ${error.message}` });
-        break;
+        if (streams.get(stream.id) !== stream) continue;
+        // Its session fails closed and drops it; the other streams go on.
+        stream.failed = true;
+        if (!stream.reported) send({ type: "error", streamId: stream.id, message: `Separation failed: ${error.message}` });
       }
     }
   } finally {
