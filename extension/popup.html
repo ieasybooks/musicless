@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="en">
+<html>
   <head>
     <meta charset="utf-8" />
-    <title>nomusic</title>
+    <title data-i18n="extension_name">nomusic</title>
     <link rel="stylesheet" href="pages.css" />
     <style>
       body { width: 300px; padding: 14px 16px; }
@@ -10,37 +10,50 @@
       header img { width: 28px; height: 28px; border-radius: 7px; }
       header h1 { margin: 0; font-size: 15px; flex: 1; }
       .setting { display: flex; gap: 12px; align-items: flex-start; }
-      .setting label { flex: 1; font-weight: 600; }
+      .setting > div { flex: 1; }
+      .setting label { font-weight: 600; }
       .setting .hint { margin-top: 3px; }
+      .notice { margin-bottom: 14px; }
       hr { border: none; border-top: 1px solid #262b35; margin: 14px 0; }
-      footer { display: flex; gap: 14px; }
+      footer { display: flex; flex-wrap: wrap; gap: 6px 14px; }
     </style>
   </head>
   <body>
     <header>
       <img src="icons/icon-128.png" alt="" />
-      <h1>nomusic</h1>
-      <span class="hint" id="version"></span>
+      <h1 data-i18n="extension_name">nomusic</h1>
+      <bdi class="hint" id="version"></bdi>
     </header>
 
-    <div class="setting">
-      <label for="autoStart">
-        Remove music automatically
-        <div class="hint">Every YouTube video starts without music. When off, click <b>nomusic</b> on a video to start.</div>
-      </label>
-      <input type="checkbox" id="autoStart" class="switch" />
-    </div>
+    <!-- Until the user turns nomusic on: the disclosure (same as the welcome page). -->
+    <section id="consent" hidden>
+      <p data-i18n="consent_text"></p>
+      <p class="actions">
+        <button type="button" class="primary" id="accept" data-i18n="consent_accept"></button>
+        <a href="https://github.com/IbraheemTuffaha/nomusic/blob/main/docs/privacy.md" target="_blank" data-i18n="link_privacy"></a>
+      </p>
+    </section>
+
+    <section id="settings" hidden>
+      <p class="notice on" id="done" role="status" data-i18n="consent_done" hidden></p>
+      <div class="setting">
+        <div>
+          <label for="autoStart" data-i18n="popup_autostart_label"></label>
+          <div class="hint" id="autoStartHint" data-i18n="popup_autostart_hint" data-i18n-args="button_off"></div>
+          <div class="hint" id="autoStartNote" data-i18n="popup_autostart_note"></div>
+        </div>
+        <input type="checkbox" id="autoStart" class="switch" aria-describedby="autoStartHint autoStartNote" />
+      </div>
+    </section>
 
     <hr />
-    <p class="hint">
-      nomusic keeps voices, speech and singing, and removes the instruments. Some quiet music can
-      remain. To hear a video's original audio, click <b>nomusic on</b> on the player.
-    </p>
-    <p class="hint">Everything runs on this computer. Nothing is uploaded or collected.</p>
+    <p class="hint" data-i18n="popup_results"></p>
+    <p class="hint" data-i18n="privacy_summary"></p>
     <hr />
     <footer>
-      <a href="welcome.html" target="_blank">How it works</a>
-      <a href="THIRD_PARTY_NOTICES.txt" target="_blank">Licenses</a>
+      <a href="welcome.html" target="_blank" data-i18n="link_guide"></a>
+      <a href="https://github.com/IbraheemTuffaha/nomusic/issues" target="_blank" data-i18n="link_help"></a>
+      <a href="THIRD_PARTY_NOTICES.txt" target="_blank" data-i18n="link_licenses"></a>
     </footer>
     <script type="module" src="popup.js"></script>
   </body>

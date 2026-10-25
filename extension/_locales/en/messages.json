@@ -1,0 +1,79 @@
+{
+  "locale_code": { "message": "en", "description": "Not translated: the language code of this catalog (BCP 47), for the lang attribute." },
+  "locale_dir": { "message": "ltr", "description": "Not translated: the writing direction of this catalog, ltr or rtl." },
+  "extension_name": { "message": "nomusic", "description": "The brand. Keep it in Latin letters in every language." },
+  "extension_description": {
+    "message": "Removes most of the background music from YouTube videos and keeps the voices. Runs on your computer; nothing is uploaded.",
+    "description": "Store summary and extensions-page description. 132 characters at most."
+  },
+
+  "button_setup": { "message": "Set up nomusic", "description": "Button label before the user has turned nomusic on for the first time." },
+  "button_setup_title": { "message": "nomusic needs a quick setup before it can remove music. Click to open it." },
+  "button_off": { "message": "Remove music", "description": "Button label while nomusic is off on this video (imperative: clicking starts it)." },
+  "button_off_title": { "message": "Remove the music from this video" },
+  "button_starting": { "message": "Removing music…", "description": "Button label while the first audio is prepared; the video waits." },
+  "button_starting_title": { "message": "nomusic is getting the sound ready. The video continues in a moment." },
+  "button_buffering": { "message": "Removing music…", "description": "Button label while the next part is prepared after a jump; the video waits." },
+  "button_buffering_title": { "message": "nomusic is getting the next part ready. The video continues in a moment." },
+  "button_on": { "message": "Music removed", "description": "Button label while nomusic is on (a state, not a command)." },
+  "button_on_title": { "message": "Most of the music is removed. Click to play this video with its music." },
+  "button_blocked": { "message": "Click to start the sound", "description": "The browser needs a click before it plays any sound. 'Sound' here is the video's audio, not voices." },
+  "button_blocked_title": { "message": "Your browser needs a click before it plays sound. Click here or on the video." },
+  "button_failed": { "message": "Music not removed" },
+  "button_failed_title": { "message": "nomusic couldn't remove the music. Click to choose what to do." },
+
+  "panel_note": { "message": "The video stays paused and silent until you choose.", "description": "Second line of the failure panel." },
+  "panel_retry": { "message": "Try again" },
+  "panel_reload": { "message": "Reload page" },
+  "panel_original": { "message": "Play with music", "description": "Plays the video with its original audio, music included. Must be unmistakable." },
+
+  "failure_protected": { "message": "This video is copy-protected, so nomusic can't reach its sound.", "description": "Copy-protected: the owner locked the video, as rented movies are." },
+  "failure_codec": { "message": "nomusic can't read this video's sound format." },
+  "failure_uncaptured": { "message": "nomusic couldn't reach this video's sound. Reloading the page usually fixes this." },
+  "failure_source": { "message": "nomusic can't reach this player's sound." },
+  "failure_slow": { "message": "Removing the music is taking too long. Your computer may be busy right now." },
+  "failure_engine": { "message": "nomusic couldn't start. Reloading the page usually fixes this." },
+  "failure_error": { "message": "Something went wrong while removing the music." },
+  "failure_audio": { "message": "nomusic couldn't take over this video's sound." },
+  "failure_updated": { "message": "nomusic was updated or turned off. Reload the page to continue." },
+
+  "consent_heading": { "message": "Turn on music removal" },
+  "consent_text": {
+    "message": "nomusic reads the sound that YouTube has already loaded, removes most of the music on this computer, and plays the voices in its place. Audio is never uploaded or saved as a file. Your setting may sync through Chrome Sync.",
+    "description": "The disclosure shown before nomusic reads any audio."
+  },
+  "consent_accept": { "message": "Turn on nomusic", "description": "Primary button of the disclosure." },
+  "consent_later": { "message": "Not now", "description": "Secondary button of the disclosure." },
+  "consent_done": { "message": "nomusic is on. Reload any YouTube tabs that were already open." },
+  "consent_later_done": { "message": "nomusic stays off. Turn it on any time from the nomusic icon in the browser toolbar." },
+
+  "popup_autostart_label": { "message": "Remove music from every video", "description": "The one switch in the toolbar popup." },
+  "popup_autostart_hint": {
+    "message": "Every YouTube video starts with its music removed. When this is off, click “$LABEL$” on a video to start.",
+    "placeholders": { "label": { "content": "$1", "example": "Remove music" } }
+  },
+  "popup_autostart_note": { "message": "Videos already playing keep going until you click the button on them." },
+  "popup_results": { "message": "Voices stay, including speech and singing. Musical instruments are removed, though some quiet music can remain." },
+  "privacy_summary": { "message": "Audio is processed on this computer and is never uploaded. Your automatic-removal setting may sync through Chrome Sync. No analytics or tracking." },
+  "link_guide": { "message": "Guide", "description": "Link to the welcome page." },
+  "link_help": { "message": "Help and feedback", "description": "Link to the project's issue tracker." },
+  "link_licenses": { "message": "Licenses" },
+  "link_privacy": { "message": "Privacy policy" },
+
+  "welcome_title": { "message": "Welcome to nomusic" },
+  "welcome_how": { "message": "How it works" },
+  "welcome_step_play": { "message": "Play a YouTube video. Most of the music is removed by itself. The video pauses for a few seconds at the start, and after you jump to a new part, while nomusic gets the sound ready." },
+  "welcome_step_button": {
+    "message": "The “$LABEL$” button in the corner of the video turns nomusic off for that video, so it plays with its music, and on again. The button shows while the video's controls are showing.",
+    "placeholders": { "label": { "content": "$1", "example": "Music removed" } }
+  },
+  "welcome_step_toolbar": { "message": "The nomusic icon in the browser toolbar has one setting: remove music from every video, or only when you click." },
+  "welcome_expect": { "message": "What to expect" },
+  "welcome_expect_voices": { "message": "Voices stay, including speech and singing. Musical instruments are removed. Some quiet music can remain, most often under speech." },
+  "welcome_expect_fail": { "message": "If nomusic can't remove the music, the video stays paused and silent, and nomusic asks whether to try again or play with music." },
+  "welcome_limits": { "message": "Limits" },
+  "welcome_limit_desktop": { "message": "Works on YouTube in Chrome, Edge, Brave and other Chromium browsers on a computer. Not on phones." },
+  "welcome_limit_protected": { "message": "Copy-protected videos, such as rented movies, can't be processed." },
+  "welcome_limit_live": { "message": "A live stream watched right at its live point keeps pausing. A little behind it plays smoothly." },
+  "welcome_limit_memory": { "message": "While it works, nomusic uses about 450 MB of memory." }
+}

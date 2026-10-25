@@ -184,15 +184,13 @@ export async function clickButton(frame) {
   return { covered_by: covered };
 }
 
-// Click "Retry" or "Return to original" in the recovery panel.
-export async function chooseRecovery(frame, text) {
-  const clicked = await frame.evaluate((text) => {
-    const item = [...document.querySelectorAll(".nomusic-recovery:not([hidden]) .nomusic-menu__item")]
-      .find((b) => b.textContent.trim() === text);
-    item?.click();
-    return !!item;
-  }, text);
-  if (!clicked) throw new Error(`no "${text}" in the recovery panel`);
+// Choose an action in the recovery panel by its data-action ("retry" or
+// "original"), with a real click: the panel ignores synthetic ones.
+export async function chooseRecovery(frame, action) {
+  const item = await frame.evaluateHandle((action) =>
+    document.querySelector(`.nomusic-recovery:not([hidden]) .nomusic-menu__item[data-action="${action}"]`), action);
+  if (!item.asElement()) throw new Error(`no "${action}" action in the recovery panel`);
+  await item.asElement().click();
 }
 
 // Pull the recorder's last `seconds` of original and output audio from the page.

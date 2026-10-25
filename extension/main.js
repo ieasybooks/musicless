@@ -31,27 +31,34 @@ function pickHost(video) {
 
 function render(controller) {
   const { session } = controller;
-  if (!controller.button) {
-    controller.lastSource = session.sourceUrl;
-    return;
-  }
-  // A new video in the same player brings a dismissed button back.
+  // A new video in the same player: anchor again for its layout.
   if (session.sourceUrl !== controller.lastSource) {
     controller.lastSource = session.sourceUrl;
-    controller.button.reset();
-    anchor(controller);
+    if (controller.button) anchor(controller);
   }
+  // A failure needs the recovery panel even where no player is big enough for
+  // the button (a small embed): nothing else tells the user what happened.
+  if (!controller.button && session.failure) anchor(controller);
+  if (!controller.button) return;
   controller.button.render();
   if (debugEnabled()) controller.button.el.dataset.nomusicDebug = JSON.stringify(session.snapshot());
 }
 
+// Does the video show at all? (A torn-down player or a hidden preview does not.)
+function hasBox(video) {
+  const box = video.getBoundingClientRect();
+  return box.width >= 48 && box.height >= 48;
+}
+
 function anchor(controller) {
-  const host = pickHost(controller.video);
+  const { video, session } = controller;
+  const host = pickHost(video);
   if (!host) {
-    controller.button?.hide();
+    if (session.failure && hasBox(video)) (controller.button ??= new Button(video, session)).float();
+    else controller.button?.hide();
     return;
   }
-  controller.button ??= new Button(controller.video, controller.session);
+  controller.button ??= new Button(video, session);
   // The host can lose its positioning around fullscreen and navigation, which
   // would let the button escape to a window-sized ancestor.
   if (getComputedStyle(host).position === "static") host.style.position = "relative";
