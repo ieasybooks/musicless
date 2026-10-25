@@ -125,3 +125,40 @@ test("a closed stream that is not the session's changes nothing", () => {
   assert.equal(session.streamId, 1);
   assert.equal(session.attached, true);
 });
+
+test("a seek inside the chunk still being made asks for it from the new position", () => {
+  const { session, video, engine } = sessionSandbox(); // playing at 8 s, chunk 0 not made yet
+  assert.equal(engine.wants().at(-1).chunks[0].from, 7.75);
+  video.currentTime = 10;
+  video.dispatchEvent(new Event("seeking"));
+  session.tick();
+  const want = engine.wants().at(-1);
+  assert.equal(want.chunks[0].k, 0);
+  assert.equal(want.chunks[0].from, 9.75);
+});
+
+test("a new source gets a fresh hold deadline", () => {
+  const { session, video, capture, advance } = sessionSandbox();
+  assert.equal(session.intent.held, true, "held for the first chunk");
+  advance(29500);
+  session.tick();
+  capture.urls.set("blob:b", 3);
+  video.currentSrc = video.src = "blob:b";
+  session.checkSource();
+  advance(1000);
+  session.tick();
+  assert.equal(session.failure, null, "B is not failed for A's wait");
+  advance(30000);
+  session.tick();
+  assert.equal(session.failure?.reason, "slow");
+});
+
+test("a changed duration is passed on to the worker", () => {
+  const { session, video, engine } = sessionSandbox({ video: { duration: Infinity } });
+  const before = engine.wants().length;
+  session.tick();
+  assert.equal(engine.wants().length, before, "nothing new to ask");
+  video.duration = 500;
+  session.tick();
+  assert.equal(engine.wants().at(-1).duration, 500);
+});

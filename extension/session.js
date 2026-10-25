@@ -79,7 +79,7 @@ export class Session {
     this.bus = null; // gain node of the current playback run, faded out on stop
     this.chunks = new Map(); // k -> { buffer, validFrom, stretched?, stretching? }
     this.sources = new Map(); // k -> AudioBufferSourceNode
-    this.requested = [];
+    this.requested = null; // the last request sent to the worker
     this.anchor = null;
     this.sourceUrl = null;
     this.streamId = null;
@@ -103,6 +103,7 @@ export class Session {
     };
     on("seeking", () => {
       this.stopAll();
+      this.requested = null; // the current chunk is needed from the new position
       this.wake();
     });
     on("seeked", () => this.resync());
@@ -170,7 +171,6 @@ export class Session {
       return;
     }
     this.failure = null;
-    this.holdStarted = performance.now();
     this.startSource();
     this.tick();
   }
@@ -216,6 +216,7 @@ export class Session {
 
   startSource() {
     this.stopProcessing();
+    this.holdStarted = performance.now(); // a hold carried over from before gets a fresh deadline
     const url = this.sourceUrl;
     this.stats.started = performance.now();
     if (!url) return; // nothing loaded yet: wait for the next source
@@ -247,7 +248,7 @@ export class Session {
     this.detach();
     this.stopAll();
     this.chunks.clear();
-    this.requested = [];
+    this.requested = null;
     this.streamId = null;
     this.unknownSince = null;
     this.idleSince = null;
@@ -562,8 +563,10 @@ export class Session {
     }
     const playing = this.intent.wantsPlay && !video.ended;
     const key = want.map((w) => w.k).join();
-    if (forget.length || key !== this.requested?.key || playing !== this.requested.playing || Math.abs(time - this.requested.time) > 30) {
-      this.requested = { key, playing, time };
+    const asked = this.requested;
+    if (!asked || forget.length || key !== asked.key || playing !== asked.playing || !Object.is(video.duration, asked.duration) ||
+        Math.abs(time - asked.time) > 30) {
+      this.requested = { key, playing, time, duration: video.duration };
       this.engine.post({ type: "want", streamId: this.streamId, chunks: want, forget, duration: video.duration, playing, position: time });
     }
 
