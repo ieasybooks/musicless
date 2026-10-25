@@ -24,19 +24,25 @@ class Port {
   postMessage(message) { this.sent.push(message); }
 }
 
-export function workerSandbox({ supported = true, localModel = null } = {}) {
+export function workerSandbox({ supported = true, localModel = null, configure = null } = {}) {
   let now = 0;
   const timers = new Set();
   const decoders = [];
+  const resampled = [];
   class AudioDecoder {
-    static isConfigSupported = async () => ({ supported });
+    // Like the browser's, the answer takes a moment.
+    static isConfigSupported = () => new Promise((resolve) => env.setTimeout(() => resolve({ supported }), 10));
     constructor({ output, error }) {
       this.output = output;
       this.error = error;
       this.state = "unconfigured";
       decoders.push(this);
     }
-    configure(config) { this.config = config; this.state = "configured"; }
+    configure(config) {
+      configure?.(config);
+      this.config = config;
+      this.state = "configured";
+    }
     decode(chunk) {
       const frames = Math.round((this.config.sampleRate * chunk.duration) / 1e6);
       this.output({
@@ -50,7 +56,10 @@ export function workerSandbox({ supported = true, localModel = null } = {}) {
   const env = {
     ...grid, createDemuxer, configKey,
     analyze: () => ({ spec: null, magnitude: new Float32Array(8) }),
-    resample: (channels, rate, start, toStart, count) => [new Float32Array(count), new Float32Array(count)],
+    resample: (channels, rate, start, toStart, count) => {
+      resampled.push({ rate, start, length: channels[0].length });
+      return [new Float32Array(count), new Float32Array(count)];
+    },
     synthesize: () => ({ left: new Float32Array(grid.WINDOW_SAMPLES), right: new Float32Array(grid.WINDOW_SAMPLES) }),
     AudioDecoder,
     EncodedAudioChunk: class { constructor(init) { Object.assign(this, init); } },
@@ -69,7 +78,7 @@ export function workerSandbox({ supported = true, localModel = null } = {}) {
   const content = new Port();
   const modelPort = new Port();
   const w = {
-    env, content, modelPort, decoders,
+    env, content, modelPort, decoders, resampled,
     get now() { return now; },
     start({ shared = true } = {}) {
       env.self.onmessage({ data: { type: "port" }, ports: shared ? [content, modelPort] : [content] });
@@ -116,17 +125,17 @@ export function workerSandbox({ supported = true, localModel = null } = {}) {
       return { frames: stream.frames.length, bytes: stream.bytes, first: stream.frames[0]?.time, last: stream.frames.at(-1)?.time };
     },
     // Frames straight into a stream, as its demuxer would give them.
-    addRaw(id, frames) {
+    addRaw(id, frames, config = { codec: "opus", sampleRate: 48000, numberOfChannels: 2 }) {
       const stream = inside.streams.get(id);
       const buffer = stream.buffers.get(9) ?? stream.buffers.set(9, { id: 9 }).get(9);
-      for (const frame of frames) frame.config = { codec: "opus", sampleRate: 48000, numberOfChannels: 2 };
+      for (const frame of frames) frame.config ??= config;
       const changed = inside.addFrames(stream, buffer, frames);
       if (changed) inside.invalidate(stream, changed);
       w.send({ type: "entries", streamId: id, entries: [] }); // lets the worker look for work
     },
     errors() { return content.sent.filter((message) => message.type === "error"); },
     // Moves the clock, running due timers in order and letting promises settle.
-    async advance(ms = 0) {
+    async advance(ms = 50) {
       const end = now + ms;
       for (;;) {
         await flush();
@@ -438,4 +447,46 @@ test("audio far from the playhead and past the byte limit is let go", async () =
   await w.advance();
   assert.ok(w.held(1).bytes <= 64 * 2 ** 20, `${w.held(1).bytes / 2 ** 20} MiB`);
   assert.equal(w.held(1).first, 100, "the farthest went first");
+});
+
+test("a decoder that fails is closed, and the stream fails", async () => {
+  const w = workerSandbox({ configure: () => { throw new Error("configuration rejected"); } });
+  w.start();
+  w.ready();
+  w.stream(1);
+  w.feed(1, 15);
+  w.want(1, [{ k: 0, from: 0 }]);
+  await w.advance();
+  assert.ok(w.decoders.length > 0);
+  assert.ok(w.decoders.every((decoder) => decoder.state === "closed"));
+  assert.match(w.errors()[0].message, /configuration rejected/);
+});
+
+test("nothing is separated with audio this browser cannot decode", async () => {
+  const w = workerSandbox({ supported: false });
+  w.start();
+  w.ready();
+  w.stream(1);
+  w.feed(1, 15);
+  w.want(1, [{ k: 0, from: 0 }]);
+  await w.advance();
+  assert.equal(w.runs().length, 0);
+  assert.equal(w.content.sent.find((message) => message.type === "unsupported")?.reason, "codec");
+});
+
+test("a sample-rate switch inside a window keeps the audio after it", async () => {
+  const w = workerSandbox();
+  w.start();
+  w.ready();
+  w.stream(1);
+  w.want(1, [{ k: 0, from: 0 }]);
+  const frames = (from, to, rate) => {
+    const list = [];
+    for (let t = from; t < to - 1e-9; t += 0.02) list.push({ time: t, duration: 0.02, data: new Uint8Array([1]), config: { codec: "mp4a.40.2", sampleRate: rate, numberOfChannels: 2 } });
+    return list;
+  };
+  w.addRaw(1, [...frames(0, 6, 48000), ...frames(6, 13, 44100)]);
+  await w.advance();
+  assert.equal(w.resampled.map((r) => `${r.rate}@${r.start.toFixed(2)}`).join(), "48000@0.00,44100@6.00");
+  assert.equal(w.runs().length, 1);
 });

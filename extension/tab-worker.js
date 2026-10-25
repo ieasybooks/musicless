@@ -30,6 +30,7 @@ let model = null;
 const streams = new Map(); // stream id -> { id, buffers, frames, ended, duration, wanted, done, playing, position }
 let busy = false;
 let current = null; // the job being separated
+const supported = new Map(); // decoder config -> whether this browser decodes it (a promise)
 
 const send = (message, transfer) => port.postMessage(message, transfer ?? []);
 
@@ -206,6 +207,13 @@ function invalidate(stream, [from, to]) {
   if (changed.length) send({ type: "changed", streamId: stream.id, chunks: changed });
 }
 
+// Some builds (e.g. open-source Chromium) cannot decode AAC.
+function decodable(config) {
+  const key = configKey(config);
+  if (!supported.has(key)) supported.set(key, AudioDecoder.isConfigSupported(config).then((result) => result.supported, () => false));
+  return supported.get(key);
+}
+
 function report(stream, reason, message) {
   if (stream.reported) return;
   stream.reported = reason;
@@ -254,9 +262,7 @@ function onEntry(stream, entry) {
       const config = buffer.demuxer.config;
       if (config !== buffer.checkedConfig) {
         buffer.checkedConfig = config;
-        // Some builds (e.g. open-source Chromium) cannot decode AAC.
-        const unsupported = () => report(stream, "codec", `This browser cannot decode this video's audio (${config.codec}).`);
-        AudioDecoder.isConfigSupported(config).then(({ supported }) => supported || unsupported(), unsupported);
+        decodable(config).then((ok) => ok || report(stream, "codec", `This browser cannot decode this video's audio (${config.codec}).`));
       }
       for (const frame of frames) frame.config = config;
       const changed = addFrames(stream, buffer, frames);
@@ -339,68 +345,97 @@ function ready(stream, k, from) {
   return { range: [first, last], validFrom: late ? runStart : start };
 }
 
-async function decode(stream, range) {
-  const frames = stream.frames.slice(range[0], range[1] + 1);
-  const config = frames[0].config;
-  const sampleRate = config.sampleRate;
+// Decodes frames of one decoder config. Output is placed at the rate it comes
+// at (an AAC config can state half of it, with SBR). The decoder is closed
+// however it ends.
+async function decode(frames, counts) {
   const first = frames[0].time;
   const last = frames[frames.length - 1];
-  const length = Math.ceil((last.time + last.duration - first) * sampleRate) + 4096;
-  const channels = [new Float32Array(length), new Float32Array(length)];
+  const seconds = last.time + last.duration - first;
+  const byRate = new Map(); // output sample rate -> { channels, placed }
   let failure = null;
-  const placed = [];
   const decoder = new AudioDecoder({
     output: (data) => {
-      if (data.sampleRate !== sampleRate) {
-        data.close(); // a mid-window sample-rate switch; rare enough to leave silent
-        return;
-      }
-      const at = Math.round((data.timestamp / 1e6 - first) * sampleRate);
-      const count = Math.min(data.numberOfFrames, length - at);
-      placed.push([at, at + count]);
-      if (count > 0 && at >= 0) {
-        const plane = new Float32Array(data.numberOfFrames);
-        for (let c = 0; c < 2; c++) {
-          data.copyTo(plane, { planeIndex: Math.min(c, data.numberOfChannels - 1), format: "f32-planar" });
-          channels[c].set(plane.subarray(0, count), at);
+      try {
+        const rate = data.sampleRate;
+        if (!byRate.has(rate)) {
+          const length = Math.ceil(seconds * rate) + 4096;
+          byRate.set(rate, { channels: [new Float32Array(length), new Float32Array(length)], placed: [] });
         }
+        const { channels, placed } = byRate.get(rate);
+        const at = Math.round((data.timestamp / 1e6 - first) * rate);
+        const count = Math.min(data.numberOfFrames, channels[0].length - at);
+        placed.push([at, at + count]);
+        if (count > 0 && at >= 0) {
+          const plane = new Float32Array(data.numberOfFrames);
+          for (let c = 0; c < 2; c++) {
+            data.copyTo(plane, { planeIndex: Math.min(c, data.numberOfChannels - 1), format: "f32-planar" });
+            channels[c].set(plane.subarray(0, count), at);
+          }
+        }
+      } catch (error) {
+        failure ??= error;
+      } finally {
+        data.close();
       }
-      data.close();
     },
-    error: (error) => { failure = error; },
+    error: (error) => { failure ??= error; },
   });
-  decoder.configure(config);
-  let current = configKey(config);
-  for (const frame of frames) {
-    // A real format change mid-window (e.g. a quality switch): reconfigure and carry on.
-    if (configKey(frame.config) !== current) {
-      await decoder.flush();
-      decoder.configure(frame.config);
-      current = configKey(frame.config);
+  try {
+    decoder.configure(frames[0].config);
+    for (const frame of frames) {
+      decoder.decode(new EncodedAudioChunk({
+        type: "key",
+        timestamp: Math.round(frame.time * 1e6),
+        duration: Math.round(frame.duration * 1e6),
+        data: frame.data,
+      }));
     }
-    decoder.decode(new EncodedAudioChunk({
-      type: "key",
-      timestamp: Math.round(frame.time * 1e6),
-      duration: Math.round(frame.duration * 1e6),
-      data: frame.data,
-    }));
+    await decoder.flush();
+  } finally {
+    if (decoder.state !== "closed") decoder.close();
   }
-  await decoder.flush();
-  decoder.close();
   if (failure) throw failure;
   // Unfilled samples between decoded frames: timestamp holes the separation would hear as silence.
-  placed.sort((a, b) => a[0] - b[0]);
-  let holes = 0;
-  for (let i = 1; i < placed.length; i++) holes += Math.max(0, placed[i][0] - placed[i - 1][1]);
-  return { channels, sampleRate, start: first, holesMs: (holes / sampleRate) * 1000, outputs: placed.length, inputs: frames.length };
+  for (const [rate, { placed }] of byRate) {
+    placed.sort((a, b) => a[0] - b[0]);
+    for (let i = 1; i < placed.length; i++) counts.holes += Math.max(0, placed[i][0] - placed[i - 1][1]) / rate;
+    counts.outputs += placed.length;
+  }
+  return [...byRate].map(([rate, { channels }]) => ({ channels, rate, start: first }));
+}
+
+// The window's audio at 44.1 kHz, decoded in runs of one config (a quality
+// switch can change the format, even the sample rate, mid-window). Nothing is
+// decoded with a config this browser cannot decode.
+async function decodeWindow(stream, frames, windowStart) {
+  const counts = { holes: 0, outputs: 0 };
+  let out = null;
+  for (let i = 0; i < frames.length;) {
+    const config = frames[i].config;
+    let j = i + 1;
+    while (j < frames.length && configKey(frames[j].config) === configKey(config)) j++;
+    if (!(await decodable(config))) {
+      report(stream, "codec", `This browser cannot decode this video's audio (${config.codec}).`);
+      throw new Error(`cannot decode ${config.codec}`);
+    }
+    for (const run of await decode(frames.slice(i, j), counts)) {
+      const resampled = resample(run.channels, run.rate, run.start, windowStart, WINDOW_SAMPLES);
+      if (!out) out = resampled;
+      else for (let c = 0; c < 2; c++) for (let n = 0; n < WINDOW_SAMPLES; n++) out[c][n] += resampled[c][n];
+    }
+    i = j;
+  }
+  return { channels: out ?? [new Float32Array(WINDOW_SAMPLES), new Float32Array(WINDOW_SAMPLES)], holesMs: counts.holes * 1000, outputs: counts.outputs };
 }
 
 async function separate(stream, job) {
   const t0 = performance.now();
-  const decoded = await decode(stream, job.range);
+  const frames = stream.frames.slice(job.range[0], job.range[1] + 1); // before anything can change the list
   const windowStart = chunkStart(job.k);
   const end = streamEnd(stream);
-  const [left, right] = resample(decoded.channels, decoded.sampleRate, decoded.start, windowStart, WINDOW_SAMPLES);
+  const decoded = await decodeWindow(stream, frames, windowStart);
+  const [left, right] = decoded.channels;
   // Before the captured run (after a seek) and past the media's end the window
   // is silence; the resampler already reads missing input as zeros.
   const runStart = Math.round((job.validFrom - windowStart) * RATE);
@@ -425,7 +460,7 @@ async function separate(stream, job) {
     vocals,
     timing: {
       decode: t1 - t0, stft: t2 - t1, model: ms, wait: t3 - t2 - ms, istft: t4 - t3, total: t4 - t0,
-      holesMs: decoded.holesMs, frames: `${decoded.outputs}/${decoded.inputs}`,
+      holesMs: decoded.holesMs, frames: `${decoded.outputs}/${frames.length}`,
     },
   };
 }
