@@ -48,6 +48,11 @@ async function timeUntilOn(page, label, timeout = 60000) {
   return { ms: Date.now() - started, state };
 }
 
+// Playing with the next chunk ready too: a measurement that starts now is not
+// cut by a hold still to come from the step before (a worker that cannot keep
+// up still shows, as holds and gaps while it listens).
+const settled = (page, label) => waitFor(page, (s) => (isOn(s) && s.ahead >= 12) || s.status === "failed", { timeout: 60000, label });
+
 // Recordings are also checked against 1x Spleeter of the page's exact audio.
 let source = null;
 async function listen(page, name, seconds) {
@@ -166,8 +171,9 @@ for (const variant of VARIANTS) {
 
   for (const rate of [1.5, 2]) {
     await step(`${tag} ${rate}x speed`, async () => {
-      const before = await frameState(page);
       await set(page, "playbackRate", rate);
+      await settled(page, `${rate}x with the next chunk ready`);
+      const before = await frameState(page);
       await sleep(1500);
       const a = await listen(page, `${variant}-rate-${rate}`, 14);
       const after = await frameState(page);
@@ -210,6 +216,25 @@ for (const variant of VARIANTS) {
     report.record(`${tag} fullscreen keeps the button on the video`, where.fullscreen && where.inside && where.visible, where);
   });
 
+  await step(`${tag} the auto-hidden button lets clicks through to the video`, async () => {
+    // As in YouTube's player while its controls are hidden (".ytp-autohide").
+    const hidden = await page.evaluate(async () => {
+      const button = document.querySelector(".nomusic-btn");
+      const box = button.getBoundingClientRect();
+      const at = () => document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+      const host = button.parentElement;
+      host.classList.add("ytp-autohide");
+      await new Promise((resolve) => setTimeout(resolve, 400)); // its fade
+      const style = getComputedStyle(button);
+      const result = { status: button.dataset.nomusicStatus, opacity: style.opacity, pointer_events: style.pointerEvents, target_is_button: at() === button };
+      host.classList.remove("ytp-autohide");
+      result.target_when_shown = at() === button;
+      return result;
+    });
+    report.record(`${tag} the auto-hidden button lets clicks through to the video`,
+      hidden.status === "on" && hidden.opacity === "0" && hidden.pointer_events === "none" && !hidden.target_is_button && hidden.target_when_shown, hidden);
+  });
+
   await step(`${tag} turn off restores the original`, async () => {
     const click = await clickButton(page);
     await sleep(1000);
@@ -223,8 +248,10 @@ for (const variant of VARIANTS) {
   await step(`${tag} turn back on`, async () => {
     await clickButton(page);
     const { ms, state } = await timeUntilOn(page, "re-enable");
+    const before = await settled(page, "re-enabled with the next chunk ready");
     const a = await listen(page, `${variant}-reenable`, 12);
-    report.record(`${tag} turn back on`, good(a) && state.originalGain === 0, { first_audio_ms: ms, ...a });
+    const after = await frameState(page);
+    report.record(`${tag} turn back on`, good(a) && state.originalGain === 0, { first_audio_ms: ms, holds: after.holds - before.holds, ...a });
   });
 
   // The page switches to another audio track (another language): the voice follows it.
@@ -234,8 +261,10 @@ for (const variant of VARIANTS) {
     source = `${MEDIA}/${other}/${variant}/audio.${variant.startsWith("webm") ? "webm" : "mp4"}`;
     await sleep(6000);
     const { ms } = await timeUntilOn(page, "after the switch");
+    const before = await settled(page, "the other track with the next chunk ready");
     const a = await listen(page, `${variant}-other-track`, 12);
-    report.record(`${tag} another audio track: the voice follows it`, good(a), { settle_ms: 6000 + ms, ...a });
+    const after = await frameState(page);
+    report.record(`${tag} another audio track: the voice follows it`, good(a), { settle_ms: 6000 + ms, holds: after.holds - before.holds, ...a });
     source = audioFile(variant);
   });
 
