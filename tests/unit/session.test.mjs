@@ -62,6 +62,7 @@ function sessionSandbox({ video: props, settings = {}, streams = { "blob:a": 1 }
       reload: () => reloads.push("reload"), replace: (url) => reloads.push(String(url)),
     },
     URL,
+    t: (key) => key, // i18n.js: failure messages by key
     importStretch: async () => ({ StretchClient: class { stretch(...args) { return stretch(...args); } } }),
   };
   const { Session } = load("session.js", env, {
