@@ -60,11 +60,15 @@ export async function launch({ headless = true, autoStart = true, autoplay = tru
   });
   const extension = testExtension();
   const extensionId = await browser.installExtension(extension);
-  // Remove the throwaway profile and extension copy once the browser has exited.
-  browser.process()?.once("exit", () => {
+  // Remove the throwaway profile and extension copy once the browser has exited,
+  // or when this script exits first (the browser is stopped then).
+  const cleanup = () => {
+    try { browser.process()?.kill("SIGKILL"); } catch { /* already gone */ }
     rmSync(profile, { recursive: true, force: true });
     rmSync(extension, { recursive: true, force: true });
-  });
+  };
+  browser.process()?.once("exit", cleanup);
+  process.once("exit", cleanup);
   // The welcome page opens on install; tests do not need it.
   await sleep(500);
   for (const page of await browser.pages()) if (page.url().includes("welcome.html")) await page.close();
