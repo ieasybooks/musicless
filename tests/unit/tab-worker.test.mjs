@@ -127,7 +127,7 @@ function workerSandbox({ supported = true, localModel = null, configure = null }
     // Frames straight into a stream, as its demuxer would give them.
     addRaw(id, frames, config = { codec: "opus", sampleRate: 48000, numberOfChannels: 2 }) {
       const stream = inside.streams.get(id);
-      const buffer = stream.buffers.get(9) ?? stream.buffers.set(9, { id: 9 }).get(9);
+      const buffer = stream.buffers.get(9) ?? stream.buffers.set(9, {}).get(9);
       for (const frame of frames) frame.config ??= config;
       inside.invalidate(stream, inside.addFrames(stream, buffer, frames));
       w.send({ type: "entries", streamId: id, entries: [] }); // lets the worker look for work
@@ -418,6 +418,14 @@ test("a chunk an earlier worker cut short at the stream's end is made again when
   w.feed(1, 3, { from: 15, header: false }); // not the end after all
   await w.advance();
   assert.deepEqual(w.changed(), [[1]]);
+});
+
+test("a buffer replayed again to the same worker keeps following its removals", async () => {
+  const w = await madeChunk0();
+  w.feed(1, 15); // the same copy again (a page asked capture.js for another replay)
+  w.entry(1, { kind: "remove", bufferId: 2, start: 0, end: Infinity });
+  await w.advance();
+  assert.equal(w.held(1).frames, 0, "all of it removed");
 });
 
 test("a removed buffer's audio is gone", async () => {

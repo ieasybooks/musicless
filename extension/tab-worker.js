@@ -288,15 +288,16 @@ function onEntry(stream, entry) {
     return;
   }
   if (entry.kind === "append" || entry.kind === "remove") stream.ended = false; // both reopen an ended Media Source
-  let buffer = stream.buffers.get(entry.bufferId);
+  let buffer = stream.buffers.get(entry.bufferId); // its frames point to it
   if (entry.kind === "buffer" || entry.kind === "changeType") {
     try {
       const demuxer = createDemuxer(entry.mime);
-      if (entry.kind === "buffer" || !buffer) {
-        buffer = { id: entry.bufferId };
+      if (!buffer) {
+        buffer = {};
         stream.buffers.set(entry.bufferId, buffer);
       }
-      Object.assign(buffer, { mime: entry.mime, demuxer, checkedConfig: null }); // a new type keeps the buffer's audio
+      // A new type keeps the buffer's audio; so does a buffer replayed again.
+      Object.assign(buffer, { mime: entry.mime, demuxer, checkedConfig: null });
     } catch {
       report(stream, "codec", "This video's audio format is not supported.");
     }
