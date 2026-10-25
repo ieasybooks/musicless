@@ -18,7 +18,7 @@ mkdirSync(WORK, { recursive: true });
 // Each launch gets its own copy, so parallel runs never see each other's edits.
 function testExtension() {
   const dir = mkdtempSync(join(WORK, "extension-under-test-"));
-  cpSync(EXTENSION, dir, { recursive: true });
+  cpSync(EXTENSION, dir, { recursive: true, dereference: true }); // worktrees may link the built model and runtime
   const manifest = JSON.parse(readFileSync(join(dir, "manifest.json"), "utf8"));
   for (const entry of [...manifest.content_scripts, ...manifest.web_accessible_resources]) {
     entry.matches.push("http://127.0.0.1/*");
