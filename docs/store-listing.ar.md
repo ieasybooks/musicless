@@ -82,3 +82,17 @@ means the video's sound, not the voices. The voices in the description are
 described, it removes the sounds of the instruments, «أصوات الآلات الموسيقية»;
 the instruments themselves are «الآلات الموسيقية».
 
+## الصور
+
+The Arabic screenshots are `docs/store/ar-1-music-removed.png`,
+`ar-2-turn-on-once.png`, `ar-3-you-choose.png` and `ar-4-one-setting.png`,
+captured on Arabic YouTube (`hl=ar`) with the Arabic catalog; upload them with
+the Arabic locale. The promo tile and the store icon are shared with English.
+Their captions:
+
+| File | Caption |
+| --- | --- |
+| `ar-1-music-removed.png` | يزيل معظم الموسيقى. ويُبقي الأصوات البشرية. |
+| `ar-2-turn-on-once.png` | شغّله مرة واحدة. بعد ذلك يعمل تلقائيًا. |
+| `ar-3-you-choose.png` | إذا لم يستطع إزالة الموسيقى، تختار أنت ما يُشغَّل. |
+| `ar-4-one-setting.png` | إعداد واحد. ولا يغادر الصوت حاسوبك أبدًا. |

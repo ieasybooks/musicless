@@ -126,8 +126,24 @@ identity check the account asks for.
 Upload the zip from the draft. Fill the listing, the Arabic locale, privacy,
 and reviewer notes from [store-listing.md](store-listing.md) and
 [store-listing.ar.md](store-listing.ar.md). The Arabic page needs a native
-review first. Screenshots need a recapture first. The current files in
-`docs/store/` still show the old button.
+review first.
+
+The images in `docs/store/` come from `tests/screenshots.mjs`. Remake them
+after any change to the button, the pages or the strings:
+
+```sh
+cd tests
+node screenshots.mjs            # Google Chrome; add CHROME=<path> for another browser
+```
+
+It installs the extension in a throwaway profile, opens four live YouTube
+pages (NASA Goddard's public-domain "Tour of the Moon in 4K"), the welcome
+page and the popup, once in English and once in Arabic, and writes
+`en-1-…png` to `en-4-…png`, `ar-1-…png` to `ar-4-…png` and the promo tile.
+A YouTube bot check or an ad can spoil a run; run it again. Portable browser
+copies need `NOMUSIC_NO_SANDBOX=1`. Upload the English screenshots with the
+English listing and the Arabic ones with the Arabic locale; the promo tile
+and `store-icon-128.png` are global.
 
 Submit for review and uncheck automatic publication. That holds the item for
 you to publish. The hold ends 30 days after approval, and a late publish

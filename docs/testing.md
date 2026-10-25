@@ -87,6 +87,18 @@ never loads a new position after a seek. So each group of steps opens a fresh
 page and seeks stay within the audio already loaded; the local suite covers
 seeking into new audio and long sessions.
 
+## Store images
+
+```sh
+node screenshots.mjs
+```
+
+The screenshots and the promo tile in `docs/store/`, in English and Arabic:
+the button and the recovery panel on a live YouTube watch page (a public-domain
+NASA video), the welcome page's first-run card and the popup. The recovery
+panel comes from a copy of the extension that the script makes fail on
+purpose. See [release.md](release.md) for when to remake them.
+
 ## Memory
 
 ```sh

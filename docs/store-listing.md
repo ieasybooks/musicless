@@ -3,8 +3,8 @@
 Paste the blocks below into the dashboard. The Arabic locale is
 [store-listing.ar.md](store-listing.ar.md). It needs a native review before
 submission. Edge Add-ons can use the same public text. Images are in
-`docs/store/`. Recapture them before upload. The files there still show an
-older button.
+`docs/store/`; `tests/screenshots.mjs` makes them (the command is in
+[release.md](release.md)).
 
 Do not submit until the release zip matches this page: English and Arabic UI,
 the first-run **Turn on nomusic** choice, no debug recorder, and the button
@@ -184,21 +184,29 @@ to your account.
 
 ## Images
 
-Recapture before upload. Show the real extension on a real YouTube player,
-with public-domain or owned footage (for example a NASA narration with
-music). No × on the button. No "100% music-free" claim.
+`tests/screenshots.mjs` writes every file below (the command is in
+[release.md](release.md)). The four screenshots exist in English (`en-*.png`)
+and in Arabic (`ar-*.png`, captured on Arabic YouTube with the Arabic
+catalog); upload each set with its locale. The player shots show NASA
+Goddard's public-domain "Tour of the Moon in 4K"
+(<https://www.youtube.com/watch?v=nr5Pj6GQL2o>) on a real YouTube watch page,
+cropped to the player. The recovery panel comes from a copy of the extension
+that the script makes fail on purpose; the extension itself is unchanged.
+There is no × on the button and no "100% music-free" claim.
 
-| File | What to show |
-| --- | --- |
-| `1-removes-music.png` | Headline: "Reduce background music. Keep the voices." Include "Some music may remain." |
-| `2-never-plays-music.png` | "If it can't remove the music, you decide what plays." Show Try again (or Reload page) and Play with music, readable at store size. |
-| `3-one-setting.png` | "Automatic removal. Audio stays on your computer." |
-| `4-welcome.png` | The **Turn on nomusic** disclosure, or "Start automatically or turn it on per video." Text must stay readable at 640×400. |
-| `promo-tile-440x280.png` | 440×280. Prefer the icon and the name nomusic, without an English-only slogan. A slogan on this tile cannot be translated. If you keep words, use "Less background music. Clearer voices." |
-| Store icon | Own 128×128 PNG. Artwork near 96×96 centered on a transparent 128×128 canvas. |
+| File | What it shows | Caption |
+| --- | --- | --- |
+| `en-1-music-removed.png` | The Music removed button on the player, with YouTube's controls showing | Removes most of the music. Keeps the voices. |
+| `en-2-turn-on-once.png` | The welcome page's Turn on nomusic card | Turn it on once. Then it works by itself. |
+| `en-3-you-choose.png` | The recovery panel: Music not removed, Try again, Play with music | If it can't remove the music, you choose what plays. |
+| `en-4-one-setting.png` | The toolbar popup | One setting. Audio never leaves your computer. |
+| `promo-tile-440x280.png` | The logo and the name only; a tile cannot be localized | none |
+| `store-icon-128.png` | The store icon: the artwork near 96×96 on a transparent 128×128 canvas | none |
 
-Screenshots are 1280×800, one to five of them. Arabic screenshots go with the
-Arabic locale. The promo tile is global.
+The Arabic files have the same numbers and names (`ar-1-music-removed.png`
+and so on); their captions are in [store-listing.ar.md](store-listing.ar.md).
+Screenshots are 1280×800 PNG without transparency, one to five per locale.
+The promo tile and the store icon are global.
 
 ## What nomusic does not do
 
