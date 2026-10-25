@@ -159,11 +159,16 @@ if "--source" in sys.argv:
     if not len(times):
         sys.exit("the video was paused for the whole recording: nothing to compare at media time")
     # 1x Spleeter of the source, only over the windows this recording heard (plus
-    # one before, whose tail completes the first crossfade), cached per span.
+    # one before, whose tail completes the first crossfade), cached per span and
+    # per separation (the model and reference.py), so a new mask is not judged
+    # against references made with the old one.
+    import hashlib
+
     stride_s = spleeter.STRIDE / spleeter.RATE
     first = max(0, int(medias.min() // stride_s) - 1)
     last = int(medias.max() // stride_s) + 1
-    cache = Path(f"{source}.ref-v2-{first}-{last}-{rate}.npy")
+    separation = hashlib.sha256(spleeter.MODEL.read_bytes() + Path(spleeter.__file__).read_bytes()).hexdigest()[:12]
+    cache = Path(f"{source}.ref-{separation}-{first}-{last}-{rate}.npy")
     if cache.exists():
         env_1x = np.load(cache)
     else:
