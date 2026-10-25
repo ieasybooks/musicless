@@ -50,18 +50,66 @@
 
   const post = (message, transfer = []) => window.postMessage({ [NS]: "capture", ...message }, "*", transfer);
 
+  const isWebm = (bytes) => bytes[0] === 0x1a && bytes[1] === 0x45 && bytes[2] === 0xdf && bytes[3] === 0xa3; // EBML
+  const MEDIA_BOXES = new Set(["moof", "styp", "sidx", "emsg", "prft", "mdat"]);
+
   // Where an append starts: a format header ("init"), a new media segment
   // ("media"), or the continuation of a segment split across appends ("part",
   // marked `header` while it continues a format header).
   function segmentKind(bytes) {
-    if (bytes[0] === 0x1a && bytes[1] === 0x45 && bytes[2] === 0xdf && bytes[3] === 0xa3) return "init"; // WebM EBML
+    if (isWebm(bytes)) return "init";
     if (bytes[0] === 0x1f && bytes[1] === 0x43 && bytes[2] === 0xb6 && bytes[3] === 0x75) return "media"; // WebM Cluster
     if (bytes.length >= 8) {
       const type = String.fromCharCode(bytes[4], bytes[5], bytes[6], bytes[7]);
       if (type === "ftyp" || type === "moov") return "init";
-      if (type === "moof" || type === "styp" || type === "sidx" || type === "emsg" || type === "prft") return "media";
+      if (MEDIA_BOXES.has(type) && type !== "mdat") return "media";
     }
     return "part";
+  }
+
+  // An EBML variable-length number: { value, length, unknown }, or null if cut off.
+  function vint(bytes, pos, keepMarker) {
+    const first = bytes[pos];
+    let length = 1;
+    while (length <= 8 && !(first & (0x80 >> (length - 1)))) length++;
+    if (length > 8 || pos + length > bytes.length) return null;
+    let value = keepMarker ? first : first & (0xff >> length);
+    let unknown = !keepMarker && value === 0xff >> length;
+    for (let i = 1; i < length; i++) {
+      value = value * 256 + bytes[pos + i];
+      if (bytes[pos + i] !== 0xff) unknown = false;
+    }
+    return { value, length, unknown };
+  }
+
+  // Where the format header at the start of `bytes` ends: at the first WebM
+  // Cluster, or at the first MP4 box of a media segment. null if it goes on.
+  function headerEnd(bytes) {
+    const webm = isWebm(bytes);
+    let pos = 0;
+    while (pos < bytes.length) {
+      if (webm) {
+        const id = vint(bytes, pos, true);
+        const size = id && vint(bytes, pos + id.length, false);
+        if (!size) return null;
+        if (id.value === 0x1f43b675) return pos;
+        if (id.value === 0x18538067) pos += id.length + size.length; // into the Segment, which holds the rest
+        else if (size.unknown) return null;
+        else pos += id.length + size.length + size.value;
+      } else {
+        if (pos + 8 > bytes.length) return null;
+        if (MEDIA_BOXES.has(String.fromCharCode(bytes[pos + 4], bytes[pos + 5], bytes[pos + 6], bytes[pos + 7]))) return pos;
+        let size = bytes[pos] * 2 ** 24 + bytes[pos + 1] * 2 ** 16 + bytes[pos + 2] * 2 ** 8 + bytes[pos + 3];
+        if (size === 1) {
+          if (pos + 16 > bytes.length) return null;
+          size = 0;
+          for (let i = pos + 8; i < pos + 16; i++) size = size * 256 + bytes[i];
+        }
+        if (size < 8) return null; // to the end of the file (or not a box at all)
+        pos += size;
+      }
+    }
+    return null;
   }
 
   // A Media Source's stream. A closed one's audio is freed; if the player opens
@@ -170,22 +218,38 @@
     stream.missed = true;
   }
 
+  // A format header can come in several appends, and an append can hold the
+  // end of a header and media: the header bytes are recorded on their own
+  // (marked `header`), so that before consent nothing else is kept. One that
+  // grows past MAX_HEADER is taken for media.
+  function appended({ streamId, bufferId }, offset, bytes) {
+    const stream = streams.get(streamId);
+    if (!stream) return;
+    const kind = segmentKind(bytes);
+    const before = kind === "init" ? new Uint8Array(0) : kind === "part" ? stream.headers.get(bufferId) : null;
+    stream.headers.delete(bufferId);
+    let media = bytes;
+    if (before) {
+      const all = new Uint8Array(before.length + bytes.length);
+      all.set(before);
+      all.set(bytes, before.length);
+      const end = headerEnd(all);
+      if ((end ?? all.length) <= MAX_HEADER) {
+        if (end === null) stream.headers.set(bufferId, all); // the header goes on in the next append
+        const cut = end === null ? bytes.length : Math.max(0, end - before.length);
+        media = cut === 0 ? bytes : cut < bytes.length ? bytes.slice(cut) : null;
+        if (cut) record(streamId, { kind: "append", bufferId, offset, segment: before.length ? "part" : "init", bytes: media ? bytes.slice(0, cut) : bytes, header: true });
+      }
+    }
+    if (media) record(streamId, { kind: "append", bufferId, offset, segment: segmentKind(media), bytes: media });
+  }
+
   function record(id, entry) {
     const stream = streams.get(id);
     if (!stream) return;
-    if (entry.kind === "append") {
-      // A format header can come in several appends; its parts stay with it.
-      const size = stream.headers.get(entry.bufferId);
-      if (entry.segment === "init" || (entry.segment === "part" && size + entry.bytes.length <= MAX_HEADER)) {
-        stream.headers.set(entry.bufferId, (entry.segment === "init" ? 0 : size) + entry.bytes.length);
-        entry.header = true;
-      } else {
-        stream.headers.delete(entry.bufferId);
-      }
-      if (consented === false && !entry.header) {
-        stream.missed = true;
-        return;
-      }
+    if (entry.kind === "append" && !entry.header && consented === false) {
+      stream.missed = true;
+      return;
     }
     // A repeated abort says nothing new.
     if (entry.kind === "abort" && stream.log.findLast((e) => e.bufferId === entry.bufferId)?.kind === "abort") return;
@@ -276,14 +340,7 @@
       const info = buffers.get(this);
       if (!info || !streams.has(info.streamId)) return;
       const view = ArrayBuffer.isView(data) ? new Uint8Array(data.buffer, data.byteOffset, data.byteLength) : new Uint8Array(data);
-      const bytes = view.slice();
-      record(info.streamId, {
-        kind: "append",
-        bufferId: info.bufferId,
-        offset: this.timestampOffset,
-        segment: segmentKind(bytes),
-        bytes,
-      });
+      appended(info, this.timestampOffset, view.slice());
     });
     return result;
   };
