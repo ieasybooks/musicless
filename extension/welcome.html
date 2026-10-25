@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Welcome to nomusic</title>
+    <title data-i18n="welcome_title">Welcome to nomusic</title>
     <link rel="stylesheet" href="pages.css" />
     <style>
       body { font-size: 15px; }
@@ -12,49 +12,62 @@
       header img { width: 48px; height: 48px; border-radius: 11px; }
       h1 { margin: 0; font-size: 26px; }
       h2 { font-size: 17px; margin: 28px 0 10px; }
-      ol, ul { padding-left: 22px; margin: 0; }
+      ol, ul { padding-inline-start: 22px; margin: 0; }
       li { margin-bottom: 8px; }
-      .pill { display: inline-block; padding: 1px 9px; border-radius: 999px; background: #228b5a; font-size: 12px; font-weight: 600; }
+      .card { padding: 18px 20px; border-radius: 12px; background: #1a1f29; border: 1px solid #2a3140; }
+      .card h2 { margin-top: 0; }
+      .card .actions { margin: 16px 0 0; }
+      .card p:last-child { margin-bottom: 0; }
+      footer { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 36px; }
     </style>
   </head>
   <body>
     <main>
       <header>
         <img src="icons/icon-128.png" alt="" />
-        <h1>nomusic is ready</h1>
+        <h1 data-i18n="welcome_title"></h1>
       </header>
 
+      <!-- Shown until the user chooses; nomusic reads no audio before "Turn on nomusic". -->
+      <section class="card" id="consent" hidden>
+        <h2 data-i18n="consent_heading"></h2>
+        <p data-i18n="consent_text"></p>
+        <p class="actions">
+          <button type="button" class="primary" id="accept" data-i18n="consent_accept"></button>
+          <button type="button" class="secondary" id="later" data-i18n="consent_later"></button>
+          <a href="https://github.com/IbraheemTuffaha/nomusic/blob/main/docs/privacy.md" target="_blank" data-i18n="link_privacy"></a>
+        </p>
+      </section>
+      <p class="notice" id="status" role="status" tabindex="-1" hidden></p>
+
+      <h2 data-i18n="welcome_how"></h2>
       <ol>
-        <li><b>Reload any YouTube tabs</b> that were open before you installed nomusic.</li>
-        <li>
-          Play a YouTube video. nomusic removes its background music automatically. At the start, and
-          after jumping to a new part, the video pauses for a moment while nomusic prepares the audio.
-        </li>
-        <li>
-          The <span class="pill">nomusic on</span> button on the video turns it off (and on again) for that
-          video. The nomusic button in the browser toolbar has the setting for starting automatically.
-        </li>
+        <li data-i18n="welcome_step_play"></li>
+        <li data-i18n="welcome_step_button" data-i18n-args="button_on"></li>
+        <li data-i18n="welcome_step_toolbar"></li>
       </ol>
 
-      <h2>What to expect</h2>
+      <h2 data-i18n="welcome_expect"></h2>
       <ul>
-        <li>Voices are kept: speech and singing. The instruments are removed. Some quiet music can remain.</li>
-        <li>
-          Everything happens on this computer, on one processor core. Nothing is uploaded, and nomusic
-          collects no data. While it is working it uses about 450 MB of memory.
-        </li>
-        <li>
-          If nomusic can't remove the music from a video, the video stays paused and silent, and nomusic
-          asks whether to retry or play the original audio.
-        </li>
+        <li data-i18n="welcome_expect_voices"></li>
+        <li data-i18n="welcome_expect_fail"></li>
+        <li data-i18n="privacy_summary"></li>
       </ul>
 
-      <h2>Limits</h2>
+      <h2 data-i18n="welcome_limits"></h2>
       <ul>
-        <li>It works on YouTube in Chrome, Edge, Brave and other Chromium browsers on a computer, not on phones.</li>
-        <li>Copy-protected videos, such as rented movies, cannot be processed.</li>
-        <li>A live stream watched right at its live point keeps pausing; a little behind it plays smoothly.</li>
+        <li data-i18n="welcome_limit_desktop"></li>
+        <li data-i18n="welcome_limit_protected"></li>
+        <li data-i18n="welcome_limit_live"></li>
+        <li data-i18n="welcome_limit_memory"></li>
       </ul>
+
+      <footer>
+        <a href="https://github.com/IbraheemTuffaha/nomusic/issues" target="_blank" data-i18n="link_help"></a>
+        <a href="THIRD_PARTY_NOTICES.txt" target="_blank" data-i18n="link_licenses"></a>
+        <a href="https://github.com/IbraheemTuffaha/nomusic/blob/main/docs/privacy.md" target="_blank" data-i18n="link_privacy"></a>
+      </footer>
     </main>
+    <script type="module" src="welcome.js"></script>
   </body>
 </html>

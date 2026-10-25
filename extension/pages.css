@@ -1,4 +1,5 @@
-/* Shared look of the extension's own pages (popup, welcome). */
+/* Shared look of the extension's own pages (popup, welcome). Logical
+   properties keep the layout right in Arabic (dir="rtl", set by i18n.js). */
 :root {
   color-scheme: dark;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
@@ -10,9 +11,40 @@ body {
   font-size: 13px;
   line-height: 1.45;
 }
+[dir="rtl"] body { line-height: 1.7; }
 a { color: #c3ef1d; }
 p { margin: 0 0 8px; }
 .hint { color: #8a92a0; font-size: 12px; font-weight: 400; }
+[hidden] { display: none !important; }
+
+button.primary,
+button.secondary {
+  min-height: 32px;
+  padding: 7px 16px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+button.primary { background: #c3ef1d; color: #11141a; }
+button.primary:hover { background: #d3f64c; }
+button.secondary { background: transparent; color: #f3f4f7; border-color: #3a4255; }
+button.secondary:hover { background: #1f2531; }
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+}
+
+/* A short confirmation ("nomusic is on") after the user chose. */
+.notice {
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(22, 110, 70, 0.25);
+  border: 1px solid rgba(22, 110, 70, 0.7);
+}
 
 /* An on/off switch drawn over a native checkbox (keyboard and screen readers keep working). */
 input.switch {
@@ -31,13 +63,23 @@ input.switch::after {
   content: "";
   position: absolute;
   top: 2px;
-  left: 2px;
+  inset-inline-start: 2px;
   width: 16px;
   height: 16px;
   border-radius: 50%;
   background: #f3f4f7;
-  transition: transform 150ms ease;
+  transition: inset-inline-start 150ms ease;
 }
 input.switch:checked { background: #4caf6e; }
-input.switch:checked::after { transform: translateX(16px); }
-input.switch:focus-visible { outline: 2px solid #b4ddff; outline-offset: 2px; }
+input.switch:checked::after { inset-inline-start: 18px; }
+
+input.switch:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid #b4ddff;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  input.switch, input.switch::after { transition: none; }
+}
