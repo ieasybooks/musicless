@@ -542,7 +542,7 @@ await step("turned on from a video's button, the first-run page goes back to it"
     const { ms, state } = await timeUntilOn(page, "the video it went back to");
     report.record("turned on from a video's button, the first-run page goes back to it",
       back.open_youtube_hidden && back.reloaded && back.page_closed && fresh && state.status === "on",
-      { ...back, fresh_page: fresh, status_after: state.status, audio_ms: ms });
+      { ...back, fresh_page: fresh, status_after: state.status, failure: state.failure?.reason ?? null, audio_ms: ms });
     await page.close();
   } finally {
     await setSettings(browser, extensionId, { consented: true });
