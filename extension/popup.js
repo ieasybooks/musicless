@@ -1,35 +1,34 @@
-// Toolbar popup: the one setting's row, with "Turn on" and the disclosure in
-// it until the user turns nomusic on.
+// Toolbar popup: the one setting's row. Until the user turns nomusic on, the
+// row carries the disclosure and the switch, turned on, is the consent.
 import { localizePage } from "./i18n.js";
 import { DEFAULTS } from "./settings.js";
 
 localizePage();
 const $ = (id) => document.getElementById(id);
+let consented = false;
 
-// Before: the disclosure, the privacy policy and "Turn on"; after: the
-// setting and help.
-function show(consented) {
+function show() {
   $("consent").hidden = consented;
-  $("settings").hidden = !consented;
+  $("autoStart").checked = consented && settings.autoStart;
 }
 
-// The line under the switch says what to do while it is off; while it is on,
-// the name says it all.
-const hint = () => { $("autoStartHint").hidden = $("autoStart").checked; };
-
 // `consented` stays false until the user turns nomusic on, here or on the first-run page.
+let settings = { ...DEFAULTS };
 chrome.storage.sync.get(DEFAULTS).then((stored) => {
-  $("autoStart").checked = stored.autoStart;
-  hint();
-  show(stored.consented);
+  settings = stored;
+  consented = stored.consented;
+  show();
 });
-$("accept").addEventListener("click", async () => {
-  await chrome.storage.sync.set({ consented: true });
-  $("done").hidden = false;
-  show(true);
-  $("autoStart").focus();
-});
-$("autoStart").addEventListener("change", () => {
-  hint();
-  chrome.storage.sync.set({ autoStart: $("autoStart").checked });
+$("autoStart").addEventListener("change", async () => {
+  if (!consented) {
+    // Turned on under the disclosure: the user's consent, and removal on every video.
+    consented = true;
+    settings.autoStart = true;
+    await chrome.storage.sync.set({ consented: true, autoStart: true });
+    show();
+    $("done").hidden = false;
+    return;
+  }
+  settings.autoStart = $("autoStart").checked;
+  chrome.storage.sync.set({ autoStart: settings.autoStart });
 });

@@ -185,7 +185,7 @@ async function shootPopup(browser, extensionId, file) {
   const page = await browser.newPage();
   await page.setViewport({ width: 332, height: 720, deviceScaleFactor: 2 });
   await page.goto(`chrome-extension://${extensionId}/popup.html`);
-  await page.waitForSelector("#settings:not([hidden])");
+  await page.waitForSelector("#autoStart:checked");
   await sleep(300);
   const box = await page.evaluate(() => {
     const r = document.body.getBoundingClientRect();
