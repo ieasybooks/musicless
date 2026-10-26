@@ -27,7 +27,7 @@
   "failure_updated": { "message": "تم تحديث nomusic أو إيقافه. أعد تحميل الصفحة للمتابعة." },
 
   "setup_heading": { "message": "شاهد YouTube بدون موسيقى" },
-  "consent_text": { "message": "يقرأ nomusic صوت فيديوهات\u00a0YouTube التي تشاهدها ويزيل منه معظم الموسيقى، على هذا الحاسوب فقط. ولا يرفع الصوت ولا يحفظه أبدًا، وقد يزامن Chrome إعداداتك." },
+  "consent_text": { "message": "لإزالة معظم الموسيقى، يقرأ nomusic صوت فيديوهات\u00a0YouTube التي تشاهدها على هذا الحاسوب فقط. ولا يرفع الصوت ولا يحفظه\u00a0أبدًا، وقد يزامن Chrome إعداداتك." },
   "consent_accept": { "message": "تفعيل" },
   "done_heading": { "message": "تم تفعيل nomusic" },
   "done_text": { "message": "إن كانت علامة تبويب YouTube مفتوحة من قبل، فأعد تحميلها." },
