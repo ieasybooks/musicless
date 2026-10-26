@@ -197,7 +197,8 @@ async function shootPopup(browser, extensionId, file) {
 
 const pngWidth = (file) => readFileSync(file).readUInt32BE(16);
 
-// A capture under its caption on a quiet canvas, at 1280x800. The caption
+// A capture under its caption on a quiet canvas (a warm grey, beside the
+// mark's amber), at 1280x800. The caption
 // must stay readable when the store scales the image to 640x400. The popup is
 // shown at its captured size (twice its CSS size); the rest fills the space
 // left.
@@ -206,8 +207,8 @@ async function showcase(browser, language, name, caption, image, { width } = {})
   await page.setViewport({ width: 1280, height: 800, deviceScaleFactor: 1 });
   const data = readFileSync(image).toString("base64");
   const font = language.dir === "rtl" ? `'Segoe UI', 'SF Arabic', 'Noto Sans Arabic', system-ui, sans-serif` : `-apple-system, 'Segoe UI', Roboto, system-ui, sans-serif`;
-  await page.setContent(`<!doctype html><html lang="${language.lang}" dir="${language.dir}"><body style="margin:0;box-sizing:border-box;width:1280px;height:800px;padding:44px 64px;background:#eef2ef;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:32px;font:500 40px/1.3 ${font};color:#1f2a24;text-align:center">
+  await page.setContent(`<!doctype html><html lang="${language.lang}" dir="${language.dir}"><body style="margin:0;box-sizing:border-box;width:1280px;height:800px;padding:44px 64px;background:#f3f0ea;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:32px;font:500 40px/1.3 ${font};color:#1f1f1f;text-align:center">
     <div style="flex:0 0 auto">${caption}</div>
     <div style="flex:0 1 auto;min-height:0;display:flex;align-items:center;justify-content:center;width:100%">
       <img src="data:image/png;base64,${data}" style="${width ? `width:${width}px;` : "max-width:100%;"}max-height:100%;border-radius:12px;box-shadow:0 2px 12px rgba(31,42,36,.18)">
