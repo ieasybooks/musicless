@@ -277,17 +277,18 @@ for (const variant of VARIANTS) {
     source = audioFile(variant);
   });
 
-  await step(`${tag} control messages a page forges leave no lasting failure`, async () => {
+  await step(`${tag} forged consent and unsubscribe messages do not stop the playing video`, async () => {
     const { streamId } = await frameState(page);
     // A page script posts nomusic's own control messages: no consent, and no
-    // subscription. (Other forged messages can fail the video, closed.)
+    // subscription. The playing video goes on, and the real answer is restored.
+    // (Other forgeries can fail a video closed, by design: see how-it-works.)
     await page.evaluate((streamId) => {
       for (const message of [{ type: "consent", consented: false }, { type: "unsubscribe", streamId }]) window.postMessage({ nomusic: "control", ...message }, "*");
     }, streamId);
     await sleep(2000);
     const state = await frameState(page);
     const stream = (await page.evaluate(() => window.__nomusicCaptureDebug())).find((s) => s.id === streamId);
-    report.record(`${tag} control messages a page forges leave no lasting failure`,
+    report.record(`${tag} forged consent and unsubscribe messages do not stop the playing video`,
       state.status === "on" && !state.failure && stream?.subscribed === true && stream?.consented === true,
       { status: state.status, failure: state.failure?.reason ?? null, still_subscribed: stream?.subscribed, consent_restored: stream?.consented });
   });
