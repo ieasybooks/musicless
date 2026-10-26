@@ -146,7 +146,7 @@ export class Button {
     this.workingSince = null;
     this.wantedPlay = false;
     this.host = null;
-    this.marked = null; // the player whose spinner the play button hides
+    this.marked = null; // [player, class]: YouTube's spinner shown for our wait, or hidden under the play button
     this.rtl = false; // the player's direction, which the corners follow
 
     this.el = setLanguage(document.createElement("button"));
@@ -278,13 +278,13 @@ export class Button {
     const blocked = state === "attention";
     const show = (working || blocked) && !!this.host;
     if (this.notice.hidden === show) this.notice.hidden = !show;
-    // While the play button asks for the click, YouTube's spinner stays out of it.
-    this.markHost(show && blocked ? this.host : null);
+    // Where the player has YouTube's spinner, the wait shows that one (the one
+    // it shows while loading, so the two never differ); ours is for other
+    // players. While the play button asks for the click, YouTube's stays out.
+    const theirs = !!this.host?.querySelector(".ytp-spinner");
+    this.markHost(show ? this.host : null, blocked ? "nomusic-blocked" : theirs ? "nomusic-waiting" : null);
     if (!show) return;
-    // While YouTube shows its own spinner (it is loading the video), the words
-    // hang under that one.
-    const theirs = String(this.host.classList.contains("buffering-mode"));
-    if (this.notice.dataset.theirs !== theirs) this.notice.dataset.theirs = theirs;
+    if (this.notice.dataset.theirs !== String(theirs)) this.notice.dataset.theirs = String(theirs);
     // Words only for a wait long enough to wonder about, at a start or after a
     // jump alike.
     const words = String(working && now - this.workingSince >= WORDS_DELAY_MS);
@@ -301,11 +301,12 @@ export class Button {
     }
   }
 
-  markHost(host) {
-    if (this.marked === host) return;
-    this.marked?.classList.remove("nomusic-blocked");
-    host?.classList.add("nomusic-blocked");
-    this.marked = host;
+  markHost(host, mark = null) {
+    const [was, wasMark] = this.marked ?? [];
+    if (was === host && wasMark === mark) return;
+    if (wasMark) was.classList.remove(wasMark);
+    if (host && mark) host.classList.add(mark);
+    this.marked = host && mark ? [host, mark] : null;
   }
 
   // ---- the tooltip ----------------------------------------------------------
@@ -459,7 +460,7 @@ export class Button {
   position(host) {
     if (this.retired) return;
     this.host = host;
-    if (this.marked) this.markHost(host);
+    if (this.marked) this.markHost(host, this.marked[1]);
     this.rtl = getComputedStyle(host).direction === "rtl";
     const row = controlRow(host);
     if (row) {

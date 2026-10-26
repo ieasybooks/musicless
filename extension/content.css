@@ -112,12 +112,12 @@
 .nomusic-tip[lang="ar"] { font-size: 14px; }
 
 /* One layer over the video while nomusic needs a wait or a click, below
-   YouTube's controls (they stay usable). The wait: YouTube's spinner, drawn
-   as YouTube draws it and where (while YouTube shows its own, ours steps
-   aside), and, if the wait lasts, the words where YouTube writes its brief
-   messages ("1.25x"), at the top; clicks go through to the video. The click:
-   the whole video is the button, the round play button in the middle drawn
-   as YouTube's own. */
+   YouTube's controls (they stay usable). The wait: YouTube's own spinner
+   (ours, drawn as YouTube's, only in players without one), and, if the wait
+   lasts, the words where YouTube writes its brief messages, at the top, in
+   its tooltips' pill; clicks go through to the video. The click: the whole
+   video is the button, the round play button in the middle drawn as
+   YouTube's own. */
 .nomusic-notice {
   position: absolute;
   z-index: 57;
@@ -178,13 +178,18 @@
   top: 10%;
   left: 50%;
   transform: translateX(-50%);
-  padding: 10px 20px;
-  border-radius: 24px;
-  background: rgba(0, 0, 0, 0.5);
+  height: 25px;
+  padding: 0 9px;
+  border-radius: 8px;
+  background: rgba(28, 28, 28, 0.9);
+  color: #eee;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 25px;
   white-space: nowrap;
 }
 .nomusic-notice[data-kind="status"][data-words="false"] .nomusic-notice__text { display: none; }
-.nomusic-notice[lang="ar"] { font-size: 20px; font-weight: 500; line-height: 25px; }
+.nomusic-notice[lang="ar"] .nomusic-notice__text { font-size: 14px; }
 .nomusic-notice__disc { display: none; }
 .nomusic-notice[data-kind="action"] { pointer-events: auto; cursor: pointer; }
 .nomusic-notice[data-kind="action"] .nomusic-notice__disc {
@@ -214,8 +219,9 @@
   overflow: hidden;
   clip-path: inset(50%);
 }
-/* While the play button asks for the click, YouTube's spinner (still loading
-   under it) stays out of the way. */
+/* YouTube's spinner, shown for our wait (YouTube hides it with an inline
+   display: none), and out of the way while the play button asks for the click. */
+.nomusic-waiting .ytp-spinner { display: block !important; }
 .nomusic-blocked .ytp-spinner { visibility: hidden; }
 @keyframes nomusic-linspin { to { transform: rotate(360deg); } }
 @keyframes nomusic-easespin {
@@ -257,7 +263,7 @@
   background: #282828;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08); /* an edge on dark frames */
   color: #fff;
-  text-align: start;
+  text-align: center; /* a short title over two choices: one centred column */
   user-select: none;
 }
 .nomusic-dialog[hidden] { display: none; }
@@ -286,7 +292,7 @@
 .nomusic-dialog__actions {
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 8px;
 }
 .nomusic-dialog__action {
@@ -310,7 +316,7 @@
 /* Fullscreen on a large screen: YouTube scales its controls up too. */
 .ytp-big-mode .nomusic-spinner { width: 128px; height: 128px; margin: -64px 0 0 -64px; }
 .ytp-big-mode .nomusic-spinner__arc { border-width: 12px; }
-.ytp-big-mode .nomusic-notice__text { padding: 14px 28px; border-radius: 32px; font-size: 27px; line-height: 36px; }
+.ytp-big-mode .nomusic-notice__text { height: 34px; padding: 0 12px; border-radius: 10px; font-size: 18px; line-height: 34px; }
 .ytp-big-mode .nomusic-notice[data-kind="action"] .nomusic-notice__disc { width: 144px; height: 144px; margin: -72px 0 0 -72px; }
 .ytp-big-mode .nomusic-notice__disc svg { width: 90px; height: 90px; }
 .ytp-big-mode .nomusic-dialog { width: min(440px, calc(100% - 24px)); }
