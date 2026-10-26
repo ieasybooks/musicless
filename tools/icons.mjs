@@ -5,7 +5,8 @@
 // The mark is the player button's struck-through note (button.js draws the
 // same note) in white on a green tile. The 16 px icon is drawn pixel by pixel,
 // since a scaled-down drawing turns to grey mush at that size; the others are
-// drawn as vectors with their own stroke widths. No font is needed.
+// drawn as vectors with their own stroke widths. Only the promo tile's name
+// needs a font: Roboto.
 //
 // Usage (from the repository root): node tools/icons.mjs
 // Needs the test tools (./setup.sh --dev) and a Chromium browser (CHROME, as
@@ -25,21 +26,21 @@ const GREEN = "#288563";
 // (a little above the diagonal, clear of the head), which cuts a gap of `gap`
 // units on its upper side only.
 let masks = 0;
-function note({ color = "#fff", stroke = 2, gap = 1.3 } = {}) {
+function note({ color = "#fff", stroke = 2, gap = 1.2 } = {}) {
   const id = `cut${++masks}`;
   const shift = (gap / 2) * Math.SQRT1_2; // half the gap, up and to the right
   const at = (x, y) => `${+(x + shift).toFixed(2)} ${+(y - shift).toFixed(2)}`;
   return `<mask id="${id}" maskUnits="userSpaceOnUse"><rect x="-4" y="-4" width="32" height="32" fill="#fff"/>` +
     `<path d="M${at(3.4, 2.6)} ${at(21.4, 20.6)}" stroke="#000" stroke-width="${+(stroke + gap).toFixed(2)}" stroke-linecap="round"/></mask>` +
-    `<g mask="url(#${id})" fill="${color}"><circle cx="9.4" cy="17.4" r="4.4"/>` +
-    `<rect x="11.3" y="2.8" width="2.5" height="14.6"/><rect x="11.3" y="2.8" width="7" height="4.7"/></g>` +
+    `<g mask="url(#${id})" fill="${color}"><circle cx="9.2" cy="18.2" r="4.2"/>` +
+    `<rect x="11.4" y="2.2" width="2" height="16"/><rect x="11.4" y="2.2" width="6.4" height="4.4"/></g>` +
     `<path d="M3.4 2.6 21.4 20.6" stroke="${color}" stroke-width="${stroke}" stroke-linecap="round"/>`;
 }
 
 // The tile with the note in it, as an SVG of `size` px. `inset` is the
 // transparent margin (the store wants 16 of 128), `scale` the note's share of
 // the tile.
-function tile(size, { inset = 0, radius = 0.25, scale = 0.7, stroke = 2, gap = 1.3, color = GREEN } = {}) {
+function tile(size, { inset = 0, radius = 0.25, scale = 0.76, stroke = 2, gap = 1.2, color = GREEN } = {}) {
   const side = size - 2 * inset;
   const g = side * scale;
   const at = inset + (side - g) / 2;
@@ -48,24 +49,23 @@ function tile(size, { inset = 0, radius = 0.25, scale = 0.7, stroke = 2, gap = 1
     `<g transform="translate(${at} ${at}) scale(${g / 24})">${note({ stroke, gap })}</g></svg>`;
 }
 
-// 16 px, pixel by pixel: at this size a gap would cut the note in two, so the
-// stem runs unbroken from the head to the flag and a one-pixel strike crosses
-// it.
+// 16 px, pixel by pixel: the strike two pixels wide with a one-pixel gap on its
+// upper side, as at every size; below it the stem runs down to the head.
 const PIXELS = [
   "................",
   "................",
-  "..#.............",
-  "...#...#####....",
-  "....#..#####....",
-  ".....#.##.......",
-  "......###.......",
+  "..##...####.....",
+  "...##..####.....",
+  "....##..#.......",
+  ".....##.........",
+  "......##........",
   ".......##.......",
   ".......###......",
-  ".......##.#.....",
-  ".....####..#....",
-  "....######..#...",
-  "....######...#..",
-  ".....####.......",
+  ".......####.....",
+  ".....####.##....",
+  "....#####..##...",
+  "....#####...##..",
+  ".....###........",
   "................",
   "................",
 ];
@@ -96,19 +96,22 @@ try {
   const page = await browser.newPage();
   await render(page, PIXEL_ICON, 16, 16, join(ROOT, "extension/icons/icon-16.png"), { script: true });
   const ICONS = {
-    32: tile(32, { inset: 1, scale: 0.76, stroke: 2.4, gap: 1.4 }),
-    48: tile(48, { inset: 2, scale: 0.72, stroke: 2.2, gap: 1.3 }),
-    128: tile(128, { inset: 16, scale: 0.7 }),
+    32: tile(32, { inset: 1, scale: 0.82, stroke: 2.4, gap: 1.3 }),
+    48: tile(48, { inset: 2, scale: 0.78, stroke: 2.2, gap: 1.2 }),
+    128: tile(128, { inset: 16, scale: 0.76 }),
   };
   for (const [size, svg] of Object.entries(ICONS)) await render(page, svg, +size, +size, join(ROOT, `extension/icons/icon-${size}.png`));
   await render(page, ICONS[128], 128, 128, join(ROOT, "docs/store/store-icon-128.png"));
   // The README logo: the tile alone, large.
   await render(page, tile(512), 512, 512, join(ROOT, "assets/logo.png"));
-  // The promo tile: the white note on the mark's green filling the tile,
-  // without text, as the store asks (its name shows under the tile); centred
-  // on its weight, a little right of its box.
-  await render(page, `<div style="width:440px;height:280px;display:grid;place-items:center;background:${GREEN}">
-      <svg width="96" height="96" viewBox="0 0 24 24" style="margin-left:3px">${note()}</svg></div>`, 440, 280, join(ROOT, "docs/store/promo-tile-440x280.png"));
+  // The promo tile: the white note and the name on the mark's green, one
+  // lockup, nothing else. The name is set in Roboto Medium, YouTube's face.
+  if (!(await page.evaluate(() => document.fonts.check("500 40px Roboto")))) {
+    throw new Error("Roboto is needed for the promo tile's name: install it (or point FONTCONFIG_FILE at a folder that has it).");
+  }
+  await render(page, `<div style="width:440px;height:280px;display:flex;align-items:center;justify-content:center;gap:14px;background:${GREEN}">
+      <svg width="72" height="72" viewBox="0 0 24 24">${note()}</svg>
+      <span style="font:500 52px/1 Roboto;letter-spacing:-0.5px;color:#fff;margin-top:-4px">nomusic</span></div>`, 440, 280, join(ROOT, "docs/store/promo-tile-440x280.png"));
   // The white note of the first-run page, which draws the tile itself (it is
   // lighter in the dark).
   writeFileSync(join(ROOT, "extension/icons/note.svg"), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">${note()}</svg>\n`);

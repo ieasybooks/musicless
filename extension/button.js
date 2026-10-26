@@ -48,15 +48,17 @@ const NOTICE_DELAY_MS = 400;
 // "off" icons do. tools/icons.mjs draws the mark from the same note. Built
 // with DOM calls: YouTube's pages accept only trusted markup.
 const SVG = "http://www.w3.org/2000/svg";
+// One weight, YouTube's: the stem, the flag's height and the strike are 2 units
+// or twice that. The stem is long enough to show above and below the strike.
 const NOTE = [
-  ["circle", { cx: 9.4, cy: 17.4, r: 4.4 }],
-  ["rect", { x: 11.3, y: 2.8, width: 2.5, height: 14.6 }],
-  ["rect", { x: 11.3, y: 2.8, width: 7, height: 4.7 }],
+  ["circle", { cx: 9.2, cy: 18.2, r: 4.2 }],
+  ["rect", { x: 11.4, y: 2.2, width: 2, height: 16 }],
+  ["rect", { x: 11.4, y: 2.2, width: 6.4, height: 4.4 }],
 ];
 // Corner to corner, a little above the diagonal, so that it clears the head.
 const STRIKE = "M3.4 2.6 21.4 20.6";
-// The strike's width (2) and the gap (1.3) beside it, moved half the gap up and right.
-const CUT = "M3.86 2.14 21.86 20.14";
+// The strike's width (2) and the gap (1.2) beside it, moved half the gap up and right.
+const CUT = "M3.82 2.18 21.82 20.18";
 const PLAY = "M8 5.5v13l10.5-6.5z";
 let glyphs = 0;
 function svg(tag, attributes, ...children) {
@@ -71,7 +73,7 @@ function glyph() {
   return svg("svg", { viewBox: "0 0 24 24", "aria-hidden": "true", focusable: "false" },
     svg("mask", { id: cut, maskUnits: "userSpaceOnUse" },
       svg("rect", { width: 24, height: 24, fill: "#fff" }),
-      svg("path", { d: CUT, stroke: "#000", "stroke-width": 3.3, "stroke-linecap": "round" })),
+      svg("path", { d: CUT, stroke: "#000", "stroke-width": 3.2, "stroke-linecap": "round" })),
     note({ class: "nomusic-glyph-plain" }),
     svg("g", { class: "nomusic-glyph-struck" },
       note({ mask: `url(#${cut})` }),
