@@ -123,7 +123,7 @@ h1:focus:not(:focus-visible) { outline: none; }
 .welcome section.off { visibility: hidden; }
 .welcome h1 { font-size: 32px; line-height: 40px; margin-bottom: 12px; text-wrap: balance; }
 [lang="ar"] .welcome h1 { line-height: 48px; }
-.welcome section p { font-size: 16px; line-height: 24px; margin-bottom: 32px; text-wrap: balance; }
+.welcome section p { max-width: 520px; margin: 0 auto 32px; font-size: 16px; line-height: 24px; text-wrap: pretty; }
 [lang="ar"] .welcome section p { font-size: 17px; line-height: 28px; }
 
 /* ---- the toolbar popup: one row, as in Chrome's settings ---- */
@@ -158,8 +158,9 @@ h1:focus:not(:focus-visible) { outline: none; }
   padding: 0 16px;
   border-top: 1px solid var(--divider);
   color: var(--text);
+  text-decoration: none;
 }
-.popup .row:hover { background: var(--hover); text-decoration: none; }
+.popup .row:hover { background: var(--hover); }
 .popup .row:focus-visible { outline-offset: -2px; }
 .popup .external {
   width: 20px;
