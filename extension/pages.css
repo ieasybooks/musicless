@@ -10,15 +10,15 @@
   --hover: rgba(31, 31, 31, 0.06);
   --faint: #5f6368;
   --divider: #e3e3e3;
-  --accent: #288563; /* the mark's green; white on it is 4.5:1 */
-  --link: #1f7556; /* the green as text: 5.6:1 */
-  --accent-hover: #1f7556;
+  --accent: #9c6400; /* the mark's amber, a step deeper: white on it is 5:1 */
+  --link: #8f5c00; /* as text: 5.7:1 */
+  --accent-hover: #8f5c00;
   --on-accent: #ffffff;
-  --tile: #288563;
+  --tile: #bc7800; /* the mark's own amber */
   --on-tile: #ffffff;
   --track: #747775;
   --track-fill: #e1e3e1;
-  --focus: #288563;
+  --focus: #9c6400;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -28,13 +28,13 @@
     --hover: rgba(227, 227, 227, 0.08);
     --faint: #9aa0a6;
     --divider: #444746;
-    --accent: #8fd6b0;
-    --link: #8fd6b0;
-    --accent-hover: #a6e0c1;
-    --on-accent: #0b2b1d;
+    --accent: #ecb24e; /* 8.7:1 on the page; its text 8.6:1 on it */
+    --link: #ecb24e;
+    --accent-hover: #f2bb5c;
+    --on-accent: #2b1d00;
     --track: #8e918f;
     --track-fill: #444746;
-    --focus: #8fd6b0;
+    --focus: #ecb24e;
   }
 }
 
@@ -59,7 +59,7 @@ body {
 }
 h1 { margin: 0; font-weight: 400; }
 p { margin: 0; }
-/* Links in running text: the green as text, underlined, as Chrome's links are
+/* Links in running text: the amber as text, underlined, as Chrome's links are
    blue. Arabic letters hang below the line: the underline sits lower there. */
 a { color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
 a:hover { text-decoration-thickness: 2px; }
@@ -108,7 +108,7 @@ h1:focus:not(:focus-visible) { outline: none; }
   text-align: center;
 }
 /* The mark: the toolbar icon's tile, the same in light and dark, as a brand
-   mark is (the note is a mask over the tile's colour). */
+   mark is (the speech mark is a mask over the tile's colour). */
 .welcome .brand {
   display: grid;
   place-items: center;
@@ -120,11 +120,11 @@ h1:focus:not(:focus-visible) { outline: none; }
 }
 .welcome .brand::before {
   content: "";
-  width: 26px;
-  height: 26px;
+  width: 30px;
+  height: 30px;
   background: var(--on-tile);
-  -webkit-mask: url(icons/note.svg) center / contain no-repeat;
-  mask: url(icons/note.svg) center / contain no-repeat;
+  -webkit-mask: url(icons/mark.svg) center / contain no-repeat;
+  mask: url(icons/mark.svg) center / contain no-repeat;
 }
 /* Both states in one place; each flows on its own, so the heading stays put
    and the button follows its own text. */

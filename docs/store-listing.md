@@ -201,7 +201,7 @@ There is no "100% music-free" claim.
 | `en-2-turn-on-once.png` | The first-run page: the disclosure and Turn on | Turn it on once. Then it works by itself. |
 | `en-3-you-choose.png` | The recovery dialog: Couldn’t remove the music, Play with music, Try again | If the music can’t be removed, the video waits for you. |
 | `en-4-one-setting.png` | The toolbar popup: the one setting and Help | One setting. Everything runs on your computer. |
-| `promo-tile-440x280.png` | The white note alone on the mark's green; no text (the store's advice, and a tile cannot be localized) | none |
+| `promo-tile-440x280.png` | The mark, a white closing speech mark, over the name "nomusic" on the mark's brass; no other text (a tile cannot be localized, and the name is the same in every language) | none |
 | `store-icon-128.png` | The store icon: the artwork near 96×96 on a transparent 128×128 canvas | none |
 
 The Arabic files have the same numbers and names (`ar-1-music-removed.png`
