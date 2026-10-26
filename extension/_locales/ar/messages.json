@@ -8,7 +8,8 @@
   "control_on": { "message": "إيقاف إزالة الموسيقى" },
   "control_setup": { "message": "تفعيل nomusic" },
   "control_failed": { "message": "لم تُزَل الموسيقى" },
-  "notice_working": { "message": "جارٍ إزالة الموسيقى" },
+  "notice_working": { "message": "تُزال الموسيقى" },
+  "notice_done": { "message": "إزالة الموسيقى مفعّلة" },
   "notice_blocked": { "message": "انقر للتشغيل" },
 
   "panel_title": { "message": "تعذّرت إزالة الموسيقى" },
@@ -27,13 +28,17 @@
   "failure_updated": { "message": "تم تحديث nomusic أو إيقافه. أعد تحميل الصفحة للمتابعة." },
 
   "setup_heading": { "message": "شاهد YouTube بدون موسيقى" },
-  "consent_text": { "message": "لإزالة معظم الموسيقى، يقرأ nomusic صوت فيديوهات\u00a0YouTube التي تشاهدها على هذا الحاسوب فقط. ولا يرفع الصوت ولا يحفظه\u00a0أبدًا، وقد يزامن Chrome إعداداتك." },
+  "consent_text": { "message": "لإزالة معظم الموسيقى، يقرأ nomusic صوت فيديوهات\u00a0YouTube التي تشاهدها ويعالجه على هذا الحاسوب فقط. ولا يرسل الصوت إلى أي مكان ولا يحفظه، وقد يتزامن إعداده عبر Chrome\u00a0Sync." },
   "consent_accept": { "message": "تفعيل" },
   "done_heading": { "message": "تم تفعيل nomusic" },
+  "done_wait": { "message": "ينتظر كل فيديو بضع ثوانٍ عند بدايته، ريثما تُزال الموسيقى." },
+  "done_control": { "message": "لتشغيل فيديو مع موسيقاه، استخدم {icon} في المشغّل." },
   "done_text": { "message": "إن كانت علامة تبويب YouTube مفتوحة من قبل، فأعد تحميلها." },
   "done_open": { "message": "فتح YouTube" },
 
   "popup_autostart_label": { "message": "إزالة الموسيقى من كل فيديو" },
+  "popup_one_video": { "message": "لإزالة الموسيقى من فيديو واحد، استخدم {icon} في المشغّل." },
   "link_help": { "message": "مساعدة" },
+  "link_help_url": { "message": "https://github.com/IbraheemTuffaha/nomusic/blob/main/docs/help.ar.md" },
   "link_privacy": { "message": "سياسة الخصوصية" }
 }
