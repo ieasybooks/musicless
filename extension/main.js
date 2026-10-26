@@ -184,8 +184,11 @@ onSettingsChanged(() => {
 // where it was, as its dialog's "Reload page" does.
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message?.type !== "reload") return;
-  [...controllers.values()].find(({ session }) => session.failure?.reason === "missed")?.session.retry();
-  sendResponse(true); // this page is nomusic's: no reload from outside
+  // The answer first (this page is nomusic's: no reload from outside), then
+  // the reload, which would cut the answer off.
+  sendResponse(true);
+  const missed = [...controllers.values()].find(({ session }) => session.failure?.reason === "missed");
+  if (missed) setTimeout(() => missed.session.retry());
 });
 
 loadSettings().finally(() => {
