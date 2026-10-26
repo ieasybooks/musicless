@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { analyze, BINS, FRAMES, RATE, resample, synthesize, WINDOW_SAMPLES } from "../../extension/dsp.js";
+import { analyze, resample, synthesize } from "../../extension/dsp.js";
+import { BINS, FRAMES, RATE, WINDOW_SAMPLES } from "../../extension/grid.js";
 
 const sine = (length, freq, rate, phase = 0) =>
   new Float32Array(length).map((_, i) => Math.sin((2 * Math.PI * freq * i) / rate + phase));

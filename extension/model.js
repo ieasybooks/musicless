@@ -3,7 +3,7 @@
 // every tab (model-worker.js) or inside a tab's own worker as a fallback.
 
 import * as ort from "./vendor/ort.wasm.min.mjs";
-import { FRAMES } from "./grid.js";
+import { BINS, FRAMES } from "./grid.js";
 
 ort.env.wasm.numThreads = 1;
 ort.env.wasm.proxy = false;
@@ -11,7 +11,7 @@ ort.env.wasm.wasmPaths = new URL("./vendor/", import.meta.url).href;
 ort.env.logLevel = "error";
 
 const MODEL_URL = new URL("./model/spleeter-2stems.onnx", import.meta.url).href;
-export const INPUT_SHAPE = [2, 1, FRAMES, 1024];
+export const INPUT_SHAPE = [2, 1, FRAMES, BINS];
 
 // Lower priority values run first; equal priorities run in arrival order.
 export function createModel() {

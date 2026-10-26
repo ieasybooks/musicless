@@ -3,11 +3,7 @@
 // reflect padding): resampling to 44.1 kHz, the magnitude spectrogram the
 // model reads, and the masked inverse STFT that produces the vocals.
 
-import { FRAMES, HOP, RATE, WINDOW_SAMPLES } from "./grid.js";
-
-export { FRAMES, HOP, RATE, WINDOW_SAMPLES };
-export const N_FFT = 4096;
-export const BINS = 1024; // the model sees 0 to ~11 kHz; higher bins are dropped
+import { BINS, FRAMES, HOP, INPUT_RMS, MAX_INPUT_GAIN, N_FFT, RATE, WINDOW_SAMPLES } from "./grid.js";
 
 const HALF = N_FFT / 2;
 const hann = new Float64Array(N_FFT).map((_, i) => 0.5 - 0.5 * Math.cos((2 * Math.PI * i) / N_FFT));
@@ -62,9 +58,6 @@ const reflect = (i, n) => (i < 0 ? -i : i >= n ? 2 * (n - 1) - i : i);
 
 // The network's masks depend on how loud its input is, so every window is shown
 // to it at the same level; the mask still applies to the window as it is.
-const INPUT_RMS = 10 ** (-24 / 20);
-const MAX_INPUT_GAIN = 10 ** (30 / 20);
-
 export function inputGain(left, right) {
   let sum = 0;
   for (let i = 0; i < left.length; i++) sum += left[i] * left[i] + right[i] * right[i];
