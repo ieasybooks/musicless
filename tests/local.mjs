@@ -540,6 +540,47 @@ await failsClosed("copy-protected (ClearKey) audio: fails closed", "", "drm", "p
 await failsClosed("Media Source hidden in another frame: fails closed", "&realm=frame", BASE, "uncaptured");
 await failsClosed("Media Source in a worker (srcObject): fails closed", "&worker=1", BASE, "source");
 
+// The dialog closed without a choice (Escape, or a click beside it): the
+// video stays held, and each later play attempt brings the choice back, even
+// though the user's intent to play never changed. Meanwhile the button shows
+// the plain note with its dot, not the struck note of removal at work.
+await step("a closed failure dialog comes back on play", async () => {
+  const page = await open(BASE, "&worker=1");
+  await play(page);
+  await waitFor(page, (s) => s.status === "failed", { timeout: 20000, label: "failure" });
+  await sleep(800);
+  const shown = () => page.evaluate(() => !!document.querySelector(".nomusic-dialog:not([hidden])"));
+  const glyph = () => page.evaluate(() => {
+    const el = [...document.querySelectorAll(".nomusic-btn")].find((b) => b.style.display !== "none");
+    const visible = (selector) => getComputedStyle(el.querySelector(selector)).display !== "none";
+    return { plain: visible(".nomusic-glyph-plain"), struck: visible(".nomusic-glyph-struck"), dot: visible(".nomusic-glyph-dot") };
+  });
+  const opened = await shown();
+  await page.evaluate(() => document.body.focus());
+  await page.keyboard.press("Escape");
+  await sleep(300);
+  const afterEscape = await shown();
+  const stood = await videoState(page);
+  await play(page);
+  await sleep(1000);
+  const backAfterPlay = await shown();
+  const held = await videoState(page);
+  const beside = await page.evaluate(() => { const r = document.querySelector(".nomusic-scrim").getBoundingClientRect(); return { x: r.left + 12, y: r.top + 12 }; });
+  await page.mouse.click(beside.x, beside.y); // a real click on the video beside the dialog
+  await sleep(300);
+  const afterScrim = await shown();
+  await play(page);
+  await sleep(500);
+  const backAgain = await shown();
+  const icon = await glyph();
+  report.record("a closed failure dialog comes back on play",
+    opened && !afterEscape && backAfterPlay && held.paused && held.time === stood.time && !afterScrim && backAgain &&
+      icon.plain && icon.dot && !icon.struck,
+    { opened, after_escape: afterEscape, back_after_play: backAfterPlay, paused_while_held: held.paused, moved_s: held.time - stood.time,
+      after_scrim: afterScrim, back_again: backAgain, glyph: icon });
+  await page.close();
+});
+
 await step("retry after a failure tries again in place", async () => {
   const page = await open("drm");
   await play(page);
