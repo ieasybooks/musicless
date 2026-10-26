@@ -495,6 +495,42 @@ await step("in Arabic the welcome page reads right to left, and turns nomusic on
   }
 });
 
+// Turned on from a video's own button: the first-run page ends with Back to
+// the video, which reloads that tab where it was and closes itself.
+await step("turned on from a video's button, the first-run page goes back to it", async () => {
+  await setSettings(browser, extensionId, { consented: false }); // no control turns it off again
+  try {
+    const page = await open(BASE);
+    await play(page);
+    await sleep(3000);
+    const opened = new Promise((resolve) => browser.once("targetcreated", resolve));
+    await clickButton(page);
+    const welcome = await (await opened).page();
+    await welcome.waitForSelector("#accept", { visible: true, timeout: 10000 });
+    await welcome.click("#accept");
+    await welcome.waitForSelector("#back", { visible: true, timeout: 5000 });
+    const instead = await welcome.evaluate(() => document.querySelector("#open").hidden);
+    await page.evaluate(() => { window.notReloaded = true; });
+    const reloaded = page.waitForNavigation({ timeout: 15000 }).then(() => true, () => false);
+    const closed = new Promise((resolve) => {
+      welcome.once("close", () => resolve(true));
+      setTimeout(() => resolve(false), 8000);
+    });
+    await welcome.click("#back");
+    const back = { open_youtube_hidden: instead, reloaded: await reloaded, page_closed: await closed };
+    await page.waitForFunction("window.playerReady === true", { timeout: 30000 });
+    const fresh = await page.evaluate(() => window.notReloaded !== true);
+    await play(page);
+    const { ms, state } = await timeUntilOn(page, "the video it went back to");
+    report.record("turned on from a video's button, the first-run page goes back to it",
+      back.open_youtube_hidden && back.reloaded && back.page_closed && fresh && state.status === "on",
+      { ...back, fresh_page: fresh, status_after: state.status, audio_ms: ms });
+    await page.close();
+  } finally {
+    await setSettings(browser, extensionId, { consented: true });
+  }
+});
+
 await step("the release build has no diagnostics, and a page cannot start its worker", async () => {
   const release = await launch({ diagnostics: false });
   try {
