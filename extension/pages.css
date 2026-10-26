@@ -134,7 +134,7 @@ h1:focus:not(:focus-visible) { outline: none; }
 .welcome h1 { font-size: 32px; line-height: 40px; margin-bottom: 12px; text-wrap: balance; }
 [lang="ar"] .welcome h1 { font-size: 34px; line-height: 48px; }
 .welcome section p { max-width: 500px; margin: 0 auto 8px; color: var(--muted); font-size: 16px; line-height: 24px; text-wrap: pretty; }
-.welcome section p:last-of-type { margin-bottom: 32px; }
+.welcome section p:has(+ div), .welcome section p:has(+ p[hidden] + div) { margin-bottom: 32px; } /* the last one shown */
 .welcome section p.aside { margin-top: 16px; font-size: 14px; line-height: 20px; }
 [lang="ar"] .welcome section p { font-size: 17px; line-height: 28px; }
 [lang="ar"] .welcome section p.aside { font-size: 15px; line-height: 24px; }
