@@ -1,6 +1,6 @@
 // Opens the welcome page: once on install, and when the button on a video asks
 // for it before the first run ("Turn on nomusic"), focusing the page if it is
-// already open.
+// already open. The tab that asked is kept for the page's "Back to the video".
 // Tabs that were open before need a reload before nomusic can work in them.
 async function openWelcome() {
   const url = chrome.runtime.getURL("welcome.html");
@@ -35,7 +35,10 @@ function engineToken() {
 
 // Only the extension's own scripts can send these (pages cannot reach it).
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message?.type === "open-welcome") openWelcome();
+  if (message?.type === "open-welcome") {
+    const asked = sender.tab ? chrome.storage.session.set({ videoTab: sender.tab.id }) : Promise.resolve();
+    asked.catch(() => {}).then(openWelcome);
+  }
   if (message?.type !== "engine-token") return;
   engineToken().then((token) => sendResponse({ token }), () => sendResponse({}));
   return true; // the answer comes later

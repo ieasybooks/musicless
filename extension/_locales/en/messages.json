@@ -36,6 +36,7 @@
   "done_control": { "message": "To play one with its music, use {icon} in the player.", "description": "First-run page after the choice. {icon} is replaced by the player button's struck note; keep it, wherever the sentence needs it." },
   "done_text": { "message": "If a YouTube tab was already open, reload it.", "description": "nomusic cannot reach tabs opened before it was turned on; most users have none, so the condition comes first. On the first-run page, and under the popup's switch right after it is turned on there." },
   "done_open": { "message": "Open YouTube", "description": "Button: opens youtube.com in this tab." },
+  "done_back": { "message": "Back to the video", "description": "Button instead of “Open YouTube” when the page was opened from a video’s button: goes back to that tab and reloads it where the video was, so its music can be removed." },
 
   "popup_autostart_label": { "message": "Remove music from every video", "description": "The one switch in the toolbar popup. Before the first run, turning it on is the consent, with the disclosure under it." },
   "popup_one_video": { "message": "To remove the music from one video, use {icon} in the player.", "description": "Under the popup's switch, only while it is off. {icon} is replaced by the player button's note; keep it." },

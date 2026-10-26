@@ -36,6 +36,7 @@
   "done_control": { "message": "لتشغيل فيديو مع موسيقاه، استخدم {icon} في المشغّل." },
   "done_text": { "message": "إن كانت علامة تبويب YouTube مفتوحة من قبل، فأعد تحميلها." },
   "done_open": { "message": "فتح YouTube" },
+  "done_back": { "message": "العودة إلى الفيديو" },
 
   "popup_autostart_label": { "message": "إزالة الموسيقى من كل فيديو" },
   "popup_one_video": { "message": "لإزالة الموسيقى من فيديو واحد، استخدم {icon} في المشغّل." },

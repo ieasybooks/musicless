@@ -25,8 +25,11 @@
           <h1 id="doneHeading" tabindex="-1" data-i18n="done_heading"></h1>
           <p data-i18n="done_wait"></p>
           <p id="doneControl"></p>
-          <p class="aside" data-i18n="done_text"></p>
-          <div><a class="button primary" href="https://www.youtube.com/" data-i18n="done_open"></a></div>
+          <p class="aside" id="doneText" data-i18n="done_text"></p>
+          <div>
+            <a class="button primary" id="open" href="https://www.youtube.com/" data-i18n="done_open"></a>
+            <button type="button" class="primary" id="back" data-i18n="done_back" hidden></button>
+          </div>
         </section>
       </div>
     </main>

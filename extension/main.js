@@ -179,6 +179,15 @@ onSettingsChanged(() => {
   }
 });
 
+// "Back to the video" on the first-run page (only nomusic's own pages can send
+// this): a video whose sound went by before nomusic was turned on is reloaded
+// where it was, as its dialog's "Reload page" does.
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message?.type !== "reload") return;
+  [...controllers.values()].find(({ session }) => session.failure?.reason === "missed")?.session.retry();
+  sendResponse(true); // this page is nomusic's: no reload from outside
+});
+
 loadSettings().finally(() => {
   applyConsent();
   start();
