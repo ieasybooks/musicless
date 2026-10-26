@@ -109,14 +109,16 @@ const shown = (element) => !!element && element.offsetWidth > 0 && element.offse
 
 // The player's own row of buttons, when it shows one: YouTube's control bar
 // (the button goes before captions), or the top row of the embedded and mobile
-// players. Null for players without one, or while it is hidden (the miniplayer).
+// players (drawn beside the main player, not inside it). Null for players
+// without one, or while it is hidden (the miniplayer).
 function controlRow(host) {
   const right = host.querySelector(".ytp-right-controls");
   if (shown(right)) {
     const row = right.querySelector(".ytp-right-controls-left") ?? right;
     return { row, before: row.querySelector(".ytp-subtitles-button") ?? row.firstElementChild, bar: "ytp" };
   }
-  const top = host.querySelector(".player-controls-top-right");
+  const top = host.querySelector(".player-controls-top-right") ??
+    (host.id === "movie_player" ? document.querySelector("#player-controls .player-controls-top-right") : null);
   if (top) {
     const captions = [...top.children].find((child) => child.querySelector?.("[class*='ClosedCaptioning']"));
     return { row: top, before: captions ?? top.firstElementChild, bar: "top" };
@@ -428,6 +430,8 @@ export class Button {
     for (const part of [this.live, this.notice]) if (part.parentElement !== host) host.append(part);
     this.notice.style.left = this.rtl ? "" : "16px";
     this.notice.style.right = this.rtl ? "16px" : "";
+    // Embedded and mobile players keep a title and buttons at the top.
+    this.notice.style.top = row?.bar === "top" ? "64px" : "";
     // The player got its box back while a failure waits: show the dialog again.
     if (this.session.failure && this.recovery.hidden && !this.dismissed) this.openRecovery();
     else this.positionPanel();

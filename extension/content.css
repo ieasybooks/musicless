@@ -149,8 +149,6 @@
 }
 .nomusic-notice[hidden] { display: none; }
 .nomusic-notice[dir="rtl"] { padding: 0 10px 0 14px; }
-/* Below the title and buttons that embedded players keep at the top. */
-.html5-video-player:has(.player-controls-top) .nomusic-notice { top: 64px; }
 .nomusic-notice[data-kind="action"] { pointer-events: auto; cursor: pointer; }
 .nomusic-notice[data-kind="action"]:hover { background: rgba(0, 0, 0, 0.9); }
 .nomusic-notice__spinner {
