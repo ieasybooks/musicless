@@ -104,9 +104,9 @@ button joins the control bar before captions, the wait shows while the first
 audio is prepared, a real click turns the music removal off and on again, the
 tooltip sits above the bar, the button hides with YouTube's controls, it stays
 in the bar when YouTube wraps its captions button, on Shorts it joins the
-Short's own buttons, and in an embedded player it joins the top row of buttons. Run it after YouTube changes
-its player. (The local test page has no YouTube controls, so `local.mjs` covers
-the corner button instead.)
+Short's own buttons, and in an embedded player it joins the top row of
+buttons. Run it after YouTube changes its player. (The local test page has no
+YouTube controls, so `local.mjs` covers the corner button instead.)
 
 ## Store images
 
