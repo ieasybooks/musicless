@@ -6,9 +6,9 @@
 //   it is the same glyph in the player's top corner, shown with the player's
 //   controls.
 // - In the middle of the video, only while nomusic needs the user to wait or to
-//   click: a spinner like YouTube's own, with two words under it, while the
-//   first audio is prepared; a round play button when the browser waits for a
-//   click before it plays sound.
+//   click: YouTube's spinner, with two words under it, while the first audio is
+//   prepared; a round play button when the browser waits for a click before it
+//   plays sound.
 // - The recovery dialog when nomusic could not remove the music.
 
 import { setLanguage, t } from "./i18n.js";
@@ -17,7 +17,7 @@ import { setLanguage, t } from "./i18n.js";
 // i18n.js): the "updated" failure shows after it is gone.
 const TEXT = {
   remove: t("control_name"),
-  withMusic: t("control_on"),
+  restore: t("control_on"),
   setup: t("control_setup"),
   failed: t("control_failed"),
   working: t("notice_working"),
@@ -32,10 +32,10 @@ const TEXT = {
 const STATES = {
   setup: ["idle", TEXT.setup, ""],
   off: ["idle", TEXT.remove, ""],
-  starting: ["working", TEXT.withMusic, TEXT.working],
-  buffering: ["working", TEXT.withMusic, TEXT.working],
-  on: ["active", TEXT.withMusic, ""],
-  blocked: ["attention", TEXT.withMusic, TEXT.blocked],
+  starting: ["working", TEXT.restore, TEXT.working],
+  buffering: ["working", TEXT.restore, TEXT.working],
+  on: ["active", TEXT.restore, ""],
+  blocked: ["attention", TEXT.restore, TEXT.blocked],
   failed: ["error", TEXT.failed, ""],
 };
 // A hold shorter than this shows nothing (a short one after a stall would only flicker).
@@ -141,6 +141,7 @@ export class Button {
     this.workingSince = null;
     this.wantedPlay = false;
     this.host = null;
+    this.marked = null; // the player whose spinner the play button hides
     this.rtl = false; // the player's direction, which the corners follow
 
     this.el = setLanguage(document.createElement("button"));
@@ -204,7 +205,7 @@ export class Button {
       this.announced = status;
       this.live.textContent = says;
     }
-    this.renderNotice(state, says);
+    this.renderNotice(state, says, status);
     if (session.failure !== this.shownFailure) {
       this.shownFailure = session.failure;
       this.dismissed = false;
@@ -225,50 +226,80 @@ export class Button {
 
   // ---- the wait and the click --------------------------------------------------
 
+  // One layer over the video, below YouTube's controls. The wait: YouTube's
+  // spinner where YouTube draws it, and the words in YouTube's own message
+  // style hanging under it; clicks go through to the video. The click: the
+  // whole video is the button, a round play button in the middle its sign.
   buildNotice() {
     const notice = setLanguage(document.createElement("button"));
     notice.type = "button";
     notice.className = "nomusic-notice";
     notice.hidden = true;
     notice.tabIndex = -1;
+    const half = () => {
+      const part = document.createElement("span");
+      part.className = "nomusic-spinner__half";
+      const arc = document.createElement("span");
+      arc.className = "nomusic-spinner__arc";
+      part.append(arc);
+      return part;
+    };
     const spinner = document.createElement("span");
-    spinner.className = "nomusic-notice__spinner";
-    const play = icon(PLAY);
-    play.classList.add("nomusic-notice__play");
+    spinner.className = "nomusic-spinner";
+    const rotator = document.createElement("span");
+    rotator.className = "nomusic-spinner__rotator";
+    rotator.append(half(), half());
+    spinner.append(rotator);
+    const disc = document.createElement("span");
+    disc.className = "nomusic-notice__disc";
+    disc.append(icon(PLAY));
     this.noticeText = document.createElement("span");
     this.noticeText.className = "nomusic-notice__text";
-    notice.append(spinner, play, this.noticeText);
+    notice.append(spinner, disc, this.noticeText);
     keepPointer(notice);
     keepKeys(notice);
-    // Only the play button takes clicks; the spinner lets them through to the
-    // video.
     notice.addEventListener("click", trusted(() => {
       if (this.session.status === "blocked") this.session.toggle();
     }));
     return notice;
   }
 
-  renderNotice(state, text) {
+  renderNotice(state, text, status) {
     const now = performance.now();
     if (state === "working") this.workingSince ??= now;
     else this.workingSince = null;
-    // While YouTube shows its own spinner (it is loading the video), ours waits.
-    const working = state === "working" && now - this.workingSince >= NOTICE_DELAY_MS &&
-      !this.host?.classList.contains("buffering-mode");
+    const working = state === "working" && now - this.workingSince >= NOTICE_DELAY_MS;
     const blocked = state === "attention";
     const show = (working || blocked) && !!this.host;
     if (this.notice.hidden === show) this.notice.hidden = !show;
+    // While the play button asks for the click, YouTube's spinner stays out of it.
+    this.markHost(show && blocked ? this.host : null);
     if (!show) return;
+    // While YouTube shows its own spinner (it is loading the video), the words
+    // hang under that one.
+    const theirs = String(this.host.classList.contains("buffering-mode"));
+    if (this.notice.dataset.theirs !== theirs) this.notice.dataset.theirs = theirs;
+    // The words come with the first wait of a video; after a jump the
+    // spinner alone says it.
+    const words = String(status === "starting");
+    if (this.notice.dataset.words !== words) this.notice.dataset.words = words;
     if (this.noticeText.textContent !== text) this.noticeText.textContent = text;
     const kind = blocked ? "action" : "status";
     if (this.notice.dataset.kind !== kind) {
       this.notice.dataset.kind = kind;
-      // The spinner is read out by the live region; the play button is a
-      // button, named by its text.
+      // The wait is read out by the live region; the play button is a button,
+      // named by its text.
       this.notice.tabIndex = blocked ? 0 : -1;
       if (blocked) this.notice.removeAttribute("aria-hidden");
       else this.notice.setAttribute("aria-hidden", "true");
     }
+  }
+
+  markHost(host) {
+    if (this.marked === host) return;
+    this.marked?.classList.remove("nomusic-blocked");
+    host?.classList.add("nomusic-blocked");
+    this.marked = host;
   }
 
   // ---- the tooltip ----------------------------------------------------------
@@ -338,9 +369,15 @@ export class Button {
       panel.addEventListener(type, (event) => event.stopPropagation());
     }
     panel.append(title, this.recoveryMessage, actions);
-    // The video behind it is dimmed (YouTube's own controls stay above it).
+    // Over the video around it, a clear layer (below YouTube's own controls): a
+    // click there closes the dialog, as Escape does; the video stays paused.
     this.scrim = document.createElement("div");
     this.scrim.className = "nomusic-scrim";
+    keepPointer(this.scrim);
+    this.scrim.addEventListener("click", trusted(() => {
+      this.dismissed = true;
+      this.closeRecovery();
+    }));
     return panel;
   }
 
@@ -416,6 +453,7 @@ export class Button {
   position(host) {
     if (this.retired) return;
     this.host = host;
+    if (this.marked) this.markHost(host);
     this.rtl = getComputedStyle(host).direction === "rtl";
     const row = controlRow(host);
     if (row) {
@@ -454,6 +492,7 @@ export class Button {
     this.host = null;
     this.el.style.display = "none";
     this.notice.hidden = true;
+    this.markHost(null);
     this.hideTip();
     if (this.session.failure && this.recovery.hidden && !this.dismissed) this.openRecovery({ focus: true });
     else this.positionPanel();
@@ -463,6 +502,7 @@ export class Button {
     this.host = null;
     this.el.style.display = "none";
     this.notice.hidden = true;
+    this.markHost(null);
     this.hideTip();
     this.closeRecovery();
   }
@@ -471,6 +511,7 @@ export class Button {
     if (this.retired) return;
     this.retired = true;
     this.closeRecovery();
+    this.markHost(null);
     for (const part of [this.el, this.live, this.notice, this.tip]) part.remove();
   }
 }

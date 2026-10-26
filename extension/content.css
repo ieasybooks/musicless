@@ -11,10 +11,13 @@
   font-family: "YouTube Noto", Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+/* Arabic: YouTube's Latin face first, so the Latin words in Arabic text
+   (YouTube, nomusic) look as they do everywhere else, then the systems' Arabic
+   faces. */
 .nomusic-tip[lang="ar"],
 .nomusic-notice[lang="ar"],
 .nomusic-dialog[lang="ar"] {
-  font-family: "Segoe UI", "SF Arabic", "Geeza Pro", "Noto Sans Arabic", "Noto Naskh Arabic UI", Tahoma, sans-serif;
+  font-family: "YouTube Noto", Roboto, "Segoe UI", "SF Arabic", "Geeza Pro", "Noto Sans Arabic", "Noto Naskh Arabic UI", Tahoma, sans-serif;
 }
 
 /* The button. In YouTube's control bar, YouTube's own .ytp-button gives it its
@@ -42,7 +45,7 @@
 .nomusic-btn[data-place="top"] { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; }
 
 /* The note plain while the music plays, struck through while nomusic removes
-   it, as YouTube draws its speaker. */
+   it, as YouTube draws its mute button. */
 .nomusic-btn .nomusic-glyph-struck,
 .nomusic-btn[data-state="idle"] .nomusic-glyph-plain { display: inline; }
 .nomusic-btn .nomusic-glyph-plain,
@@ -75,7 +78,7 @@
 /* A white ring, as YouTube draws over the picture. */
 .nomusic-btn[data-place="corner"]:focus-visible,
 .nomusic-btn[data-place="top"]:focus-visible,
-.nomusic-notice:focus-visible,
+.nomusic-notice:focus-visible .nomusic-notice__disc,
 .nomusic-dialog__action:focus-visible {
   outline: 2px solid #fff;
   outline-offset: 2px;
@@ -106,78 +109,136 @@
   pointer-events: none;
 }
 .nomusic-tip[hidden] { display: none; }
+.nomusic-tip[lang="ar"] { font-size: 14px; }
 
-/* In the middle of the video while nomusic needs a wait or a click. The
-   wait: a ring like YouTube's own spinner and two words under it, on a soft
-   shade that keeps the words readable over a white frame; it lets clicks
-   through to the video. The click: a round play button, as YouTube draws its
-   own. */
+/* One layer over the video while nomusic needs a wait or a click, below
+   YouTube's controls (they stay usable). The wait: YouTube's spinner, drawn
+   as YouTube draws it and where (while YouTube shows its own, ours steps
+   aside), and the words in YouTube's message style hanging under it, never
+   moving it; clicks go through to the video. The click: the whole video is
+   the button, the round play button in the middle drawn as YouTube's own. */
 .nomusic-notice {
   position: absolute;
-  z-index: 2147483600;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 14px;
+  z-index: 57;
+  inset: 0;
   margin: 0;
-  padding: 36px 56px;
+  padding: 0;
   border: 0;
-  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0.5) 60%, rgba(0, 0, 0, 0));
+  background: none;
   color: #fff;
-  font-size: 15px;
-  font-weight: 500;
-  line-height: 20px;
-  white-space: nowrap;
-  text-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
+  font-size: 19.25px; /* YouTube's 175 % of 11 px */
+  font-weight: 400;
+  line-height: 25px;
   pointer-events: none;
   animation: nomusic-in 200ms ease-out;
 }
 .nomusic-notice[hidden] { display: none; }
-.nomusic-notice[dir="rtl"] { line-height: 24px; }
-.nomusic-notice__spinner {
-  width: 44px;
-  height: 44px;
+.nomusic-notice:focus-visible { outline: none; }
+.nomusic-spinner {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 64px;
+  height: 64px;
+  margin: -32px 0 0 -32px;
+  animation: nomusic-linspin 1568ms linear infinite;
+}
+.nomusic-notice[data-theirs="true"] .nomusic-spinner,
+.nomusic-notice[data-kind="action"] .nomusic-spinner { display: none; }
+.nomusic-spinner__rotator {
+  position: absolute;
+  inset: 0;
+  animation: nomusic-easespin 5332ms cubic-bezier(0.4, 0, 0.2, 1) infinite both;
+}
+/* Two halves, each showing one side of a ring that grows and shrinks. */
+.nomusic-spinner__half { position: absolute; inset: 0 49% 0 0; overflow: hidden; }
+.nomusic-spinner__half + .nomusic-spinner__half { inset: 0 0 0 49%; }
+.nomusic-spinner__arc {
+  position: absolute;
+  top: 0;
+  left: 0;
   box-sizing: border-box;
-  border: 4px solid #fff;
-  border-inline-start-color: transparent;
+  width: 200%;
+  height: 100%;
+  border: 6px solid #ddd;
+  border-right-color: transparent;
+  border-bottom-color: transparent;
   border-radius: 50%;
-  animation: nomusic-spin 1100ms linear infinite;
+  animation: nomusic-left-spin 1333ms cubic-bezier(0.4, 0, 0.2, 1) infinite both;
 }
-.nomusic-notice__play { display: none; width: 40px; height: 40px; margin-inline-start: 4px; }
-.nomusic-notice[data-kind="action"] {
-  width: 72px;
-  height: 72px;
-  padding: 0;
-  justify-content: center;
+.nomusic-spinner__half + .nomusic-spinner__half .nomusic-spinner__arc {
+  left: -100%;
+  border-right-color: #ddd;
+  border-left-color: transparent;
+  animation-name: nomusic-right-spin;
+}
+.nomusic-notice__text {
+  position: absolute;
+  top: calc(50% + 48px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px 20px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(16px);
+  white-space: nowrap;
+}
+.nomusic-notice[data-words="false"] .nomusic-notice__text { display: none; }
+.nomusic-notice[lang="ar"] { font-size: 20px; font-weight: 500; }
+.nomusic-notice__disc { display: none; }
+.nomusic-notice[data-kind="action"] { pointer-events: auto; cursor: pointer; }
+.nomusic-notice[data-kind="action"] .nomusic-notice__disc {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  place-items: center;
+  width: 78px;
+  height: 78px;
+  margin: -39px 0 0 -39px;
   border-radius: 50%;
-  background: rgba(0, 0, 0, 0.6);
-  pointer-events: auto;
-  cursor: pointer;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(16px);
+  transition: background-color 100ms linear, transform 100ms ease-out;
 }
-.nomusic-notice[data-kind="action"]:hover { background: rgba(0, 0, 0, 0.75); }
-.nomusic-notice[data-kind="action"] .nomusic-notice__spinner { display: none; }
-.nomusic-notice[data-kind="action"] .nomusic-notice__play { display: block; }
+/* A play sign's weight sits left of its box: 2 px to the right looks centred. */
+.nomusic-notice__disc svg { display: block; width: 48px; height: 48px; margin-left: 2px; }
+.nomusic-notice[data-kind="action"]:hover .nomusic-notice__disc { background: rgba(0, 0, 0, 0.65); }
+.nomusic-notice[data-kind="action"]:active .nomusic-notice__disc { transform: scale(0.96); }
 /* The play button is named by its text, which is not shown. */
 .nomusic-notice[data-kind="action"] .nomusic-notice__text {
-  position: absolute;
+  display: block;
+  top: 50%;
   width: 1px;
   height: 1px;
+  padding: 0;
   overflow: hidden;
   clip-path: inset(50%);
 }
-@keyframes nomusic-spin { to { transform: rotate(360deg); } }
+/* While the play button asks for the click, YouTube's spinner (still loading
+   under it) stays out of the way. */
+.nomusic-blocked .ytp-spinner { visibility: hidden; }
+@keyframes nomusic-linspin { to { transform: rotate(360deg); } }
+@keyframes nomusic-easespin {
+  12.5% { transform: rotate(135deg); }
+  25% { transform: rotate(270deg); }
+  37.5% { transform: rotate(405deg); }
+  50% { transform: rotate(540deg); }
+  62.5% { transform: rotate(675deg); }
+  75% { transform: rotate(810deg); }
+  87.5% { transform: rotate(945deg); }
+  to { transform: rotate(1080deg); }
+}
+@keyframes nomusic-left-spin { 0%, to { transform: rotate(130deg); } 50% { transform: rotate(-5deg); } }
+@keyframes nomusic-right-spin { 0%, to { transform: rotate(-130deg); } 50% { transform: rotate(5deg); } }
 @keyframes nomusic-in { from { opacity: 0; } }
 
-/* Behind the dialog: the video dimmed, below YouTube's own controls. */
+/* Around the dialog: a clear layer over the video, below YouTube's own
+   controls. A click on it closes the dialog. */
 .nomusic-scrim {
   position: absolute;
   z-index: 30;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  pointer-events: none;
 }
 
 /* The recovery dialog, in the middle of the player. */
@@ -192,10 +253,11 @@
   max-height: calc(100% - 24px);
   margin: auto;
   overflow: auto; /* a tiny player: scroll to the buttons */
-  padding: 20px 20px 16px 24px;
+  padding: 24px;
   border-radius: 12px;
   background: #282828;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+  /* An edge on dark frames, a shadow on bright ones. */
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 4px 32px rgba(0, 0, 0, 0.5);
   color: #fff;
   text-align: start;
   user-select: none;
@@ -207,20 +269,22 @@
   margin: 0 0 4px;
   font-size: 17px;
   font-weight: 500;
-  line-height: 24px;
+  line-height: 26px;
 }
 .nomusic-dialog__message {
   margin: 0 0 20px;
   color: #aaa;
   font-size: 14px;
-  line-height: 20px;
+  line-height: 22px;
   overflow-wrap: anywhere;
 }
 .nomusic-dialog__message:empty { display: none; }
 .nomusic-dialog__title:has(+ .nomusic-dialog__message:empty) { margin-bottom: 20px; }
-.nomusic-dialog[dir="rtl"] { padding: 20px 24px 16px 20px; }
-.nomusic-dialog[dir="rtl"] .nomusic-dialog__title { line-height: 26px; }
-.nomusic-dialog[dir="rtl"] .nomusic-dialog__message { line-height: 24px; }
+/* Arabic letters are smaller than Latin ones at the same size: one step up,
+   in the same boxes. */
+.nomusic-dialog[lang="ar"] .nomusic-dialog__title { font-size: 18px; }
+.nomusic-dialog[lang="ar"] .nomusic-dialog__message { font-size: 15px; }
+.nomusic-dialog[lang="ar"] .nomusic-dialog__action { font-size: 15px; }
 .nomusic-dialog__actions {
   display: flex;
   flex-wrap: wrap;
@@ -233,7 +297,7 @@
   padding: 8px 16px;
   border: 0;
   border-radius: 18px;
-  background: transparent;
+  background: rgba(255, 255, 255, 0.1);
   color: #fff;
   font: inherit;
   font-size: 14px;
@@ -241,13 +305,16 @@
   line-height: 20px;
   cursor: pointer;
 }
-.nomusic-dialog__action:hover { background: rgba(255, 255, 255, 0.1); }
+.nomusic-dialog__action:hover { background: rgba(255, 255, 255, 0.2); }
 .nomusic-dialog__action[data-action="retry"] { background: #f1f1f1; color: #0f0f0f; }
 .nomusic-dialog__action[data-action="retry"]:hover { background: #d9d9d9; }
 
 /* Fullscreen on a large screen: YouTube scales its controls up too. */
-.ytp-big-mode .nomusic-notice { font-size: 18px; line-height: 24px; }
-.ytp-big-mode .nomusic-notice__spinner { width: 56px; height: 56px; border-width: 5px; }
+.ytp-big-mode .nomusic-spinner { width: 128px; height: 128px; margin: -64px 0 0 -64px; }
+.ytp-big-mode .nomusic-spinner__arc { border-width: 12px; }
+.ytp-big-mode .nomusic-notice__text { top: calc(50% + 88px); padding: 14px 28px; font-size: 27px; line-height: 36px; }
+.ytp-big-mode .nomusic-notice[data-kind="action"] .nomusic-notice__disc { width: 117px; height: 117px; margin: -58.5px 0 0 -58.5px; }
+.ytp-big-mode .nomusic-notice__disc svg { width: 72px; height: 72px; }
 .ytp-big-mode .nomusic-dialog { width: min(440px, calc(100% - 24px)); }
 .ytp-big-mode .nomusic-dialog__title { font-size: 20px; line-height: 28px; }
 .ytp-big-mode .nomusic-dialog__message,
@@ -266,7 +333,9 @@
   border: 0;
 }
 
+/* Less motion: the ring turns slowly at one length, and nothing fades. */
 @media (prefers-reduced-motion: reduce) {
-  .nomusic-btn, .nomusic-notice { transition: none; animation: none; }
-  .nomusic-notice__spinner { animation: none; }
+  .nomusic-btn, .nomusic-notice, .nomusic-notice__disc { transition: none; animation: none; }
+  .nomusic-spinner { animation-duration: 3s; }
+  .nomusic-spinner__rotator, .nomusic-spinner__arc { animation: none; }
 }
