@@ -41,7 +41,7 @@ function render(controller) {
     controller.lastSource = session.sourceUrl;
     if (controller.button) anchor(controller);
   }
-  // A failure needs the recovery panel even where no player is big enough for
+  // A failure needs the recovery dialog even where no player is big enough for
   // the button (a small embed): nothing else tells the user what happened.
   if (!controller.button && session.failure) anchor(controller);
   if (!controller.button) return;

@@ -1,5 +1,6 @@
-// Opens the welcome page: once on install, and when the "Set up nomusic"
-// button on a video asks for it (focusing the page if it is already open).
+// Opens the welcome page: once on install, and when the button on a video asks
+// for it before the first run ("Turn on nomusic"), focusing the page if it is
+// already open.
 // Tabs that were open before need a reload before nomusic can work in them.
 async function openWelcome() {
   const url = chrome.runtime.getURL("welcome.html");
