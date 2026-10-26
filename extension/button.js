@@ -1,9 +1,10 @@
 // What nomusic shows on each video: a view of one Session.
 // - A button that turns nomusic on or off for the current video. It joins the
-//   player's own row of buttons and is drawn as YouTube draws its captions
-//   button: outlined while the music plays, filled while nomusic removes it.
-//   Where a player has no such row (Shorts, other sites' players) it is the
-//   same glyph in the player's top corner, shown with the player's controls.
+//   player's own row of buttons and is drawn as YouTube draws its mute button:
+//   a note while the music plays, the note struck through while nomusic
+//   removes it. Where a player has no such row (Shorts, other sites' players)
+//   it is the same glyph in the player's top corner, shown with the player's
+//   controls.
 // - In the middle of the video, only while nomusic needs the user to wait or to
 //   click: a spinner like YouTube's own, with two words under it, while the
 //   first audio is prepared; a round play button when the browser waits for a
@@ -40,18 +41,22 @@ const STATES = {
 // A hold shorter than this shows nothing (a short one after a stall would only flicker).
 const NOTICE_DELAY_MS = 400;
 
-// The glyph, on YouTube's 24 px grid and in its weight: a note, plain while
-// the music plays and struck through while nomusic removes it, as YouTube
-// draws its speaker plain or crossed out. The strike cuts a gap through the
-// stem. tools/icons.mjs draws the mark from the same note. Built with DOM
-// calls: YouTube's pages accept only trusted markup.
+// The glyph, on YouTube's 24 px grid and in its weight: a note (round head,
+// straight stem, square flag), plain while the music plays and struck through
+// while nomusic removes it. The struck note is the plain one with a strike
+// corner to corner, which cuts a gap on its upper side only, as Material's
+// "off" icons do. tools/icons.mjs draws the mark from the same note. Built
+// with DOM calls: YouTube's pages accept only trusted markup.
 const SVG = "http://www.w3.org/2000/svg";
 const NOTE = [
-  ["circle", { cx: 10, cy: 17.8, r: 3.8 }],
-  ["rect", { x: 11.8, y: 3, width: 2, height: 14.8 }],
-  ["rect", { x: 11.8, y: 3, width: 6, height: 4.2 }],
+  ["circle", { cx: 9.4, cy: 17.4, r: 4.4 }],
+  ["rect", { x: 11.3, y: 2.8, width: 2.5, height: 14.6 }],
+  ["rect", { x: 11.3, y: 2.8, width: 7, height: 4.7 }],
 ];
-const STRIKE = "M3.4 3 20.6 20.2";
+// Corner to corner, a little above the diagonal, so that it clears the head.
+const STRIKE = "M3.4 2.6 21.4 20.6";
+// The strike's width (2) and the gap (1.3) beside it, moved half the gap up and right.
+const CUT = "M3.86 2.14 21.86 20.14";
 const PLAY = "M8 5.5v13l10.5-6.5z";
 let glyphs = 0;
 function svg(tag, attributes, ...children) {
@@ -66,7 +71,7 @@ function glyph() {
   return svg("svg", { viewBox: "0 0 24 24", "aria-hidden": "true", focusable: "false" },
     svg("mask", { id: cut, maskUnits: "userSpaceOnUse" },
       svg("rect", { width: 24, height: 24, fill: "#fff" }),
-      svg("path", { d: STRIKE, stroke: "#000", "stroke-width": 4, "stroke-linecap": "round" })),
+      svg("path", { d: CUT, stroke: "#000", "stroke-width": 3.3, "stroke-linecap": "round" })),
     note({ class: "nomusic-glyph-plain" }),
     svg("g", { class: "nomusic-glyph-struck" },
       note({ mask: `url(#${cut})` }),
