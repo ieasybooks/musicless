@@ -20,10 +20,10 @@ import { join } from "node:path";
 import puppeteer from "../tests/node_modules/puppeteer-core/lib/esm/puppeteer/puppeteer-core.js";
 
 const ROOT = new URL("../", import.meta.url).pathname;
-// The tile stands apart from every toolbar at 3:1 or more (white 3.6:1,
-// #3c3c3c 3.1:1, #1f1f1f 4.6:1), and the white mark on it is 3.6:1. The pages
-// set their white text on a deeper amber (pages.css).
-const AMBER = "#bc7800";
+// The tile stands apart from Chrome's white and dark toolbars at 3:1 or more
+// (white 3.3:1, #3c3c3c 3.3:1, #1f1f1f 5:1), and the white mark on it is
+// 3.3:1. The pages set their white text on a deeper amber (pages.css).
+const AMBER = "#c27f0a";
 
 // The speech mark: a pair of closing quotation marks, each a round bowl whose
 // tail sweeps from its right side down to a point under its left, as a
@@ -32,7 +32,7 @@ const AMBER = "#bc7800";
 // bowl widths apart. Drawn from (x, y), `width` wide.
 const n = (v) => +v.toFixed(3);
 const TAIL = 2;
-const GAP = 0.65;
+const GAP = 0.58;
 function quote(cx, cy, r) {
   const X = (x) => n(cx + x * r);
   const Y = (y) => n(cy + y * r);
@@ -51,20 +51,22 @@ const HEIGHT = (2 + TAIL) / (4 + 4 * GAP); // the pair's height for its width
 
 // The tile with the mark in it, as an SVG of `size` px. `inset` is the
 // transparent margin; `share` the mark's width as a share of the tile. The
-// pair is centred on its bowls and tails together.
-function tile(size, { inset = 0, radius = 0.25, share = 0.56, color = AMBER } = {}) {
+// pair sits a little below the middle: its weight is in its bowls.
+function tile(size, { inset = 0, radius = 0.25, share = 0.6, color = AMBER } = {}) {
   const side = size - 2 * inset;
   const width = side * share;
   const x = inset + (side - width) / 2;
-  const y = inset + (side - width * HEIGHT) / 2;
+  const y = inset + (side - width * HEIGHT) / 2 + side * 0.04;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">` +
     `<rect x="${inset}" y="${inset}" width="${side}" height="${side}" rx="${n(side * radius)}" fill="${color}"/>${mark(x, y, width)}</svg>`;
 }
 
 // 16 px, pixel by pixel and in whole pixels: two bowls of five with their
 // corners cut, 2 px apart and 2 px from the edges, each tail a 2 px step down
-// to the left that ends in one pixel.
+// to the left that ends in one pixel; a row below the middle, for the bowls'
+// weight.
 const PIXELS = [
+  "................",
   "................",
   "................",
   "................",
@@ -77,7 +79,6 @@ const PIXELS = [
   ".....##.....##..",
   "....##.....##...",
   "...#......#.....",
-  "................",
   "................",
   "................",
   "................",
@@ -127,8 +128,8 @@ try {
   // The 128 px icon (also the store's) fills 112 px of it: a flat tile needs
   // no more margin, and the other listings fill all 128.
   const ICONS = {
-    32: tile(32, { inset: 1, share: 0.62 }),
-    48: tile(48, { inset: 2, share: 0.6 }),
+    32: tile(32, { inset: 1, share: 0.64 }),
+    48: tile(48, { inset: 2, share: 0.62 }),
     128: tile(128, { inset: 8 }),
   };
   for (const [size, svg] of Object.entries(ICONS)) await render(page, svg, +size, +size, join(ROOT, `extension/icons/icon-${size}.png`));
@@ -141,12 +142,12 @@ try {
   if (!(await page.evaluate(() => document.fonts.check("500 40px Roboto")))) {
     throw new Error("Roboto is needed for the promo tile's name: install it (or point FONTCONFIG_FILE at a folder that has it).");
   }
-  await render(page, `<div style="width:440px;height:280px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;background:${AMBER}">
-      <svg width="76" height="${n(76 * HEIGHT)}" viewBox="0 0 76 ${n(76 * HEIGHT)}">${mark(0, 0, 76)}</svg>
+  await render(page, `<div style="width:440px;height:280px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:${AMBER}">
+      <svg width="92" height="${n(92 * HEIGHT)}" viewBox="0 0 92 ${n(92 * HEIGHT)}">${mark(0, 0, 92)}</svg>
       <span style="font:500 44px/1 Roboto;letter-spacing:-0.5px;color:#fff;margin-bottom:4px">nomusic</span></div>`, 440, 280, join(ROOT, "docs/store/promo-tile-440x280.png"));
   // The white mark of the first-run page, which draws the tile itself.
   writeFileSync(join(ROOT, "extension/icons/mark.svg"),
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">${mark(3, 12 - (18 * HEIGHT) / 2, 18)}</svg>\n`);
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">${mark(3, 12 - (18 * HEIGHT) / 2 + 0.8, 18)}</svg>\n`);
   // The player button's two glyphs, for sentences that point at it.
   writeFileSync(join(ROOT, "extension/icons/player-on.svg"), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">${note()}</svg>\n`);
   writeFileSync(join(ROOT, "extension/icons/player-off.svg"), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g fill="#fff">${PLAIN}</g></svg>\n`);

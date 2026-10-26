@@ -11,10 +11,9 @@
   --faint: #5f6368;
   --divider: #e3e3e3;
   --accent: #9c6400; /* the mark's amber, a step deeper: white on it is 5:1 */
-  --link: #8f5c00; /* as text: 5.7:1 */
   --accent-hover: #8f5c00;
   --on-accent: #ffffff;
-  --tile: #bc7800; /* the mark's own amber */
+  --tile: #c27f0a; /* the mark's own amber */
   --on-tile: #ffffff;
   --track: #747775;
   --track-fill: #e1e3e1;
@@ -29,7 +28,6 @@
     --faint: #9aa0a6;
     --divider: #444746;
     --accent: #ecb24e; /* 8.7:1 on the page; its text 8.6:1 on it */
-    --link: #ecb24e;
     --accent-hover: #f2bb5c;
     --on-accent: #2b1d00;
     --track: #8e918f;
@@ -59,9 +57,10 @@ body {
 }
 h1 { margin: 0; font-weight: 400; }
 p { margin: 0; }
-/* Links in running text: the amber as text, underlined, as Chrome's links are
-   blue. Arabic letters hang below the line: the underline sits lower there. */
-a { color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
+/* Links in running text: the text's own colour, underlined, so the one action
+   keeps the page's one colour. Arabic letters hang below the line: the
+   underline sits lower there. */
+a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
 a:hover { text-decoration-thickness: 2px; }
 [lang="ar"] a { text-underline-offset: 4px; }
 [hidden] { display: none !important; }
@@ -112,16 +111,16 @@ h1:focus:not(:focus-visible) { outline: none; }
 .welcome .brand {
   display: grid;
   place-items: center;
-  width: 40px;
-  height: 40px;
-  margin: 0 auto 32px;
-  border-radius: 10px;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 28px;
+  border-radius: 12px;
   background: var(--tile);
 }
 .welcome .brand::before {
   content: "";
-  width: 30px;
-  height: 30px;
+  width: 36px;
+  height: 36px;
   background: var(--on-tile);
   -webkit-mask: url(icons/mark.svg) center / contain no-repeat;
   mask: url(icons/mark.svg) center / contain no-repeat;
