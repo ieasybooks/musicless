@@ -6,8 +6,8 @@
 #   extension/vendor/                     ONNX Runtime Web 1.30.0 (Microsoft, MIT), WebAssembly build
 # Needs curl, tar and python3 (a throwaway venv gets onnx and numpy).
 #
-# ./setup.sh --dev also installs the test tools: tests/node_modules (puppeteer-core,
-# onnxruntime-web) with npm, and tests/.venv (numpy, onnxruntime) for the analysis.
+# ./setup.sh --dev also installs the test tools: tests/node_modules (puppeteer-core)
+# with npm, and tests/.venv (numpy, onnxruntime) for the analysis.
 set -euo pipefail
 cd "$(dirname "$0")"
 

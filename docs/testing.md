@@ -13,8 +13,13 @@ cd tests && npm run unit
 Node's test runner covers the window grid and crossfades, the STFT and the
 resampler, the WebM and MP4 demuxers (including encrypted audio), the capture's
 memory limits (the trimmed copy must still decode), the play/pause intent
-bridge, and parity between the browser pipeline and `reference.py` (the same
-separation in Python). The media fixtures in `tests/unit/fixtures` are
+bridge, and the separation as shipped: `model.js` on the bundled ONNX Runtime,
+which must agree with `reference.py` (the same separation in Python) to 60 dB,
+and must keep a synthetic voice (SDR of at least 14 dB) while removing music
+heard on its own (to -60 dB or less). The second check catches what parity
+cannot: a setting or a retrained model that moves both sides. Its limits are
+this build's numbers less a margin; a change that misses them needs listening
+before the limits move. The media fixtures in `tests/unit/fixtures` are
 generated audio (`make-fixtures.sh`).
 
 ## Test media
@@ -42,8 +47,9 @@ MEDIA_SET=synth node local.mjs        # or vlog; QUICK=1 for a shorter run
 appended ahead of the playhead, abort and re-append on seek), with options to
 mute, autoplay, hide its Media Source in another frame or a worker, and play
 ClearKey-encrypted media. The suite installs the extension in a fresh profile
-with a debug flag that records the page's audio and nomusic's output on the
-same clock. `analyze.py` then checks sync (against Spleeter run offline),
+with diagnostics added to its own copy of the extension: a recorder of the
+page's audio and nomusic's output on the same clock, and requests for nomusic's
+state. The release has neither. `analyze.py` then checks sync (against Spleeter run offline),
 dropouts and gaps (against 1x Spleeter of the exact source, at the media time
 each block was heard) and output while the video is silent. Its offline
 references are cached next to the media, keyed by the model and
@@ -112,5 +118,8 @@ after turning it off (the model is released 30 s after nothing needs it).
 
 ## CI
 
-`.github/workflows/ci.yml` runs the setup, the unit tests and the quick local
-suite on the synthetic media in Chrome, then packages the extension.
+`.github/workflows/ci.yml` runs the setup and the unit tests, packages the
+extension, and runs the quick local suite on the unzipped package with the
+synthetic media in Chrome. On a tag, `.github/workflows/release.yml` runs the
+full local suite and the memory check on the package before it is attested
+(see [release.md](release.md)).
