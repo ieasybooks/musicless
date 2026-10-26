@@ -20,11 +20,35 @@ const CAPTURE_DEBUG = `window.__nomusicCaptureDebug = () => [...streams].map(([i
   buffers: [...s.buffers.values()], bytes: s.bytes, stored: s.log.length, subscribed: s.subscribed, dropped: !!s.dropped,
   missed: !!s.missed, media: s.log.reduce((sum, e) => sum + (e.kind === "append" && !e.header ? e.bytes.length : 0), 0), consented }));\n`;
 
+// The test copy's requests for state and recordings (main.js). The recorder
+// taps each routed session's audio; the release has neither.
+const MAIN_DEBUG = `
+// (test copy) state, sessions and recordings on request
+const startSourceForTests = Session.prototype.startSource;
+Session.prototype.startSource = function () {
+  startSourceForTests.call(this);
+  if (!this.graph || this.recorder) return;
+  import(chrome.runtime.getURL("recorder.js")).then(({ Recorder }) => {
+    if (!this.recorder && !this.disposed) this.recorder = new Recorder(this.graph.ctx, this.graph.element, this.graph.output, this.video);
+  });
+};
+window.addEventListener("message", (event) => {
+  if (event.source !== window || event.data?.nomusic !== "debug") return;
+  const sessions = [...controllers.values()].map((controller) => controller.session);
+  const session = sessions.find((s) => s.attached) ?? sessions.find((s) => s.on) ?? sessions[0];
+  let reply = null;
+  if (event.data.type === "dump") reply = session?.recorder?.dump(event.data.seconds ?? 20) ?? null;
+  else if (event.data.type === "state") reply = session ? session.snapshot() : null;
+  else if (event.data.type === "sessions") reply = sessions.map((s) => s.snapshot());
+  window.postMessage({ nomusic: "debug-reply", id: event.data.id, reply }, "*");
+});
+`;
+
 // The shipped manifest only matches YouTube; tests also allow the local server.
 // The test copy also turns on nomusic's diagnostics (state and recordings, which
-// the release cannot do): its manifest is marked, the recorder is made loadable
-// and the capture's state is readable from the page. `diagnostics: false`
-// leaves them out, as in the release.
+// the release cannot do): its manifest is marked, main.js answers requests for
+// state and recordings, the recorder is made loadable, and the capture's state
+// is readable from the page. `diagnostics: false` leaves them out, as in the release.
 // Each launch gets its own copy, so parallel runs never see each other's edits.
 function testExtension({ diagnostics = true } = {}) {
   const dir = mkdtempSync(join(WORK, "extension-under-test-"));
@@ -39,6 +63,11 @@ function testExtension({ diagnostics = true } = {}) {
       throw new Error("capture.js no longer declares `const streams = new Map();` or `function trim(stream, limit) {`: update the harness");
     }
     writeFileSync(join(dir, "capture.js"), inspected);
+    const main = readFileSync(join(dir, "main.js"), "utf8");
+    if (!/^import \{[^}]*\bSession\b[^}]*\} from "\.\/session\.js";$/m.test(main) || !main.includes("const controllers = new Map();")) {
+      throw new Error("main.js no longer imports Session or declares `const controllers = new Map();`: update the harness");
+    }
+    writeFileSync(join(dir, "main.js"), main + MAIN_DEBUG);
     manifest.nomusic_test = true;
     manifest.web_accessible_resources[0].resources.push("recorder.js");
   }

@@ -4,9 +4,9 @@
 // scheduled against the video's clock.
 //
 // When nomusic cannot remove the music it fails closed: the original track
-// stays silent and the video pauses until the user chooses Retry or Return to
-// original. While a chunk is not ready yet, the video is held (paused) rather
-// than played with music.
+// stays silent and the video pauses until the user chooses Try again (or
+// Reload page) or Play with music. While a chunk is not ready yet, the video is
+// held (paused) rather than played with music.
 //
 // Until the user turns nomusic on (settings.consented), a session only shows
 // "setup": it reads no audio and leaves the video alone.
@@ -275,11 +275,6 @@ export class Session {
     }
     this.graph.original.gain.value = 0;
     this.applyVolume();
-    if (debugEnabled() && !this.recorder) {
-      import(chrome.runtime.getURL("recorder.js")).then(({ Recorder }) => {
-        if (!this.recorder && !this.disposed) this.recorder = new Recorder(this.graph.ctx, this.graph.element, this.graph.output, this.video);
-      });
-    }
     this.streamId = this.capture.streamFor(url);
     this.unknownSince = this.streamId ? null : performance.now();
   }

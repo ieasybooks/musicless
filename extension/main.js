@@ -2,7 +2,7 @@
 // later) a Session, and a Button once it has a visible player to sit in. The
 // session is attached as soon as the element appears, before it can play, so
 // with automatic removal on no music is heard while the first audio is
-// prepared. Discovery and anchoring are adapted from the main nomusic extension.
+// prepared.
 
 import { Button } from "./button.js";
 import { CaptureBus } from "./capture-bus.js";
@@ -10,7 +10,6 @@ import { Engine } from "./engine.js";
 import { debugEnabled, Session } from "./session.js";
 import { loadSettings, onSettingsChanged, settings } from "./settings.js";
 
-const NS = "nomusic";
 const capture = new CaptureBus();
 const engine = new Engine();
 const controllers = new Map(); // video -> { session, button }
@@ -169,20 +168,6 @@ onSettingsChanged(() => {
     if (!session.on && !session.userChoice && session.sourceUrl) session.turnOn();
   }
 });
-
-// Test diagnostics (the test harness's copy of the extension only): state and recordings.
-if (debugEnabled()) {
-  window.addEventListener("message", (event) => {
-    if (event.source !== window || event.data?.[NS] !== "debug") return;
-    const sessions = [...controllers.values()].map((controller) => controller.session);
-    const session = sessions.find((s) => s.attached) ?? sessions.find((s) => s.on) ?? sessions[0];
-    let reply = null;
-    if (event.data.type === "dump") reply = session?.recorder?.dump(event.data.seconds ?? 20) ?? null;
-    else if (event.data.type === "state") reply = session ? session.snapshot() : null;
-    else if (event.data.type === "sessions") reply = sessions.map((s) => s.snapshot());
-    window.postMessage({ [NS]: "debug-reply", id: event.data.id, reply }, "*");
-  });
-}
 
 loadSettings().finally(() => {
   applyConsent();
