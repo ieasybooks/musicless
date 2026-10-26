@@ -7,7 +7,7 @@
   --bg: #ffffff;
   --text: #1f1f1f;
   --muted: #444746;
-  --line: #e1e3e1;
+  --faint: #5e5e5e;
   --hover: rgba(31, 31, 31, 0.06);
   --accent: #1f7556; /* the mark's green; white on it is 5.6:1 */
   --accent-hover: #195f46;
@@ -20,7 +20,7 @@
     --bg: #1f1f1f;
     --text: #e3e3e3;
     --muted: #c4c7c5;
-    --line: #444746;
+    --faint: #a8aba9;
     --hover: rgba(227, 227, 227, 0.08);
     --accent: #8fd6b0;
     --accent-hover: #a6e0c1;
@@ -29,6 +29,7 @@
     --focus: #8fd6b0;
   }
 }
+
 /* On body: Chrome gives extension pages' bodies its own default font. */
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans", system-ui, sans-serif;
@@ -39,15 +40,16 @@ body {
   line-height: 20px;
   -webkit-font-smoothing: antialiased;
 }
+/* Arabic letters are smaller than Latin ones at the same size: one step up. */
 [lang="ar"] body {
-  font-family: "Segoe UI", "SF Arabic", "Geeza Pro", "Noto Sans Arabic", "Noto Naskh Arabic UI", Tahoma, system-ui, sans-serif;
+  font-family: "Segoe UI", "SF Arabic", "Noto Sans Arabic", "Geeza Pro", Tahoma, system-ui, sans-serif;
   font-size: 15px;
   line-height: 24px;
 }
 h1 { margin: 0; font-weight: 400; }
-[dir="rtl"] h1 { font-weight: 500; }
+[lang="ar"] h1 { font-weight: 500; }
 p { margin: 0; }
-a { color: var(--muted); text-decoration: none; }
+a { color: var(--faint); text-decoration: none; }
 a:hover { color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
 [hidden] { display: none !important; }
 
@@ -58,7 +60,7 @@ a.button {
   justify-content: center;
   box-sizing: border-box;
   min-height: 40px;
-  padding: 10px 24px;
+  padding: 0 24px;
   border: 0;
   border-radius: 20px;
   background: var(--accent);
@@ -82,54 +84,74 @@ h1:focus-visible {
 }
 h1:focus:not(:focus-visible) { outline: none; }
 
-/* ---- the first-run page: one column, at the same height in both states ---- */
+/* ---- the first-run page: one column, high in the window ---- */
 .welcome main {
   box-sizing: border-box;
   max-width: 536px;
   margin: 0 auto;
-  padding: 22vh 24px 96px;
+  padding: 18vh 24px 96px;
 }
-.welcome .mark { display: block; width: 40px; height: 40px; margin-bottom: 24px; }
+.welcome .brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 40px;
+  font-size: 15px;
+  font-weight: 500;
+}
+.welcome .brand img { display: block; width: 32px; height: 32px; }
+/* Both states in one grid: their headings, texts and buttons share rows, so
+   turning nomusic on changes words, not positions. */
+.welcome .states { display: grid; grid-template-rows: auto auto auto; }
+.welcome section { grid-area: 1 / 1 / 4 / 2; display: grid; grid-template-rows: subgrid; align-content: start; }
+.welcome section.off { visibility: hidden; }
 .welcome h1 { font-size: 28px; line-height: 36px; margin-bottom: 12px; text-wrap: balance; }
-[dir="rtl"] .welcome h1 { line-height: 44px; }
+[lang="ar"] .welcome h1 { line-height: 44px; }
 .welcome section p { font-size: 16px; line-height: 24px; color: var(--muted); margin-bottom: 32px; }
-[dir="rtl"] .welcome section p { font-size: 17px; line-height: 30px; }
+[lang="ar"] .welcome section p { font-size: 17px; line-height: 30px; }
 .welcome footer {
   position: fixed;
   inset-inline: 0;
   bottom: 24px;
-  max-width: 440px;
+  max-width: 488px;
   margin: 0 auto;
   font-size: 12px;
   line-height: 16px;
 }
+[lang="ar"] .welcome footer { font-size: 13px; line-height: 20px; }
 
 /* ---- the toolbar popup ---- */
 .popup { width: 320px; }
-.popup section { padding: 16px 16px 8px; }
-.popup #consent p { margin-bottom: 16px; }
-.popup .actions { display: flex; justify-content: flex-end; }
-.popup button.primary { min-height: 32px; padding: 6px 16px; border-radius: 16px; }
-.popup .notice { margin-bottom: 12px; color: var(--muted); }
+.popup section { padding: 16px 16px 4px; }
+.popup h1 { font-size: 15px; line-height: 20px; font-weight: 500; margin-bottom: 4px; }
+.popup #consent p { color: var(--muted); font-size: 13px; line-height: 20px; }
+[lang="ar"] .popup h1 { font-size: 16px; line-height: 24px; }
+[lang="ar"] .popup #consent p { font-size: 14px; line-height: 22px; }
+.popup .notice { margin-bottom: 12px; color: var(--muted); font-size: 13px; }
 .popup .setting {
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: center;
-  gap: 2px 16px;
+  column-gap: 16px;
   margin: -8px -16px 0;
-  padding: 8px 16px;
+  padding: 10px 16px;
 }
 .popup .setting:hover { background: var(--hover); }
 .popup .setting label { cursor: pointer; }
-.popup .hint { grid-column: 1 / -1; color: var(--muted); font-size: 12px; line-height: 16px; }
-[dir="rtl"] .popup .hint { font-size: 13px; line-height: 20px; }
+.popup .setting input { grid-row: 1 / 3; grid-column: 2; }
+.popup .hint { color: var(--muted); font-size: 13px; line-height: 18px; }
+[lang="ar"] .popup .hint { font-size: 14px; line-height: 22px; }
 .popup footer {
   display: flex;
+  align-items: center;
   gap: 16px;
-  padding: 8px 16px 12px;
+  min-height: 32px;
+  padding: 12px 16px 16px;
   font-size: 12px;
   line-height: 16px;
 }
+[lang="ar"] .popup footer { font-size: 13px; line-height: 20px; }
+.popup footer button.primary { margin-inline-start: auto; min-height: 32px; padding: 0 16px; border-radius: 16px; font-size: 13px; }
 
 /* An on/off switch drawn over a native checkbox (keyboard and screen readers
    keep working), in the proportions of Chrome's own. */

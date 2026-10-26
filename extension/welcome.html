@@ -9,20 +9,22 @@
   </head>
   <body class="welcome">
     <main>
-      <img class="mark" src="icons/mark.svg" alt="" width="40" height="40" />
+      <p class="brand"><img src="icons/mark.svg" alt="" width="32" height="32" /><span data-i18n="extension_name">nomusic</span></p>
 
-      <!-- Until the user chooses, nomusic reads no audio: only "Turn on" starts it. -->
-      <section id="setup" hidden>
-        <h1 data-i18n="setup_heading"></h1>
-        <p data-i18n="consent_text"></p>
-        <button type="button" class="primary" id="accept" data-i18n="consent_accept"></button>
-      </section>
-
-      <section id="done" hidden>
-        <h1 id="doneHeading" tabindex="-1" data-i18n="done_heading"></h1>
-        <p data-i18n="done_text"></p>
-        <a class="button primary" href="https://www.youtube.com/" data-i18n="done_open"></a>
-      </section>
+      <!-- The two states share one grid, so nothing moves when the first becomes the second.
+           Until the user chooses, nomusic reads no audio: only "Turn on" starts it. -->
+      <div class="states">
+        <section id="setup" class="off">
+          <h1 data-i18n="setup_heading"></h1>
+          <p data-i18n="consent_text"></p>
+          <div><button type="button" class="primary" id="accept" data-i18n="consent_accept"></button></div>
+        </section>
+        <section id="done" class="off">
+          <h1 id="doneHeading" tabindex="-1" data-i18n="done_heading"></h1>
+          <p data-i18n="done_text"></p>
+          <div><a class="button primary" href="https://www.youtube.com/" data-i18n="done_open"></a></div>
+        </section>
+      </div>
     </main>
     <footer>
       <a href="https://github.com/IbraheemTuffaha/nomusic/blob/main/docs/privacy.md" target="_blank" data-i18n="link_privacy"></a>

@@ -9,10 +9,8 @@
   <body class="popup">
     <!-- Until the user turns nomusic on: the disclosure (as on the first-run page). -->
     <section id="consent" hidden>
+      <h1 data-i18n="setup_heading"></h1>
       <p data-i18n="consent_text"></p>
-      <div class="actions">
-        <button type="button" class="primary" id="accept" data-i18n="consent_accept"></button>
-      </div>
     </section>
 
     <section id="settings" hidden>
@@ -25,8 +23,9 @@
     </section>
 
     <footer>
-      <a href="https://github.com/IbraheemTuffaha/nomusic/blob/main/docs/privacy.md" target="_blank" data-i18n="link_privacy"></a>
-      <a href="https://github.com/IbraheemTuffaha/nomusic/issues" target="_blank" data-i18n="link_help"></a>
+      <a id="privacy" href="https://github.com/IbraheemTuffaha/nomusic/blob/main/docs/privacy.md" target="_blank" data-i18n="link_privacy" hidden></a>
+      <a id="help" href="https://github.com/IbraheemTuffaha/nomusic/issues" target="_blank" data-i18n="link_help" hidden></a>
+      <button type="button" class="primary" id="accept" data-i18n="consent_accept" hidden></button>
     </footer>
     <script type="module" src="popup.js"></script>
   </body>

@@ -6,8 +6,8 @@ localizePage();
 const $ = (id) => document.getElementById(id);
 
 function show(consented) {
-  $("setup").hidden = consented;
-  $("done").hidden = !consented;
+  $("setup").classList.toggle("off", consented);
+  $("done").classList.toggle("off", !consented);
 }
 
 chrome.storage.sync.get({ consented: false }).then(({ consented }) => show(consented));

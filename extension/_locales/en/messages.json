@@ -2,14 +2,13 @@
   "locale_code": { "message": "en", "description": "Not translated: the language code of this catalog (BCP 47), for the lang attribute." },
   "locale_dir": { "message": "ltr", "description": "Not translated: the writing direction of this catalog, ltr or rtl." },
   "extension_name": { "message": "nomusic", "description": "The brand. Keep it in Latin letters in every language." },
-  "extension_description": { "message": "Removes most of the background music from YouTube™ videos and keeps the voices. Audio stays on your computer.", "description": "Store summary and extensions-page description. 132 characters at most." },
+  "extension_description": { "message": "Removes most of the background music from YouTube™ videos and keeps the voices. Everything runs on your computer.", "description": "Store summary and extensions-page description. 132 characters at most." },
 
-  "control_name": { "message": "Remove music", "description": "Accessible name of the on/off button in the video player (a toggle: screen readers add on/off). A feature name, not a command." },
-  "control_on": { "message": "Music removal is on", "description": "Tooltip of the player button while nomusic is on for this video." },
-  "control_off": { "message": "Music removal is off", "description": "Tooltip of the player button while nomusic is off for this video; clicking turns it on." },
+  "control_name": { "message": "Remove music", "description": "Name and tooltip of the player button while the music plays; a click removes it. Like YouTube's \"Mute\", it says what a click does." },
+  "control_on": { "message": "Play with music", "description": "Name and tooltip of the player button while nomusic removes the music; a click plays the video with its music. Like YouTube's \"Unmute\", it says what a click does." },
   "control_setup": { "message": "Turn on nomusic", "description": "Tooltip and name of the player button before the first run; it opens the page that turns nomusic on." },
   "control_failed": { "message": "Music not removed", "description": "Tooltip of the player button after a failure; it reopens the choice." },
-  "notice_working": { "message": "Removing music", "description": "Shown in a chip at the top of the video while it waits a moment for the first audio without music (at the start, or after a jump). A spinner beside it already says \"in progress\", so no ellipsis." },
+  "notice_working": { "message": "Removing music", "description": "Under a spinner in the middle of the video while it waits a moment for the first audio without music (at the start, or after a jump)." },
   "notice_blocked": { "message": "Click to play", "description": "Chip at the top of the video when the browser needs a click before it plays sound; the chip is the button." },
 
   "panel_title": { "message": "Couldn't remove the music", "description": "Title of the failure dialog; the reason follows it." },
@@ -27,15 +26,15 @@
   "failure_audio": { "message": "The sound didn't start. Reloading the page usually fixes this." },
   "failure_updated": { "message": "nomusic was updated or turned off. Reload the page to continue." },
 
-  "setup_heading": { "message": "Remove music from YouTube videos", "description": "Heading of the first-run page." },
-  "consent_text": { "message": "nomusic reads the sound of the videos you play and removes most of the music right on this computer, keeping the voices. The sound is never uploaded or saved; only your settings may sync through Chrome\u00a0Sync.", "description": "The disclosure shown before nomusic reads any audio (first-run page and popup). Keep every fact: reads the sound, on this computer, never uploaded or saved, settings may sync." },
+  "setup_heading": { "message": "Remove the music, keep the voices", "description": "Heading of the first-run page and title of the popup before the first run." },
+  "consent_text": { "message": "nomusic reads the sound of the YouTube videos you play and removes most of the music, here on this computer. It never uploads or saves the sound, and only your settings may sync through Chrome\u00a0Sync.", "description": "The disclosure shown before nomusic reads any audio (first-run page and popup). Keep every fact: reads the sound, on this computer, never uploaded or saved, settings may sync." },
   "consent_accept": { "message": "Turn on", "description": "The one button of the disclosure: the user's consent." },
-  "done_heading": { "message": "nomusic is on", "description": "Heading of the first-run page after the user turned nomusic on." },
-  "done_text": { "message": "Open YouTube, or reload any YouTube tabs that were already open.", "description": "nomusic cannot reach tabs opened before it was installed." },
+  "done_heading": { "message": "Music removal is on", "description": "First-run page after the choice." },
+  "done_text": { "message": "Reload any YouTube tab that was already open.", "description": "nomusic cannot reach tabs opened before it was installed." },
   "done_open": { "message": "Open YouTube", "description": "Button: opens youtube.com in this tab." },
 
   "popup_autostart_label": { "message": "Remove music from every video", "description": "The one switch in the toolbar popup." },
-  "popup_autostart_hint": { "message": "When this is off, use the nomusic button in a video's controls.", "description": "Shown under the switch." },
+  "popup_autostart_hint": { "message": "Or pick videos one by one from the player.", "description": "Under the switch, on and off: the other way to use nomusic (the button in the player)." },
   "link_help": { "message": "Help", "description": "Link to the project's issue tracker." },
   "link_privacy": { "message": "Privacy policy" }
 }

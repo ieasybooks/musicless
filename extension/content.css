@@ -28,6 +28,8 @@
   color: #fff;
   cursor: pointer;
 }
+/* YouTube's own icons are pure white; its bar would make ours #eee. */
+.ytp-chrome-controls .nomusic-btn.ytp-button { color: #fff; }
 .nomusic-btn svg {
   display: block;
   width: 24px;
@@ -39,29 +41,12 @@
 /* The top row of the embedded and mobile players: 48 px icon buttons. */
 .nomusic-btn[data-place="top"] { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; }
 
-/* As YouTube shows captions: the glyph outlined while the music plays, filled
-   while nomusic removes it. */
-.nomusic-btn .nomusic-glyph-filled,
-.nomusic-btn[data-state="idle"] .nomusic-glyph-outlined { display: inline; }
-.nomusic-btn .nomusic-glyph-outlined,
-.nomusic-btn[data-state="idle"] .nomusic-glyph-filled { display: none; }
-
-/* Before the first run, and after a failure whose dialog was closed: a dot
-   asks for a click, where YouTube puts its own badges. (A real element:
-   YouTube's bar draws its hover shape on the button's ::before.) */
-.nomusic-btn__dot {
-  display: none;
-  position: absolute;
-  top: calc(50% - 13px);
-  left: calc(50% + 8px);
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: #e1002d;
-  pointer-events: none;
-}
-.nomusic-btn[data-nomusic-status="setup"] .nomusic-btn__dot,
-.nomusic-btn[data-dismissed] .nomusic-btn__dot { display: block; }
+/* The note plain while the music plays, struck through while nomusic removes
+   it, as YouTube draws its speaker. */
+.nomusic-btn .nomusic-glyph-struck,
+.nomusic-btn[data-state="idle"] .nomusic-glyph-plain { display: inline; }
+.nomusic-btn .nomusic-glyph-plain,
+.nomusic-btn[data-state="idle"] .nomusic-glyph-struck { display: none; }
 
 /* Where the player has no row of buttons: the bare glyph in its top corner
    (button.js sets the side), with the soft shadow YouTube gives its overlay
@@ -95,7 +80,6 @@
   outline: 2px solid #fff;
   outline-offset: 2px;
 }
-.nomusic-dialog:focus { outline: none; }
 /* In the control bar, YouTube draws its own ring when the keyboard is in use;
    this one is for when it does not. */
 .html5-video-player:not(.ytp-probably-keyboard-focus) .nomusic-btn[data-place="ytp"]:focus-visible {
@@ -109,78 +93,109 @@
   position: absolute;
   z-index: 2147483602;
   max-width: 260px;
-  padding: 5px 9px;
+  height: 25px;
+  box-sizing: border-box;
+  padding: 0 9px;
   border-radius: 8px;
   background: rgba(28, 28, 28, 0.9);
   color: #eee;
   font-size: 13px;
   font-weight: 500;
-  line-height: 15px;
+  line-height: 25px;
   white-space: nowrap;
   pointer-events: none;
 }
 .nomusic-tip[hidden] { display: none; }
-.nomusic-tip[dir="rtl"] { line-height: 19px; }
 
-/* The chip in the player's top corner (button.js sets the side), shaped like
-   YouTube's own "click to unmute". The status chip lets clicks through to the
-   video; the action chip is the button that starts the sound. */
+/* In the middle of the video while nomusic needs a wait or a click. The
+   wait: a ring like YouTube's own spinner and two words under it, on a soft
+   shade that keeps the words readable over a white frame; it lets clicks
+   through to the video. The click: a round play button, as YouTube draws its
+   own. */
 .nomusic-notice {
   position: absolute;
   z-index: 2147483600;
-  top: 16px;
-  display: inline-flex;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 8px;
-  max-width: calc(100% - 32px);
-  height: 32px;
+  gap: 14px;
   margin: 0;
-  padding: 0 14px 0 10px;
+  padding: 36px 56px;
   border: 0;
-  border-radius: 16px;
-  background: rgba(0, 0, 0, 0.8);
+  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0.5) 60%, rgba(0, 0, 0, 0));
   color: #fff;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   line-height: 20px;
   white-space: nowrap;
+  text-shadow: 0 0 4px rgba(0, 0, 0, 0.5);
   pointer-events: none;
-  animation: nomusic-in 150ms ease-out;
+  animation: nomusic-in 200ms ease-out;
 }
 .nomusic-notice[hidden] { display: none; }
-.nomusic-notice[dir="rtl"] { padding: 0 10px 0 14px; }
-.nomusic-notice[data-kind="action"] { pointer-events: auto; cursor: pointer; }
-.nomusic-notice[data-kind="action"]:hover { background: rgba(0, 0, 0, 0.9); }
+.nomusic-notice[dir="rtl"] { line-height: 24px; }
 .nomusic-notice__spinner {
-  flex: 0 0 auto;
-  width: 16px;
-  height: 16px;
+  width: 44px;
+  height: 44px;
   box-sizing: border-box;
-  border: 2.5px solid transparent;
-  border-top-color: #fff;
-  border-right-color: #fff;
+  border: 4px solid #fff;
+  border-inline-start-color: transparent;
   border-radius: 50%;
-  animation: nomusic-spin 800ms linear infinite;
+  animation: nomusic-spin 1100ms linear infinite;
 }
-.nomusic-notice__play { display: none; flex: 0 0 auto; width: 18px; height: 18px; }
+.nomusic-notice__play { display: none; width: 40px; height: 40px; margin-inline-start: 4px; }
+.nomusic-notice[data-kind="action"] {
+  width: 72px;
+  height: 72px;
+  padding: 0;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
+  pointer-events: auto;
+  cursor: pointer;
+}
+.nomusic-notice[data-kind="action"]:hover { background: rgba(0, 0, 0, 0.75); }
 .nomusic-notice[data-kind="action"] .nomusic-notice__spinner { display: none; }
 .nomusic-notice[data-kind="action"] .nomusic-notice__play { display: block; }
+/* The play button is named by its text, which is not shown. */
+.nomusic-notice[data-kind="action"] .nomusic-notice__text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
 @keyframes nomusic-spin { to { transform: rotate(360deg); } }
 @keyframes nomusic-in { from { opacity: 0; } }
+
+/* Behind the dialog: the video dimmed, below YouTube's own controls. */
+.nomusic-scrim {
+  position: absolute;
+  z-index: 30;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
 
 /* The recovery dialog, in the middle of the player. */
 .nomusic-dialog {
   position: absolute;
   z-index: 2147483601;
   inset: 0;
-  width: min(360px, calc(100% - 24px));
+  width: fit-content;
+  min-width: min(300px, calc(100% - 24px));
+  max-width: min(400px, calc(100% - 24px));
   height: fit-content;
   max-height: calc(100% - 24px);
   margin: auto;
   overflow: auto; /* a tiny player: scroll to the buttons */
-  padding: 20px 20px 16px;
+  padding: 20px 20px 16px 24px;
   border-radius: 12px;
-  background: #212121;
+  background: #282828;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
   color: #fff;
   text-align: start;
   user-select: none;
@@ -190,9 +205,9 @@
 .nomusic-dialog--floating { position: fixed; inset: auto; margin: 0; max-height: calc(100vh - 16px); }
 .nomusic-dialog__title {
   margin: 0 0 4px;
-  font-size: 16px;
+  font-size: 17px;
   font-weight: 500;
-  line-height: 22px;
+  line-height: 24px;
 }
 .nomusic-dialog__message {
   margin: 0 0 20px;
@@ -203,6 +218,7 @@
 }
 .nomusic-dialog__message:empty { display: none; }
 .nomusic-dialog__title:has(+ .nomusic-dialog__message:empty) { margin-bottom: 20px; }
+.nomusic-dialog[dir="rtl"] { padding: 20px 24px 16px 20px; }
 .nomusic-dialog[dir="rtl"] .nomusic-dialog__title { line-height: 26px; }
 .nomusic-dialog[dir="rtl"] .nomusic-dialog__message { line-height: 24px; }
 .nomusic-dialog__actions {
@@ -217,7 +233,7 @@
   padding: 8px 16px;
   border: 0;
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.1);
+  background: transparent;
   color: #fff;
   font: inherit;
   font-size: 14px;
@@ -225,12 +241,13 @@
   line-height: 20px;
   cursor: pointer;
 }
-.nomusic-dialog__action:hover { background: rgba(255, 255, 255, 0.2); }
+.nomusic-dialog__action:hover { background: rgba(255, 255, 255, 0.1); }
 .nomusic-dialog__action[data-action="retry"] { background: #f1f1f1; color: #0f0f0f; }
 .nomusic-dialog__action[data-action="retry"]:hover { background: #d9d9d9; }
 
 /* Fullscreen on a large screen: YouTube scales its controls up too. */
-.ytp-big-mode .nomusic-notice { top: 24px; height: 40px; padding-inline: 14px 18px; border-radius: 20px; font-size: 17px; }
+.ytp-big-mode .nomusic-notice { font-size: 18px; line-height: 24px; }
+.ytp-big-mode .nomusic-notice__spinner { width: 56px; height: 56px; border-width: 5px; }
 .ytp-big-mode .nomusic-dialog { width: min(440px, calc(100% - 24px)); }
 .ytp-big-mode .nomusic-dialog__title { font-size: 20px; line-height: 28px; }
 .ytp-big-mode .nomusic-dialog__message,

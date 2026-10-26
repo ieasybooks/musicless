@@ -6,9 +6,11 @@ import { DEFAULTS } from "./settings.js";
 localizePage();
 const $ = (id) => document.getElementById(id);
 
+// Before: the disclosure, the privacy policy and "Turn on"; after: the
+// setting and help.
 function show(consented) {
-  $("consent").hidden = consented;
-  $("settings").hidden = !consented;
+  for (const id of ["consent", "privacy", "accept"]) $(id).hidden = consented;
+  for (const id of ["settings", "help"]) $(id).hidden = !consented;
 }
 
 // `consented` stays false until the user turns nomusic on, here or on the first-run page.
