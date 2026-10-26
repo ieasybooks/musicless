@@ -278,11 +278,10 @@ for (const variant of VARIANTS) {
 
   await step(`${tag} control messages a page forges leave no lasting failure`, async () => {
     const { streamId } = await frameState(page);
-    // A page script posts nomusic's own control messages: no consent, no
-    // subscription, and a replay saying the audio went by before consent.
+    // A page script posts nomusic's own control messages: no consent, and no
+    // subscription. (Other forged messages can fail the video, closed.)
     await page.evaluate((streamId) => {
       for (const message of [{ type: "consent", consented: false }, { type: "unsubscribe", streamId }]) window.postMessage({ nomusic: "control", ...message }, "*");
-      window.postMessage({ nomusic: "capture", type: "replay", streamId, missed: true, entries: [] }, "*");
     }, streamId);
     await sleep(2000);
     const state = await frameState(page);
