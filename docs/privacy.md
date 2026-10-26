@@ -24,7 +24,7 @@ not offer recording, media downloads, or audio export.
 
 nomusic stores three values with Chrome's extension storage: the
 automatic-removal setting; whether you have acknowledged the first-run
-local-audio disclosure (the **Turn on nomusic** choice); and a random token
+local-audio disclosure (the **Turn on** choice); and a random token
 that lets nomusic's hidden processing frame accept connections only from
 nomusic itself. Chrome may sync the first two between your own devices when
 you enable Chrome Sync; the token stays on this device. The developer does not

@@ -95,17 +95,30 @@ never loads a new position after a seek. So each group of steps opens a fresh
 page and seeks stay within the audio already loaded; the local suite covers
 seeking into new audio and long sessions.
 
+```sh
+node controls.mjs
+```
+
+Where nomusic sits in YouTube's own player, which YouTube changes often: the
+button joins the control bar before captions, the spinner shows while the first
+audio is prepared, a real click turns the music removal off and on again, the
+tooltip sits above the bar, the button hides with YouTube's controls, and in an
+embedded player it joins the top row of buttons. Run it after YouTube changes
+its player. (The local test page has no YouTube controls, so `local.mjs` covers
+the corner button instead.)
+
 ## Store images
 
 ```sh
 node screenshots.mjs
 ```
 
-The screenshots and the promo tile in `docs/store/`, in English and Arabic:
-the button and the recovery panel on a live YouTube watch page (a public-domain
-NASA video), the welcome page's first-run card and the popup. The recovery
-panel comes from a copy of the extension that the script makes fail on
-purpose. See [release.md](release.md) for when to remake them.
+The screenshots in `docs/store/`, in English and Arabic: the button and the
+recovery dialog on a live YouTube watch page (a public-domain NASA video), the
+first-run page and the popup. The dialog comes from a copy of the extension
+that the script makes fail on purpose. The icons, the store icon and the promo
+tile come from `node ../tools/icons.mjs`. See [release.md](release.md) for when
+to remake them.
 
 ## Memory
 

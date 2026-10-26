@@ -24,14 +24,14 @@ video plays, and plays them in place of the original track.
 | `intent.js` | Page world. Reports the page's `play()`/`pause()` calls, so a pause the user makes while nomusic holds the video is not undone. |
 | `content.js`, `main.js` | Load the content-script modules; give every `<video>` a `Session` as soon as it appears (before it can play) and a `Button` once it has a visible player. `capture-bus.js` checks every message from the page world before anything acts on it. |
 | `session.js` | One video's music removal: follows its source, routes its audio through Web Audio (original silenced, separated voices at the page's volume), asks the engine for chunks around the playhead, schedules them on the video's clock, holds the video when a chunk is missing, fails closed. |
-| `button.js`, `content.css`, `i18n.js` | The button in the player and its recovery panel, in English or Arabic (`_locales/`), right to left where the player is. It shows with YouTube's own controls, and ignores clicks a page script fakes. |
+| `button.js`, `content.css`, `i18n.js` | What nomusic shows on a video, in English or Arabic (`_locales/`): a button in YouTube's own control bar (or the embedded player's top row; a small corner button where a player has neither), a spinner in the middle of the video while the first audio is prepared, a play button when the browser waits for a click, and the recovery dialog. It shows and hides with YouTube's controls, and ignores clicks a page script fakes. |
 | `engine.js` | The page's connection to the hidden frame; routes messages by stream; notices a frame or worker that has gone away and starts a new one; removes the frame 30 s after nothing uses it. |
 | `separator.html/js` | The hidden frame, in the extension's own origin (WebAssembly allowed, out of the page's reach). It accepts one connection, and only with a random token that page scripts cannot read: the background service worker makes it once, and the content script sends it only to the extension's own origin, fixed when the frame is created. Then it starts the tab worker and connects it to the shared model. |
 | `tab-worker.js` | Per tab: demuxes (`demux.js`), decodes with WebCodecs, resamples to 44.1 kHz, computes the STFT (`dsp.js`), sends it to the model, synthesizes the voices and crossfades the window edges. Keeps at most 64 MiB of audio per video, nothing more than 15 minutes behind or ahead of the playhead, and separates again whatever the player replaced. |
 | `model-worker.js`, `model.js` | One copy of the model for every tab (a shared worker; WebCodecs is not available there, which is why decoding stays per tab). A priority queue puts the chunk a playing video needs first. |
 | `grid.js` | The model's numbers and the fixed window grid, shared by both sides (`tests/reference.py` mirrors them). |
 | `stretch.js`, `third_party/soundtouch` | Pitch-preserving time-stretch for speeds other than 1x. |
-| `popup.*`, `welcome.*`, `background.js`, `settings.js` | The toolbar popup, the welcome page, and the stored values: the automatic-removal setting and whether the user chose **Turn on nomusic** (`chrome.storage.sync`), and the frame's token (`chrome.storage.local`). |
+| `popup.*`, `welcome.*`, `background.js`, `settings.js` | The toolbar popup, the first-run page, and the stored values: the automatic-removal setting and whether the user chose **Turn on** (`chrome.storage.sync`), and the frame's token (`chrome.storage.local`). |
 
 ## Separation
 
@@ -90,11 +90,11 @@ chunk a playing video needs comes before look-ahead work in any tab.
 
 ## Before nomusic is turned on
 
-On install, the welcome page explains what nomusic does with audio and asks
-the user to choose **Turn on nomusic** (the toolbar popup offers the same
-choice). Until then nomusic reads no audio: capture keeps only format headers,
-no session routes or separates anything, and the button on the player says
-**Set up nomusic** and opens the welcome page.
+On install, the first-run page says in two sentences what nomusic does with
+audio and asks the user to choose **Turn on** (the toolbar popup offers the
+same choice). Until then nomusic reads no audio: capture keeps only format
+headers, no session routes or separates anything, and the button on the
+player ("Turn on nomusic") opens the first-run page.
 
 ## Failing closed
 
@@ -102,11 +102,11 @@ nomusic never plays the original track by itself once it is on. If it cannot
 remove the music (copy-protected audio, audio it cannot capture, a codec the
 browser cannot decode, a chunk stuck for 30 s, sound that still cannot start
 after a click, or the extension being updated under an open page), the
-original stays silent, the video pauses, and the button's panel offers **Try
-again** or **Play with music**. When only a reload can help (the extension was
-updated, the audio went by before it could be captured, the engine could not
-start again, or the sound cannot start), the panel offers **Reload page**
-instead; on a watch page the reload keeps the position.
+original stays silent, the video pauses, and a dialog in the middle of the
+player offers **Try again** or **Play with music**. When only a reload can help
+(the extension was updated, the audio went by before it could be captured, the
+engine could not start again, or the sound cannot start), it offers **Reload
+page** instead; on a watch page the reload keeps the position.
 
 If the hidden frame or its workers stop answering, the engine is started
 again once; if that fails too, the video fails closed as above. Chunks the

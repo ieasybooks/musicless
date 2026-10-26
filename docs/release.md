@@ -23,14 +23,16 @@ On Linux, before the tag:
    - `node local.mjs` in Google Chrome (the full suite, about 40 minutes);
    - `QUICK=1 CHROME=<path> node local.mjs` in Brave, Edge and Chromium;
    - `node youtube.mjs` (live YouTube; retry a step an ad or bot check spoiled);
+   - `node controls.mjs` (where the button sits in YouTube's own player);
    - `node memory.mjs`.
 6. **Listen.** Load `extension/` and watch a few videos with speech over
    music, a song, a seek, a speed change and a live stream. The original is
-   never heard while removal is on. The button uses: Remove music, Removing
-   music…, Music removed, Click to start the sound, Music not removed, Set up
-   nomusic. The recovery panel offers Try again (or Reload page) and Play with
-   music. There is no × on the button. The first run asks you to **Turn on
-   nomusic** before it processes a video.
+   never heard while removal is on. The button sits in YouTube's control bar,
+   left of captions: a plain note while the music plays ("Remove music"), the
+   note struck through while it is removed ("Play with music"). The first
+   seconds show a spinner with "Removing music" in the middle of the video.
+   The recovery dialog offers Try again (or Reload page) and Play with music.
+   The first run asks you to **Turn on** before it processes a video.
 7. **Package check.** `./scripts/package.sh` writes `dist/nomusic-<version>.zip`.
    Unzip it and run `NOMUSIC_EXTENSION=<folder> QUICK=1 node local.mjs`, then
    load that folder in a clean profile and play one video. The release zip
@@ -41,10 +43,10 @@ On Linux, before the tag:
 On macOS and on Windows, with the same unzipped release, before you publish
 the store item:
 
-- Choose **Turn on nomusic**, reload an open YouTube tab, and play a
+- Choose **Turn on**, reload an open YouTube tab, and play a
   public video with speech over music.
 - Seek, change speed, turn the player button off and on, and open the
-  recovery panel on a video it cannot process.
+  recovery dialog on a video it cannot process.
 - Switch the browser language to Arabic and check right-to-left layout.
 - The extension stays usable at about 400 MB of extra memory while it runs.
 
@@ -139,10 +141,12 @@ cd tests
 node screenshots.mjs            # Google Chrome; add CHROME=<path> for another browser
 ```
 
-It installs the extension in a throwaway profile, opens four live YouTube
-pages (NASA Goddard's public-domain "Tour of the Moon in 4K"), the welcome
-page and the popup, once in English and once in Arabic, and writes
-`en-1-…png` to `en-4-…png`, `ar-1-…png` to `ar-4-…png` and the promo tile.
+It installs the extension in a throwaway profile, opens live YouTube pages
+(NASA Goddard's public-domain "Tour of the Moon in 4K"), the first-run page
+and the popup, once in English and once in Arabic, and writes `en-1-…png` to
+`en-4-…png` and `ar-1-…png` to `ar-4-…png`. The icons, `store-icon-128.png`
+and the promo tile come from `node tools/icons.mjs` (from the repository
+root) after any change to the mark.
 A YouTube bot check or an ad can spoil a run; run it again. Portable browser
 copies need `NOMUSIC_NO_SANDBOX=1`. Upload the English screenshots with the
 English listing and the Arabic ones with the Arabic locale; the promo tile

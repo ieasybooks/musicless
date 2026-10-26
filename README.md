@@ -39,38 +39,33 @@ is no listing URL yet. This page will gain one after the listing is live.
    on **Developer mode**, click **Load unpacked**, and choose the unzipped
    folder.
 4. Reload any YouTube tabs that were already open.
-5. The first time, choose **Turn on nomusic** on the welcome page (the toolbar
-   popup offers the same choice). Until you do, nomusic does not remove music.
-   The button on the player says **Set up nomusic** and opens that page.
+5. The first time, choose **Turn on** on the page that opens (the toolbar popup
+   offers the same choice). Until you do, nomusic does not remove music; its
+   button on the player opens that page.
 
 ## Use
 
 Play a supported YouTube video. After you turn nomusic on, it removes the
 music by itself. At the start, and after a jump to a part that has not loaded
-yet, the video pauses for a moment (about 2 to 4 seconds on a typical laptop)
-while nomusic prepares the audio. The button says **Removing music…** during
-that pause.
+yet, the video waits a moment (about 2 to 4 seconds on a typical laptop) while
+nomusic prepares the audio; a spinner in the middle of the video says
+**Removing music** while it does.
 
-The button on the player:
+nomusic's button sits in YouTube's control bar, left of captions (in embedded
+players, in the top row of buttons): a note while the music plays, the note
+struck through while nomusic removes it. Its tooltip says what a click does:
+**Remove music**, or **Play with music**. If the browser needs a click before
+it plays sound, a play button shows in the middle of the video.
 
-| What it says | What it means |
-| --- | --- |
-| Remove music | nomusic is off for this video. Click to remove the music. |
-| Removing music… | The processed audio is not ready yet. The video is paused. |
-| Music removed | The music is removed. Click to hear the original. |
-| Click to start the sound | The browser is waiting for a click before it plays sound. |
-| Music not removed | nomusic could not remove the music. Click to choose. |
-| Set up nomusic | You have not chosen **Turn on nomusic** yet. |
-
-When the music cannot be removed, the video stays
-paused and silent until you choose **Try again** or **Play with music**. Some
-failures ask you to **Reload page** instead (the extension was updated, or
-this video was not captured). Copy-protected videos, such as rented movies,
-take this path.
+When the music cannot be removed, the video stays paused and silent, and a
+dialog offers **Try again** or **Play with music**. Some failures ask you to
+**Reload page** instead (the extension was updated, or this video started
+before nomusic could reach its sound). Copy-protected videos, such as rented
+movies, take this path.
 
 The toolbar has one setting, **Remove music from every video**. When it is
-off, click **Remove music** on a video to start. Videos that are already
-playing keep going until you click the button on them.
+off, use the button in the player on the videos you choose. Videos that are
+already playing keep going until you click the button on them.
 
 Volume, mute, speed changes (the voice keeps its pitch), seeking, fullscreen,
 Shorts, live streams, ads and embedded YouTube players work.

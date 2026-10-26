@@ -7,8 +7,8 @@ submission. Edge Add-ons can use the same public text. Images are in
 [release.md](release.md)).
 
 Do not submit until the release zip matches this page: English and Arabic UI,
-the first-run **Turn on nomusic** choice, no debug recorder, and the button
-labels named below.
+the first-run **Turn on** choice, no debug recorder, and the player labels
+named below.
 
 ## Listing
 
@@ -18,11 +18,11 @@ labels named below.
 nomusic
 ```
 
-**Summary** (123 of 132 characters; it is the manifest `description`, from
+**Summary** (113 of 132 characters; it is the manifest `description`, from
 `extension/_locales/en/messages.json`, so the package supplies it):
 
 ```text
-Removes most of the background music from YouTube™ videos and keeps the voices. Runs on your computer; nothing is uploaded.
+Removes most of the background music from YouTube™ videos and keeps the voices. Everything runs on your computer.
 ```
 
 **Language:** English (`default_locale: en`), plus Arabic (`ar`) from the
@@ -40,9 +40,9 @@ nomusic reduces background music while keeping the voices: speech and singing. C
 
 How it works
 • Audio separation runs on your computer using a bundled, open-source model. No account or backend service is needed.
-• After you choose Turn on nomusic, automatic removal is on by default. Turn it off in the toolbar if you prefer to start per video.
-• The video may pause briefly at the start or after a seek while the processed audio is prepared. The button says Removing music… while that happens.
-• Click Music removed on the player to hear the original sound, and click Remove music to turn removal back on. Before the first-run choice, the button says Set up nomusic.
+• After you choose Turn on, automatic removal is on by default. Turn it off in the toolbar if you prefer to choose videos one by one.
+• The video may wait briefly at the start or after a seek while the processed audio is prepared. A spinner in the middle of the video says Removing music while that happens.
+• nomusic's button sits in the player's control bar, left of captions: a music note, struck through while the music is removed. Click it to play the video with its music, and again to remove the music.
 
 Playback controls
 Volume, mute, seeking, fullscreen, and speed changes are supported. nomusic also works with supported Shorts, live streams, and embedded players on computers.
@@ -53,7 +53,7 @@ nomusic reads audio that the site's own player has already loaded and processes 
 Limits to know
 • Some music may remain, especially quiet background music under speech. Voices can sound less bright. This is not a guarantee of music-free playback.
 • Processing uses one CPU thread and about 400 MB of memory; performance varies by computer and video.
-• Copy-protected videos cannot be processed. When removal fails, the button says Music not removed. The video pauses and the original stays silent until you choose Try again or Play with music. Some failures ask you to Reload page instead. If the browser is waiting for a click before it plays sound, the button says Click to start the sound.
+• Copy-protected videos cannot be processed. When removal fails, the video pauses, the original stays silent, and a dialog ("Couldn't remove the music") offers Try again or Play with music. Some failures ask you to Reload page instead. If the browser is waiting for a click before it plays sound, a play button shows in the middle of the video.
 • A live stream watched right at its live point keeps pausing. Watching a little behind it reduces the pauses.
 • This extension supports the listed site's desktop players, not phone browsers or other video services.
 
@@ -63,9 +63,10 @@ Privacy policy: https://github.com/IbraheemTuffaha/nomusic/blob/main/docs/privac
 nomusic is an independent project and is not affiliated with or endorsed by YouTube or Google. YouTube is a trademark of Google LLC. Use of this trademark is subject to Google Permissions.
 ```
 
-The player labels in that text are: Remove music, Removing music…, Music
-removed, Click to start the sound, Music not removed, Set up nomusic. The
-recovery panel offers Try again (or Reload page) and Play with music.
+The player's words in that text are: Remove music and Play with music (the
+button's tooltips), Removing music (under the spinner), Couldn't remove the
+music (the dialog), Try again (or Reload page) and Play with music (its
+choices).
 
 ## Links and distribution
 
@@ -98,7 +99,7 @@ Reduce background music during YouTube video playback while preserving voices, b
 **`storage`:**
 
 ```text
-Stores the automatic music-removal preference and whether the user has acknowledged the first-run local-audio disclosure (Turn on nomusic) in chrome.storage.sync, so nomusic starts consistently and does not repeat the disclosure; both may sync between the user's own devices through Chrome Sync. Also stores a random token in chrome.storage.local that the extension's own hidden processing frame checks, so that web pages cannot connect to it. No audio, video, browsing-history log, or analytics is stored in extension storage.
+Stores the automatic music-removal preference and whether the user has acknowledged the first-run local-audio disclosure (Turn on) in chrome.storage.sync, so nomusic starts consistently and does not repeat the disclosure; both may sync between the user's own devices through Chrome Sync. Also stores a random token in chrome.storage.local that the extension's own hidden processing frame checks, so that web pages cannot connect to it. No audio, video, browsing-history log, or analytics is stored in extension storage.
 ```
 
 Re-read this against the keys the extension actually writes. If the
@@ -164,18 +165,18 @@ may stay in English. Describe only behavior the zip actually has.
 ```text
 Purpose: local background-music reduction during playback, keeping speech and singing. No nomusic account, payment, backend, microphone permission, media downloads, or export is needed.
 
-1. Install the submitted package on a desktop Chrome version supported by the manifest. Before the first-run choice, the player button says Set up nomusic and opens the welcome page. nomusic does not process audio until you choose Turn on nomusic. Reload website tabs that were open before installation.
-2. Open a normal, non-copy-protected YouTube video with speech over background music. A public video works; no YouTube login is required for ordinary public playback. Leave the video unmuted. The first audio may take a few seconds to prepare; the video pauses during preparation. The button says Removing music… while it prepares.
-3. The player's Music removed control indicates separation is enabled. Listen for reduced instruments with retained speech and singing. Some music leakage is expected and is disclosed. Click that control to hear the original, then click Remove music to turn removal back on.
-4. Try volume, mute, a seek, and a speed change. Check an embedded player as well. In the toolbar popup, turn automatic removal off, open another supported video, and click Remove music on its player.
-5. If processing fails or the content is copy-protected, the button says Music not removed. The video remains paused and the original track stays silent until the user chooses Try again or Play with music. Some failures show Reload page instead of Try again. This is deliberate fail-closed behavior. DRM is not bypassed. A live stream at the live edge can pause repeatedly; test slightly behind the edge.
-6. Choose an Arabic browser UI locale and verify the localized controls, welcome page, and right-to-left layout. English and Arabic have identical features and privacy behavior.
+1. Install the submitted package on a desktop Chrome version supported by the manifest. A first-run page opens; nomusic does not process audio until you choose Turn on there or in the toolbar popup. Before that, the player button's tooltip says Turn on nomusic and it opens that page. Reload website tabs that were open before installation.
+2. Open a normal, non-copy-protected YouTube video with speech over background music. A public video works; no YouTube login is required for ordinary public playback. Leave the video unmuted. The first audio may take a few seconds to prepare; the video waits during preparation, with a spinner and "Removing music" in the middle of the video.
+3. nomusic's button sits in the player's control bar, left of captions: a struck-through music note while separation is on. Listen for reduced instruments with retained speech and singing. Some music leakage is expected and is disclosed. Click the button (tooltip: Play with music) to hear the original, then click it again (tooltip: Remove music) to turn removal back on.
+4. Try volume, mute, a seek, and a speed change. Check an embedded player as well (the button sits in its top row of buttons). In the toolbar popup, turn automatic removal off, open another supported video, and click the button on its player.
+5. If processing fails or the content is copy-protected, the video remains paused and the original track stays silent, and a dialog ("Couldn't remove the music") offers Try again or Play with music. Some failures show Reload page instead of Try again. This is deliberate fail-closed behavior. DRM is not bypassed. A live stream at the live edge can pause repeatedly; test slightly behind the edge.
+6. Choose an Arabic browser UI locale and verify the localized controls, first-run page, and right-to-left layout. English and Arabic have identical features and privacy behavior.
 
 Media handling: nomusic does not issue requests to fetch media from YouTube or a third-party service. The normal website player makes its own streaming requests. The extension copies audio bytes that the player supplies to MediaSource/SourceBuffer, uses them temporarily in RAM for separation, and replaces the sound heard during the same player session with the separated voices. It does not save, download, export, redistribute, or provide later offline access to that media. Ads continue through the site's player; nomusic is not an ad blocker.
 
 Runtime: the package includes ONNX Runtime Web 1.30.0, its approximately 14 MB WASM binary, and an approximately 37.5 MiB ONNX model. All inference runs locally on one CPU thread. The extension-origin frame and workers need the documented wasm-unsafe-eval CSP to instantiate the packaged WASM. No remote executable code is loaded. The source, pinned setup, and third-party license notices explain the included vendor files.
 
-web_accessible_resources exposes the packaged content-script module dependencies, the player-control image, and separator.html only to the same three supported website origins. The model and runtime are loaded from the extension origin, not from a CDN.
+web_accessible_resources exposes the packaged content-script module dependencies and separator.html only to the same three supported website origins. The model and runtime are loaded from the extension origin, not from a CDN.
 ```
 
 Add a stable public video URL you have permission to use, and one alternate,
