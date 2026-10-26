@@ -1,6 +1,6 @@
 // The nomusic button on each video, and its recovery panel. A view of one
 // Session: it shows the session's status and turns nomusic on or off for the
-// current video. Adapted from the main nomusic extension's button.
+// current video.
 
 import { setLanguage, t } from "./i18n.js";
 
@@ -93,10 +93,7 @@ export class Button {
     const [state, label, title] = LABELS[session.status] ?? LABELS.off;
     if (this.el.dataset.state !== state) this.el.dataset.state = state;
     if (this.label.textContent !== label) this.label.textContent = label;
-    if (this.el.title !== title) {
-      this.el.title = title;
-      this.el.setAttribute("aria-label", title);
-    }
+    if (this.el.title !== title) this.el.title = title; // the label is the name; the title describes it
     this.el.dataset.nomusicStatus = session.status;
     if (session.status !== this.announced) {
       this.announced = session.status;

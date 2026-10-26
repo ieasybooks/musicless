@@ -1,5 +1,5 @@
 // Shared worker holding the one copy of the model for every tab (the network
-// alone needs ~500 MB of WebAssembly memory). Each tab's worker gets its own
+// alone needs about 240 MiB of WebAssembly memory). Each tab's worker gets its own
 // MessagePort here and sends separation requests with a priority: the chunk a
 // playing video needs now goes before look-ahead work from any tab.
 

@@ -20,7 +20,7 @@ import Stretch from "./third_party/soundtouch/Stretch.js";
 // an audible stutter ("two voices / chopping"). We instead use a short window
 // with ~50% overlap (overlap ≈ sequence/2 → no verbatim middle, every output
 // sample is a crossfade), which is how ffmpeg's `atempo` WSOLA is shaped. This
-// was validated against atempo and rubberband on real demucs-vocal chunks: a
+// was validated against atempo and rubberband on real separated-voice chunks: a
 // spectral-similarity-to-atempo metric rose from ~0.91 (old params, audibly
 // stuttering) to ~0.95 (these params, matching the clean references), and the
 // per-chunk seam discontinuity dropped from ~55x to ~5x the median sample step.

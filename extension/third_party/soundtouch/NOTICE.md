@@ -15,7 +15,7 @@ when the video is played at non-1x speed.
 | `AbstractSamplePipe.js` | Verbatim. Base class Stretch extends. |
 | `CircularSampleBuffer.js` | Verbatim. Sample buffer used by Stretch. |
 | `FifoSampleBuffer.js` | Verbatim. Sample buffer used by Stretch. |
-| `README.md` / `LICENSE` | Upstream, verbatim. |
+| `LICENSE` | Upstream, verbatim. |
 
 All files are unmodified.
 

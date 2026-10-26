@@ -1,7 +1,7 @@
 // Keeps the user's play/pause choice separate from nomusic pausing the video
 // while it waits for separated audio. Native events cover the player's
 // controls; intent.js (page world) also reports a page's pause() call when the
-// video was already paused by us. Adapted from the main nomusic extension.
+// video was already paused by us.
 
 export class PlaybackIntent {
   constructor(video, onChange = () => {}) {
