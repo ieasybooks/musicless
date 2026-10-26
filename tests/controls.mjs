@@ -1,6 +1,6 @@
 // Live check of how nomusic sits in YouTube's own player: the button joins
-// the control bar before captions, shows the wait chip while the first audio
-// is prepared, turns the music removal off and on with a real click, shows
+// the control bar before captions, shows the wait notice while the first
+// audio is prepared, turns the music removal off and on with a real click, shows
 // its tooltip, and hides with YouTube's controls; in an embedded player it
 // joins the top row of buttons. YouTube changes its player often: run this
 // when it does. Usage (from tests/): node controls.mjs
@@ -33,8 +33,8 @@ const button = (frame) => frame.evaluate(() => {
     inBar: !!el.closest(".ytp-right-controls"),
     beforeCaptions: !!el.nextElementSibling?.matches(".ytp-subtitles-button"),
     pressed: el.getAttribute("aria-pressed"),
-    filled: shownPart(".nomusic-glyph-filled"),
-    outlined: shownPart(".nomusic-glyph-outlined"),
+    struck: shownPart(".nomusic-glyph-struck"),
+    plain: shownPart(".nomusic-glyph-plain"),
     barOpacity: bar ? getComputedStyle(bar).opacity : null,
     autohide: !!el.closest(".ytp-autohide"),
   };
@@ -64,25 +64,25 @@ await step("the button joins YouTube's control bar, before captions", async () =
   report.record("the button joins YouTube's control bar, before captions", b.place === "ytp" && b.inBar && b.beforeCaptions, b);
 });
 
-await step("the chip says what happens while the first audio is prepared", async () => {
+await step("the notice says what happens while the first audio is prepared", async () => {
   let seen = null;
   const started = Date.now();
   while (Date.now() - started < 20000 && !seen) {
     seen = await page.evaluate(() => {
-      const chip = document.querySelector("#movie_player .nomusic-notice:not([hidden])");
-      return chip ? { kind: chip.dataset.kind, text: chip.textContent, paused: document.querySelector("#movie_player video").paused } : null;
+      const notice = document.querySelector("#movie_player .nomusic-notice:not([hidden])");
+      return notice ? { kind: notice.dataset.kind, text: notice.textContent, paused: document.querySelector("#movie_player video").paused } : null;
     });
     if (!seen) await sleep(100);
   }
-  report.record("the chip says what happens while the first audio is prepared", seen?.kind === "status" && !!seen.text, seen ?? {});
+  report.record("the notice says what happens while the first audio is prepared", seen?.kind === "status" && !!seen.text, seen ?? {});
 });
 
-await step("on: the glyph is filled, the button pressed", async () => {
+await step("on: the note is struck through, the button pressed", async () => {
   await waitFor(page, (s) => s.status === "on" && !s.holding, { timeout: 60000, label: "on" });
   await showControls();
   const b = await button(page);
-  const chip = await page.evaluate(() => !!document.querySelector("#movie_player .nomusic-notice:not([hidden])"));
-  report.record("on: the glyph is filled, the button pressed", b.pressed === "true" && b.filled && !b.outlined && !chip, { ...b, chip_shown: chip });
+  const notice = await page.evaluate(() => !!document.querySelector("#movie_player .nomusic-notice:not([hidden])"));
+  report.record("on: the note is struck through, the button pressed", b.pressed === "true" && b.struck && !b.plain && !notice, { ...b, notice_shown: notice });
 });
 
 await step("hovering shows the tooltip above the bar", async () => {
@@ -107,8 +107,8 @@ await step("a click turns it off for this video, another turns it back on", asyn
   const on = await waitFor(page, (s) => s.status === "on" && !s.holding, { timeout: 60000, label: "back on" });
   const b = await button(page);
   report.record("a click turns it off for this video, another turns it back on",
-    off.status === "off" && off.pressed === "false" && off.outlined && off.originalGain === 1 && on.status === "on" && b.filled,
-    { off: { status: off.status, pressed: off.pressed, outlined: off.outlined, original_gain: off.originalGain }, on: { status: on.status, filled: b.filled } });
+    off.status === "off" && off.pressed === "false" && off.plain && off.originalGain === 1 && on.status === "on" && b.struck,
+    { off: { status: off.status, pressed: off.pressed, plain: off.plain, original_gain: off.originalGain }, on: { status: on.status, struck: b.struck } });
 });
 
 await step("it hides with YouTube's controls", async () => {
