@@ -521,7 +521,7 @@ await step("turned on from a video's button, the first-run page goes back to it"
     const page = await open(BASE);
     await play(page);
     await sleep(3000);
-    const opened = new Promise((resolve) => browser.once("targetcreated", resolve));
+    const opened = browser.waitForTarget((target) => target.type() === "page" && target.url().includes("welcome.html"), { timeout: 15000 });
     await clickButton(page);
     const welcome = await (await opened).page();
     await welcome.waitForSelector("#accept", { visible: true, timeout: 10000 });
