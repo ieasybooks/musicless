@@ -1,9 +1,10 @@
 // Live check of how nomusic sits in YouTube's own player: the button joins
 // the control bar before captions, shows the wait notice while the first
 // audio is prepared, turns the music removal off and on with a real click, shows
-// its tooltip, and hides with YouTube's controls; in an embedded player it
-// joins the top row of buttons. YouTube changes its player often: run this
-// when it does. Usage (from tests/): node controls.mjs
+// its tooltip, hides with YouTube's controls, and stays in the bar when YouTube
+// wraps its captions button; on Shorts it joins the Short's own buttons; in an
+// embedded player it joins the top row of buttons. YouTube changes its player
+// often: run this when it does. Usage (from tests/): node controls.mjs
 import { frameState, launch, newPage, Report, sleep, waitFor, WORK } from "./harness.mjs";
 import { serve } from "./serve.mjs";
 
@@ -121,6 +122,74 @@ await step("it hides with YouTube's controls", async () => {
     await sleep(250);
   }
   report.record("it hides with YouTube's controls", b.autohide && b.barOpacity === "0", b);
+});
+
+// YouTube changes this markup often: a captions button wrapped in a container
+// of its own must not take the button out of the bar (or out of the page).
+await step("when YouTube wraps its captions button, the button stays in the bar", async () => {
+  const errors = [];
+  const onError = (error) => errors.push(error.message);
+  page.on("pageerror", onError);
+  await page.evaluate(() => {
+    const captions = document.querySelector("#movie_player .ytp-subtitles-button");
+    const wrapper = document.createElement("div");
+    wrapper.className = "nomusic-test-wrapper";
+    captions.before(wrapper);
+    wrapper.append(captions);
+    document.querySelector("#movie_player .nomusic-btn").remove(); // as when YouTube rebuilds its controls
+  });
+  let b = null;
+  const started = Date.now();
+  while (Date.now() - started < 8000) {
+    b = await page.evaluate(() => {
+      const el = document.querySelector("#movie_player .nomusic-btn");
+      return el ? { place: el.dataset.place, beforeWrapper: !!el.nextElementSibling?.matches(".nomusic-test-wrapper") } : null;
+    });
+    if (b?.place) break;
+    await sleep(250);
+  }
+  page.off("pageerror", onError);
+  await page.evaluate(() => {
+    const wrapper = document.querySelector(".nomusic-test-wrapper");
+    wrapper?.before(...wrapper.childNodes);
+    wrapper?.remove();
+  });
+  report.record("when YouTube wraps its captions button, the button stays in the bar",
+    b?.place === "ytp" && b.beforeWrapper && !errors.some((message) => /insertBefore/.test(message)), { ...b, errors: errors.slice(0, 3) });
+});
+
+// Shorts have no control bar: the button joins the Short's own row at its
+// top (captions, menu, fullscreen), shows and hides with it, and works.
+await step("on Shorts the button joins the Short's own buttons, and shows and hides with them", async () => {
+  const shorts = await newPage(browser);
+  await shorts.setUserAgent((await browser.userAgent()).replace("HeadlessChrome", "Chrome"));
+  await shorts.goto("https://www.youtube.com/shorts/", { waitUntil: "domcontentloaded" });
+  await shorts.waitForSelector("#shorts-player video", { timeout: 30000 });
+  await shorts.waitForSelector("#right-controls .nomusic-btn", { timeout: 30000 });
+  const look = () => shorts.evaluate(() => {
+    const el = document.querySelector("#right-controls .nomusic-btn");
+    const overlay = el?.closest(".player-controls");
+    return el && { place: el.dataset.place, status: el.dataset.nomusicStatus, overlay: overlay ? getComputedStyle(overlay).opacity : null };
+  });
+  const video = await shorts.evaluate(() => { const r = document.querySelector("#shorts-player video").getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; });
+  await shorts.mouse.move(video.x, video.y, { steps: 4 });
+  await shorts.mouse.move(video.x + 12, video.y + 8, { steps: 3 });
+  await sleep(500);
+  const shownWithRow = await look();
+  const box = await shorts.evaluate(() => { const r = document.querySelector("#right-controls .nomusic-btn").getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; });
+  await shorts.mouse.move(box.x, box.y, { steps: 3 });
+  const status = (await look()).status;
+  await shorts.mouse.click(box.x, box.y); // a real click turns removal off (automatic mode) or on
+  await sleep(1500);
+  const clicked = await look();
+  await shorts.mouse.move(2, 400, { steps: 3 });
+  await sleep(3000);
+  const hiddenWithRow = await look();
+  report.record("on Shorts the button joins the Short's own buttons, and shows and hides with them",
+    shownWithRow.place === "top" && shownWithRow.overlay === "1" && hiddenWithRow.overlay === "0" &&
+      (status === "off" ? clicked.status !== "off" : clicked.status === "off"),
+    { shown: shownWithRow, before_click: status, after_click: clicked.status, hidden: hiddenWithRow });
+  await shorts.close();
 });
 
 await step("in an embedded player it joins the top row of buttons", async () => {
