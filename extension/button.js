@@ -2,9 +2,9 @@
 // - A button that turns nomusic on or off for the current video. It joins the
 //   player's own row of buttons and is drawn as YouTube draws its mute button:
 //   a note while the music plays, the note struck through while nomusic
-//   removes it. Where a player has no such row (Shorts, other sites' players)
-//   it is the same glyph in the player's top corner, shown with the player's
-//   controls.
+//   removes it. On Shorts it joins the Short's own row of buttons at its top.
+//   Where a player has no such row (other sites' players) it is the same
+//   glyph in the player's top corner, shown with the player's controls.
 //   Before the first run and after a failure (both wait for the user), it is
 //   the plain note with a small dot.
 // - In the middle of the video, only while nomusic needs the user to wait or to
@@ -138,6 +138,10 @@ function controlRow(host) {
     const row = right.querySelector(".ytp-right-controls-left") ?? right;
     return { row, before: childHolding(row, row.querySelector(".ytp-subtitles-button")), bar: "ytp" };
   }
+  // Shorts: the active Short's own row at its top, before captions, its menu
+  // and fullscreen; it shows and hides with that row.
+  const shorts = host.closest("ytd-reel-video-renderer")?.querySelector("ytd-shorts-player-controls #right-controls");
+  if (shorts) return { row: shorts, before: shorts.firstElementChild, bar: "top" };
   const top = host.querySelector(".player-controls-top-right") ??
     (host.id === "movie_player" ? document.querySelector("#player-controls .player-controls-top-right") : null);
   if (top) {

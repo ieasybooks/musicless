@@ -41,8 +41,17 @@
   pointer-events: none;
 }
 .nomusic-btn[data-place="ytp"] { display: inline-flex; align-items: center; justify-content: center; }
-/* The top row of the embedded and mobile players: 48 px icon buttons. */
-.nomusic-btn[data-place="top"] { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; }
+/* The top row of the embedded and mobile players, and of a Short: 48 px icon
+   buttons. Shorts' row lets clicks through to the video, and only its own
+   buttons take them, as this one does. */
+.nomusic-btn[data-place="top"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  pointer-events: auto;
+}
 
 /* The note plain while the music plays, struck through while nomusic removes
    it, as YouTube draws its mute button. */
