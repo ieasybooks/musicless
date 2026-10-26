@@ -26,15 +26,14 @@
   "failure_audio": { "message": "لم يبدأ الصوت. إعادة تحميل الصفحة تحلّ المشكلة عادةً." },
   "failure_updated": { "message": "تم تحديث nomusic أو إيقافه. أعد تحميل الصفحة للمتابعة." },
 
-  "setup_heading": { "message": "مشاهدة YouTube بدون موسيقى" },
-  "consent_text": { "message": "على هذا الحاسوب فقط، يقرأ nomusic صوت فيديوهات\u00a0YouTube التي تشاهدها، دون أن يرفعه أو يحفظه. وقد يزامن Chrome إعداداتك." },
+  "setup_heading": { "message": "شاهد YouTube بدون موسيقى" },
+  "consent_text": { "message": "يقرأ nomusic صوت فيديوهات\u00a0YouTube التي تشاهدها ويزيل منه معظم الموسيقى، على هذا الحاسوب فقط. ولا يرفع الصوت ولا يحفظه أبدًا، وقد يزامن Chrome إعداداتك." },
   "consent_accept": { "message": "تفعيل" },
   "done_heading": { "message": "تم تفعيل nomusic" },
   "done_text": { "message": "إن كانت علامة تبويب YouTube مفتوحة من قبل، فأعد تحميلها." },
   "done_open": { "message": "فتح YouTube" },
 
   "popup_autostart_label": { "message": "إزالة الموسيقى من كل فيديو" },
-  "popup_autostart_hint": { "message": "استخدم الزر في المشغّل لتفعيله لفيديو واحد." },
   "link_help": { "message": "مساعدة" },
   "link_privacy": { "message": "سياسة الخصوصية" }
 }

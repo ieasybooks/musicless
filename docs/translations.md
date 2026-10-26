@@ -17,9 +17,9 @@ Conventions
   setting = إعداد; original audio = الصوت الأصلي (in prose only, never on the recovery button).
 - Buttons use the verbal noun, as Chrome's and YouTube's own Arabic buttons do (تفعيل،
   إعادة المحاولة، إعادة تحميل الصفحة، تشغيل مع الموسيقى، إيقاف إزالة الموسيقى، فتح YouTube); "Turn
-  on" is تفعيل, as in Chrome, since تشغيل means "Play" beside a video. Headings, feature and
-  setting names are noun phrases too (مشاهدة YouTube بدون موسيقى، إزالة الموسيقى من
-  كل فيديو). Instructions in sentences use the imperative (استخدم، أعد تحميل). Progress is جارٍ
+  on" is تفعيل, as in Chrome, since تشغيل means "Play" beside a video. Feature and setting
+  names are noun phrases too (إزالة الموسيقى من كل فيديو); the first-run heading is an
+  imperative, as the English is (شاهد YouTube بدون موسيقى). Instructions in sentences use the imperative (استخدم، أعد تحميل). Progress is جارٍ
   إزالة الموسيقى, the failure state لم تُزَل الموسيقى, the enabled state تم تفعيل nomusic. (Until
   this pass the buttons were imperatives, حاول مجددًا and شغّل nomusic; the native review
   should confirm the change.)
@@ -54,13 +54,12 @@ Conventions
 | `failure_error` | Something went wrong. | <div dir="rtl">حدث خطأ ما.</div> | The cause is unknown; the two actions follow. |
 | `failure_audio` | The sound didn’t start. Reloading the page usually fixes this. | <div dir="rtl">لم يبدأ الصوت. إعادة تحميل الصفحة تحلّ المشكلة عادةً.</div> | The sound would not start even after the user's click. |
 | `failure_updated` | nomusic was updated or turned off. Reload the page to continue. | <div dir="rtl">تم تحديث nomusic أو إيقافه. أعد تحميل الصفحة للمتابعة.</div> | Shown after the extension was updated or removed; chrome.i18n is gone by then, so the text is resolved at load. |
-| `setup_heading` | Watch YouTube without the music | <div dir="rtl">مشاهدة YouTube بدون موسيقى</div> | Heading of the first-run page: what the user gets. A noun phrase (مشاهدة). |
-| `consent_text` | On this computer only, nomusic reads the sound of the YouTube videos you play, without uploading or saving it. Chrome may sync your settings. | <div dir="rtl">على هذا الحاسوب فقط، يقرأ nomusic صوت فيديوهات YouTube التي تشاهدها، دون أن يرفعه أو يحفظه. وقد يزامن Chrome إعداداتك.</div> | The disclosure (Chrome Web Store user-data policy), on the first-run page and in the popup; the privacy policy link follows it. Must keep every fact: on this computer only, reads the videos' sound, never uploads or saves it, settings may sync (Chrome Sync, named as Chrome). فيديوهات and YouTube are joined by a no-break space. |
+| `setup_heading` | Watch YouTube without the music | <div dir="rtl">شاهد YouTube بدون موسيقى</div> | Heading of the first-run page: what the user gets. An imperative, as the English (شاهد). |
+| `consent_text` | nomusic reads the sound of the YouTube videos you play and removes most of the music, on this computer only. It never uploads or saves the sound. Chrome may sync your settings. | <div dir="rtl">يقرأ nomusic صوت فيديوهات YouTube التي تشاهدها ويزيل منه معظم الموسيقى، على هذا الحاسوب فقط. ولا يرفع الصوت ولا يحفظه أبدًا، وقد يزامن Chrome إعداداتك.</div> | The disclosure (Chrome Web Store user-data policy), on the first-run page and in the popup's one row before the first run; the privacy policy link follows it. Must keep every fact: reads the videos' sound, on this computer only, never uploads or saves it, settings may sync (Chrome Sync, named as Chrome). "Most of the music" keeps the heading honest. فيديوهات and YouTube are joined by a no-break space. |
 | `consent_accept` | Turn on | <div dir="rtl">تفعيل</div> | The one button of the disclosure: the user's affirmative consent. تفعيل, as Chrome's Arabic says "Turn on" (تشغيل would read as "Play" next to YouTube). |
 | `done_heading` | nomusic is on | <div dir="rtl">تم تفعيل nomusic</div> | First-run page after the choice, in Chrome's "[name] is on" pattern (تم تفعيل, matching the تفعيل button). |
 | `done_text` | If a YouTube tab was already open, reload it. | <div dir="rtl">إن كانت علامة تبويب YouTube مفتوحة من قبل، فأعد تحميلها.</div> | Tabs opened before nomusic was turned on need a reload (content scripts load only on navigation, and nomusic has no permission to reload tabs). Most users have none, so the condition comes first; the instruction is an imperative. |
 | `done_open` | Open YouTube | <div dir="rtl">فتح YouTube</div> | Button that opens youtube.com in the same tab (verbal noun فتح). |
-| `popup_autostart_label` | Remove music from every video | <div dir="rtl">إزالة الموسيقى من كل فيديو</div> | Name of the one switch, and the popup's title before the first run; a setting name, so a noun phrase. |
-| `popup_autostart_hint` | Use the button in the player to turn it on for one video. | <div dir="rtl">استخدم الزر في المشغّل لتفعيله لفيديو واحد.</div> | Under the switch, only while it is off: the other way to use nomusic, the button in the player, for one video at a time. |
+| `popup_autostart_label` | Remove music from every video | <div dir="rtl">إزالة الموسيقى من كل فيديو</div> | Name of the one switch; before the first run, turning it on is the consent. A setting name, so a noun phrase. |
 | `link_help` | Help | <div dir="rtl">مساعدة</div> | GitHub issues. مساعدة without the article, as Google's menus. |
 | `link_privacy` | Privacy policy | <div dir="rtl">سياسة الخصوصية</div> | The published privacy policy. |

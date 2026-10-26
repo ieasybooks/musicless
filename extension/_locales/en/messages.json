@@ -27,14 +27,13 @@
   "failure_updated": { "message": "nomusic was updated or turned off. Reload the page to continue." },
 
   "setup_heading": { "message": "Watch YouTube without the music", "description": "Heading of the first-run page: what the user gets." },
-  "consent_text": { "message": "On this computer only, nomusic reads the sound of the YouTube videos you play, without uploading or saving it. Chrome may sync your settings.", "description": "The disclosure before nomusic reads any audio (first-run page and popup); the privacy policy link follows it. Keep every fact: on this computer only, reads the videos' sound, never uploaded or saved, settings may sync (through Chrome Sync)." },
+  "consent_text": { "message": "nomusic reads the sound of the YouTube videos you play and removes most of the music, on this computer only. It never uploads or saves the sound. Chrome may sync your settings.", "description": "The disclosure before nomusic reads any audio (first-run page, and the popup's one row before the first run); the privacy policy link follows it. Keep every fact: reads the videos' sound, on this computer only, never uploaded or saved, settings may sync (through Chrome Sync). \"Most of the music\" keeps the heading honest." },
   "consent_accept": { "message": "Turn on", "description": "The one button of the disclosure: the user's consent." },
   "done_heading": { "message": "nomusic is on", "description": "First-run page after the choice." },
-  "done_text": { "message": "If a YouTube tab was already open, reload it.", "description": "nomusic cannot reach tabs opened before it was turned on; most users have none, so the condition comes first." },
+  "done_text": { "message": "If a YouTube tab was already open, reload it.", "description": "nomusic cannot reach tabs opened before it was turned on; most users have none, so the condition comes first. On the first-run page, and under the popup's switch right after it is turned on there." },
   "done_open": { "message": "Open YouTube", "description": "Button: opens youtube.com in this tab." },
 
-  "popup_autostart_label": { "message": "Remove music from every video", "description": "The one switch in the toolbar popup, and the popup's title before the first run (with \"Turn on\" in the switch's place)." },
-  "popup_autostart_hint": { "message": "Use the button in the player to turn it on for one video.", "description": "Under the switch, only while it is off: the other way to use nomusic." },
+  "popup_autostart_label": { "message": "Remove music from every video", "description": "The one switch in the toolbar popup. Before the first run, turning it on is the consent, with the disclosure under it." },
   "link_help": { "message": "Help", "description": "Link to the project's issue tracker." },
   "link_privacy": { "message": "Privacy policy" }
 }
