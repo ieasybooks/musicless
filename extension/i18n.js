@@ -26,3 +26,14 @@ export function localizePage(root = document) {
     element.textContent = t(element.dataset.i18n, ...args);
   }
 }
+
+// A message with the player button's glyph in its sentence, where the catalog
+// puts {icon}; the glyph is named for screen readers by the button's own name.
+export function localizeWithGlyph(element, key, { on = false } = {}) {
+  const glyph = document.createElement("span");
+  glyph.className = on ? "glyph glyph-on" : "glyph glyph-off";
+  glyph.setAttribute("role", "img");
+  glyph.setAttribute("aria-label", t(on ? "control_on" : "control_name"));
+  const [before, after = ""] = t(key).split("{icon}");
+  element.replaceChildren(before, glyph, after);
+}

@@ -1,8 +1,9 @@
 // First-run page: the disclosure and the one choice that turns nomusic on,
-// then the one thing left to do.
-import { localizePage } from "./i18n.js";
+// then what to expect, where the control is, and the one thing left to do.
+import { localizePage, localizeWithGlyph } from "./i18n.js";
 
 localizePage();
+localizeWithGlyph(document.getElementById("doneControl"), "done_control", { on: true });
 const $ = (id) => document.getElementById(id);
 
 function show(consented) {

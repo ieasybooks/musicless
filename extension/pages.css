@@ -110,6 +110,8 @@ h1:focus:not(:focus-visible) { outline: none; }
 /* The mark: the toolbar icon's tile, the same in light and dark, as a brand
    mark is (the note is a mask over the tile's colour). */
 .welcome .brand {
+  display: grid;
+  place-items: center;
   width: 40px;
   height: 40px;
   margin: 0 auto 32px;
@@ -118,10 +120,8 @@ h1:focus:not(:focus-visible) { outline: none; }
 }
 .welcome .brand::before {
   content: "";
-  display: block;
   width: 26px;
   height: 26px;
-  margin: 7px;
   background: var(--on-tile);
   -webkit-mask: url(icons/note.svg) center / contain no-repeat;
   mask: url(icons/note.svg) center / contain no-repeat;
@@ -133,16 +133,39 @@ h1:focus:not(:focus-visible) { outline: none; }
 .welcome section.off { visibility: hidden; }
 .welcome h1 { font-size: 32px; line-height: 40px; margin-bottom: 12px; text-wrap: balance; }
 [lang="ar"] .welcome h1 { font-size: 34px; line-height: 48px; }
-.welcome section p { max-width: 500px; margin: 0 auto 32px; color: var(--muted); font-size: 16px; line-height: 24px; text-wrap: pretty; }
+.welcome section p { max-width: 500px; margin: 0 auto 8px; color: var(--muted); font-size: 16px; line-height: 24px; text-wrap: pretty; }
+.welcome section p:last-of-type { margin-bottom: 32px; }
+.welcome section p.aside { margin-top: 16px; font-size: 14px; line-height: 20px; }
 [lang="ar"] .welcome section p { font-size: 17px; line-height: 28px; }
+[lang="ar"] .welcome section p.aside { font-size: 15px; line-height: 24px; }
 
-/* ---- the toolbar popup: one row, as in Chrome's settings, and Help ---- */
+/* The player button's glyph inside a sentence, in the text's own colour. */
+.glyph {
+  display: inline-block;
+  width: 1.35em;
+  height: 1.35em;
+  margin: 0 0.1em;
+  vertical-align: -0.3em;
+  background: var(--text);
+  -webkit-mask: url(icons/player-off.svg) center / contain no-repeat;
+  mask: url(icons/player-off.svg) center / contain no-repeat;
+}
+.glyph-on { -webkit-mask-image: url(icons/player-on.svg); mask-image: url(icons/player-on.svg); }
+
+/* ---- the toolbar popup ---- */
 .popup { width: 320px; }
 @media (prefers-color-scheme: dark) {
   .popup { --bg: #28292c; } /* a popup floats a step above the page */
 }
-/* The setting: all of the row is the switch. Before the first run its
-   description is the disclosure; just after, one line about open tabs. */
+/* Before the first run: the disclosure and "Turn on", as on the first-run page. */
+.popup #consent { padding: 16px; }
+.popup h1 { margin: 0 0 4px; font-size: 16px; line-height: 24px; font-weight: 500; }
+[lang="ar"] .popup h1 { font-size: 17px; line-height: 28px; }
+.popup .actions { display: flex; justify-content: flex-end; margin-top: 16px; }
+.popup .actions button.primary { min-height: 32px; padding: 0 16px; border-radius: 16px; font-size: 13px; }
+[lang="ar"] .popup .actions button.primary { font-size: 14px; }
+/* Then the setting: one row, all of it the switch, as in Chrome's settings;
+   under it, a line only while it is needed. */
 .popup .setting {
   display: grid;
   grid-template-columns: 1fr auto;
@@ -154,10 +177,9 @@ h1:focus:not(:focus-visible) { outline: none; }
   cursor: pointer;
 }
 .popup .setting:hover { background: var(--hover); }
-.popup .setting input { grid-row: 1 / 4; grid-column: 2; }
-/* Beside a long description, the switch stays with its name. */
-.popup .setting:has(#consent:not([hidden])) input { grid-row: 1; }
-.popup .hint { grid-column: 1; margin-top: 4px; color: var(--muted); text-wrap: pretty; }
+.popup .hint { color: var(--muted); text-wrap: pretty; }
+.popup #settings .hint { margin: -4px 0 0; padding: 0 16px 12px; }
+.popup .hint .glyph { background: var(--muted); }
 /* Help: a second row under a hairline, its sign where the switch is. */
 .popup .row {
   display: flex;

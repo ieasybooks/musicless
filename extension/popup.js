@@ -1,34 +1,40 @@
-// Toolbar popup: the one setting's row. Until the user turns nomusic on, the
-// row carries the disclosure and the switch, turned on, is the consent.
-import { localizePage } from "./i18n.js";
+// Toolbar popup: the disclosure and "Turn on" until the user turns nomusic on,
+// then the one setting.
+import { localizePage, localizeWithGlyph, t } from "./i18n.js";
 import { DEFAULTS } from "./settings.js";
 
 localizePage();
+localizeWithGlyph(document.getElementById("oneVideo"), "popup_one_video");
 const $ = (id) => document.getElementById(id);
-let consented = false;
+$("help").href = t("link_help_url");
 
-function show() {
+function show(consented) {
   $("consent").hidden = consented;
-  $("autoStart").checked = consented && settings.autoStart;
+  $("settings").hidden = !consented;
+}
+
+// While removal is not automatic, one line says how to remove the music from
+// one video; the switch is described by it only while it shows.
+function hint() {
+  const off = !$("autoStart").checked;
+  $("oneVideo").hidden = !off;
+  if (off) $("autoStart").setAttribute("aria-describedby", "oneVideo");
+  else $("autoStart").removeAttribute("aria-describedby");
 }
 
 // `consented` stays false until the user turns nomusic on, here or on the first-run page.
-let settings = { ...DEFAULTS };
 chrome.storage.sync.get(DEFAULTS).then((stored) => {
-  settings = stored;
-  consented = stored.consented;
-  show();
+  $("autoStart").checked = stored.autoStart;
+  hint();
+  show(stored.consented);
 });
-$("autoStart").addEventListener("change", async () => {
-  if (!consented) {
-    // Turned on under the disclosure: the user's consent, and removal on every video.
-    consented = true;
-    settings.autoStart = true;
-    await chrome.storage.sync.set({ consented: true, autoStart: true });
-    show();
-    $("done").hidden = false;
-    return;
-  }
-  settings.autoStart = $("autoStart").checked;
-  chrome.storage.sync.set({ autoStart: settings.autoStart });
+$("accept").addEventListener("click", async () => {
+  await chrome.storage.sync.set({ consented: true });
+  $("done").hidden = false;
+  show(true);
+  $("autoStart").focus();
+});
+$("autoStart").addEventListener("change", () => {
+  hint();
+  chrome.storage.sync.set({ autoStart: $("autoStart").checked });
 });

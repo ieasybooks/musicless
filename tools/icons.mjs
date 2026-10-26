@@ -37,6 +37,9 @@ function note({ color = "#fff", stroke = 2, gap = 1.2, low = 0.7 } = {}) {
     `<path d="M3.4 2.3 21.4 20.3" stroke="${color}" stroke-width="${stroke}" stroke-linecap="round"/>`;
 }
 
+// The note alone, as the player button draws it while the music plays.
+const PLAIN = `<circle cx="9.2" cy="17.9" r="4.2"/><rect x="11.4" y="1.9" width="2" height="16"/><rect x="11.4" y="1.9" width="6.4" height="4.4"/>`;
+
 // The tile with the note in it, as an SVG of `size` px. `inset` is the
 // transparent margin (the store wants 16 of 128), `scale` the note's share of
 // the tile.
@@ -116,7 +119,10 @@ try {
   // The white note of the first-run page, which draws the tile itself (it is
   // lighter in the dark).
   writeFileSync(join(ROOT, "extension/icons/note.svg"), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">${note()}</svg>\n`);
-  console.log("wrote extension/icons/icon-{16,32,48,128}.png, extension/icons/note.svg, docs/store/store-icon-128.png, docs/store/promo-tile-440x280.png, assets/logo.png");
+  // The player button's two glyphs, for sentences that point at it.
+  writeFileSync(join(ROOT, "extension/icons/player-on.svg"), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">${note()}</svg>\n`);
+  writeFileSync(join(ROOT, "extension/icons/player-off.svg"), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g fill="#fff">${PLAIN}</g></svg>\n`);
+  console.log("wrote extension/icons/icon-{16,32,48,128}.png, extension/icons/{note,player-on,player-off}.svg, docs/store/store-icon-128.png, docs/store/promo-tile-440x280.png, assets/logo.png");
 } finally {
   await browser.close();
   rmSync(profile, { recursive: true, force: true });
