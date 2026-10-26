@@ -7,7 +7,7 @@ import { setLanguage, t } from "./i18n.js";
 // Everything below is resolved while the extension is certainly alive (see
 // i18n.js): the "updated" failure shows after it is gone.
 const ICON = chrome.runtime.getURL("icons/button.png");
-// status -> [data-state, visible label, tooltip and accessible name]
+// status -> [data-state, visible label (also the accessible name), tooltip]
 const LABELS = {
   setup: ["idle", t("button_setup"), t("button_setup_title")],
   off: ["idle", t("button_off"), t("button_off_title")],

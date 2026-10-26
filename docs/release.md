@@ -94,10 +94,10 @@ git tag -a v1.0.0 main -m "nomusic 1.0.0"
 git push origin v1.0.0
 ```
 
-The Release workflow has two jobs. The first builds
-`dist/nomusic-<version>.zip` with `scripts/package.sh` and tests that
-package: the unit tests, the full browser suite in Chrome and the memory
-check. The second, the only one that can write, builds the zip again without
+The Release workflow has two jobs. The first runs the unit tests, builds
+`dist/nomusic-<version>.zip` with `scripts/package.sh`, and tests the
+unzipped package: the full browser suite in Chrome and the memory check.
+The second, the only one that can write, builds the zip again without
 the test tools, checks that it is the zip the tests ran (same SHA-256),
 writes `SHA256SUMS`, attests the zip and the checksum file, and opens a
 draft GitHub Release. A tag whose name is not `v` plus the manifest version
