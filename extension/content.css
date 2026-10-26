@@ -46,10 +46,16 @@
 
 /* The note plain while the music plays, struck through while nomusic removes
    it, as YouTube draws its mute button. */
-.nomusic-btn .nomusic-glyph-struck,
-.nomusic-btn[data-state="idle"] .nomusic-glyph-plain { display: inline; }
 .nomusic-btn .nomusic-glyph-plain,
-.nomusic-btn[data-state="idle"] .nomusic-glyph-struck { display: none; }
+.nomusic-btn .nomusic-glyph-dot { display: none; }
+.nomusic-btn .nomusic-glyph-struck { display: inline; }
+/* Off, before the first run and after a failure, the music is not removed:
+   the plain note. Before the first run and after a failure nomusic also waits
+   for the user: a small dot in YouTube's red, where YouTube puts its own
+   badges. */
+.nomusic-btn:is([data-state="idle"], [data-state="setup"], [data-state="error"]) .nomusic-glyph-plain { display: inline; }
+.nomusic-btn:is([data-state="idle"], [data-state="setup"], [data-state="error"]) .nomusic-glyph-struck { display: none; }
+.nomusic-btn:is([data-state="setup"], [data-state="error"]) .nomusic-glyph-dot { display: inline; fill: #ff0033; }
 
 /* Where the player has no row of buttons: the bare glyph in its top corner
    (button.js sets the side), with the soft shadow YouTube gives its overlay
@@ -113,9 +119,8 @@
 
 /* One layer over the video while nomusic needs a wait or a click, below
    YouTube's controls (they stay usable). The wait: YouTube's own spinner
-   (ours, drawn as YouTube's, only in players without one), and, if the wait
-   lasts, the words where YouTube writes its brief messages, at the top, in
-   its tooltips' pill; clicks go through to the video. The click: the whole
+   (ours, drawn as YouTube's, in players without one), and two words under it
+   in YouTube's tooltip pill; clicks go through to the video. The click: the whole
    video is the button, the round play button in the middle drawn as
    YouTube's own. */
 .nomusic-notice {
@@ -175,7 +180,7 @@
 }
 .nomusic-notice__text {
   position: absolute;
-  top: 10%;
+  top: calc(50% + 48px);
   left: 50%;
   transform: translateX(-50%);
   height: 25px;
@@ -188,7 +193,6 @@
   line-height: 25px;
   white-space: nowrap;
 }
-.nomusic-notice[data-kind="status"][data-words="false"] .nomusic-notice__text { display: none; }
 .nomusic-notice[lang="ar"] .nomusic-notice__text { font-size: 14px; }
 .nomusic-notice__disc { display: none; }
 .nomusic-notice[data-kind="action"] { pointer-events: auto; cursor: pointer; }
@@ -316,7 +320,7 @@
 /* Fullscreen on a large screen: YouTube scales its controls up too. */
 .ytp-big-mode .nomusic-spinner { width: 128px; height: 128px; margin: -64px 0 0 -64px; }
 .ytp-big-mode .nomusic-spinner__arc { border-width: 12px; }
-.ytp-big-mode .nomusic-notice__text { height: 34px; padding: 0 12px; border-radius: 10px; font-size: 18px; line-height: 34px; }
+.ytp-big-mode .nomusic-notice__text { top: calc(50% + 88px); height: 34px; padding: 0 12px; border-radius: 10px; font-size: 18px; line-height: 34px; }
 .ytp-big-mode .nomusic-notice[data-kind="action"] .nomusic-notice__disc { width: 144px; height: 144px; margin: -72px 0 0 -72px; }
 .ytp-big-mode .nomusic-notice__disc svg { width: 90px; height: 90px; }
 .ytp-big-mode .nomusic-dialog { width: min(440px, calc(100% - 24px)); }
@@ -338,8 +342,9 @@
 }
 
 /* Less motion: the ring turns slowly at one length, and nothing fades. */
+/* Less motion: nothing fades, and the wait is a still ring (button.js uses
+   ours rather than YouTube's turning one); the words say what it is. */
 @media (prefers-reduced-motion: reduce) {
   .nomusic-btn, .nomusic-notice, .nomusic-notice__disc { transition: none; animation: none; }
-  .nomusic-spinner { animation-duration: 3s; }
-  .nomusic-spinner__rotator, .nomusic-spinner__arc { animation: none; }
+  .nomusic-spinner, .nomusic-spinner__rotator, .nomusic-spinner__arc { animation: none; }
 }

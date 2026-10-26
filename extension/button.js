@@ -5,6 +5,8 @@
 //   removes it. Where a player has no such row (Shorts, other sites' players)
 //   it is the same glyph in the player's top corner, shown with the player's
 //   controls.
+//   Before the first run and after a failure (both wait for the user), it is
+//   the plain note with a small dot.
 // - In the middle of the video, only while nomusic needs the user to wait or to
 //   click: YouTube's spinner, with two words under it, while the first audio is
 //   prepared; a round play button when the browser waits for a click before it
@@ -21,6 +23,7 @@ const TEXT = {
   setup: t("control_setup"),
   failed: t("control_failed"),
   working: t("notice_working"),
+  done: t("notice_done"),
   blocked: t("notice_blocked"),
   title: t("panel_title"),
   retry: t("panel_retry"),
@@ -30,7 +33,7 @@ const TEXT = {
 // status -> [data-state, the tooltip (what a click does, as YouTube's own
 // "Mute" and "Unmute" say), what the live region says]
 const STATES = {
-  setup: ["idle", TEXT.setup, ""],
+  setup: ["setup", TEXT.setup, ""],
   off: ["idle", TEXT.remove, ""],
   starting: ["working", TEXT.restore, TEXT.working],
   buffering: ["working", TEXT.restore, TEXT.working],
@@ -38,10 +41,11 @@ const STATES = {
   blocked: ["attention", TEXT.restore, TEXT.blocked],
   failed: ["error", TEXT.failed, ""],
 };
-// A hold shorter than this shows nothing (a short one after a stall would only
-// flicker); one that lasts says what it is after the second delay.
+const WAITS = new Set(["starting", "buffering"]);
+// A hold shorter than this shows nothing (a short one after a stall would only flicker).
 const NOTICE_DELAY_MS = 400;
-const WORDS_DELAY_MS = 1500;
+// Less motion: our still spinner instead of YouTube's turning one.
+const stillness = matchMedia("(prefers-reduced-motion: reduce)");
 
 // The glyph, on YouTube's 24 px grid and in its weight: a note (round head,
 // straight stem, square flag), plain while the music plays and struck through
@@ -59,6 +63,8 @@ const NOTE = [
 ];
 // Corner to corner, a little above the diagonal, so that it clears the head.
 const STRIKE = "M3.4 2.3 21.4 20.3";
+// Bottom right, where the note leaves room: the dot that says nomusic waits for the user.
+const DOT = { cx: 19.6, cy: 19.6, r: 2.6 };
 // The strike's width (2) with a gap of 1.2 above it and 0.7 below, so that it
 // reads as a stroke laid over the note.
 const CUT = "M3.58 2.12 21.58 20.12";
@@ -80,7 +86,8 @@ function glyph() {
     note({ class: "nomusic-glyph-plain" }),
     svg("g", { class: "nomusic-glyph-struck" },
       note({ mask: `url(#${cut})` }),
-      svg("path", { d: STRIKE, stroke: "currentColor", "stroke-width": 2, "stroke-linecap": "round", fill: "none" })));
+      svg("path", { d: STRIKE, stroke: "currentColor", "stroke-width": 2, "stroke-linecap": "round", fill: "none" })),
+    svg("circle", { class: "nomusic-glyph-dot", ...DOT }));
 }
 const icon = (d) => svg("svg", { viewBox: "0 0 24 24", "aria-hidden": "true", focusable: "false" }, svg("path", { d, fill: "currentColor" }));
 
@@ -156,11 +163,26 @@ export class Button {
     keepPointer(this.el);
     keepKeys(this.el);
     this.el.addEventListener("click", trusted(() => {
-      if (this.session.status === "setup") openWelcome();
+      const status = this.session.status;
+      if (status === "setup") openWelcome();
       else if (this.session.failure) this.openRecovery({ focus: true });
-      else this.session.toggle();
+      else if (status === "blocked") {
+        // What the tooltip says, "Stop removing music"; the click also lets
+        // the page play sound, so the music is heard. The play button in the
+        // middle is the way to start the sound with the music removed.
+        this.session.toggle();
+        this.session.returnToOriginal();
+      } else this.session.toggle();
       this.showTip();
     }));
+    // A play attempt while a failure waits for the user's choice (the dialog
+    // was closed) brings the choice back. Our own hold re-pauses the video, so
+    // nothing is heard (fail closed); the intent stays "play", so this listens
+    // for each attempt rather than for a change of intent.
+    this.onPlay = () => {
+      if (!this.retired && this.session.failure && this.dismissed) this.openRecovery({ focus: true });
+    };
+    video.addEventListener("play", this.onPlay);
     // A tooltip in the player's own style, on hover and on keyboard focus.
     this.tip = setLanguage(document.createElement("div"));
     this.tip.className = "nomusic-tip";
@@ -207,8 +229,9 @@ export class Button {
       this.placeTip();
     }
     if (status !== this.announced) {
+      // The end of a wait is said once; other statuses say what their row says.
+      this.live.textContent = status === "on" && WAITS.has(this.announced) ? TEXT.done : says;
       this.announced = status;
-      this.live.textContent = says;
     }
     this.renderNotice(state, says);
     if (session.failure !== this.shownFailure) {
@@ -223,7 +246,8 @@ export class Button {
         this.closeRecovery();
       }
     }
-    // Closed without a choice: it comes back when the user tries to play.
+    // Closed without a choice: it comes back when the user tries to play (a
+    // play event, above, or a page reporting the intent).
     const wantsPlay = !!session.intent?.wantsPlay;
     if (session.failure && this.dismissed && wantsPlay && !this.wantedPlay) this.openRecovery({ focus: true });
     this.wantedPlay = wantsPlay;
@@ -232,10 +256,9 @@ export class Button {
   // ---- the wait and the click --------------------------------------------------
 
   // One layer over the video, below YouTube's controls. The wait: YouTube's
-  // spinner where YouTube draws it, and the words where YouTube writes its own
-  // brief messages (the top of the video); clicks go through to the video. The
-  // click: the whole video is the button, a round play button in the middle
-  // its sign.
+  // spinner where YouTube draws it, and two words under it, where the eye
+  // already is; clicks go through to the video. The click: the whole video is
+  // the button, a round play button in the middle its sign.
   buildNotice() {
     const notice = setLanguage(document.createElement("button"));
     notice.type = "button";
@@ -280,15 +303,12 @@ export class Button {
     if (this.notice.hidden === show) this.notice.hidden = !show;
     // Where the player has YouTube's spinner, the wait shows that one (the one
     // it shows while loading, so the two never differ); ours is for other
-    // players. While the play button asks for the click, YouTube's stays out.
-    const theirs = !!this.host?.querySelector(".ytp-spinner");
+    // players, and for anyone who asks for less motion (it stands still).
+    // While the play button asks for the click, YouTube's stays out.
+    const theirs = !stillness.matches && !!this.host?.querySelector(".ytp-spinner");
     this.markHost(show ? this.host : null, blocked ? "nomusic-blocked" : theirs ? "nomusic-waiting" : null);
     if (!show) return;
     if (this.notice.dataset.theirs !== String(theirs)) this.notice.dataset.theirs = String(theirs);
-    // Words only for a wait long enough to wonder about, at a start or after a
-    // jump alike.
-    const words = String(working && now - this.workingSince >= WORDS_DELAY_MS);
-    if (this.notice.dataset.words !== words) this.notice.dataset.words = words;
     if (this.noticeText.textContent !== text) this.noticeText.textContent = text;
     const kind = blocked ? "action" : "status";
     if (this.notice.dataset.kind !== kind) {
@@ -365,13 +385,22 @@ export class Button {
     // music off last, where dialogs put their main one, and focused.
     actions.append(this.returnBtn, this.retryBtn);
     keepKeys(panel, { all: true });
-    panel.addEventListener("keydown", (event) => {
-      if (event.key !== "Escape") return;
-      event.preventDefault();
-      this.dismissed = true;
-      this.closeRecovery();
-      if (shown(this.el)) this.el.focus();
-    });
+    // While it is open, wherever focus is: Escape closes it, Tab moves between
+    // its two actions.
+    this.onKeys = (event) => {
+      if (this.recovery.hidden) return;
+      if (event.key === "Escape" && !typing()) {
+        event.preventDefault();
+        event.stopPropagation();
+        this.dismiss();
+      } else if (event.key === "Tab") {
+        const order = [this.returnBtn, this.retryBtn];
+        const at = order.indexOf(document.activeElement);
+        event.preventDefault();
+        event.stopPropagation();
+        (at < 0 ? this.retryBtn : order[(at + 1) % order.length]).focus();
+      }
+    };
     for (const type of ["pointerdown", "pointerup", "mousedown", "mouseup", "dblclick", "click"]) {
       panel.addEventListener(type, (event) => event.stopPropagation());
     }
@@ -381,11 +410,16 @@ export class Button {
     this.scrim = document.createElement("div");
     this.scrim.className = "nomusic-scrim";
     keepPointer(this.scrim);
-    this.scrim.addEventListener("click", trusted(() => {
-      this.dismissed = true;
-      this.closeRecovery();
-    }));
+    this.scrim.addEventListener("click", trusted(() => this.dismiss()));
     return panel;
+  }
+
+  // Closed without a choice: the video stays paused and silent, and the
+  // choice returns on the next play attempt.
+  dismiss() {
+    this.dismissed = true;
+    this.closeRecovery();
+    if (shown(this.el)) this.el.focus();
   }
 
   action(name, handler) {
@@ -406,11 +440,13 @@ export class Button {
     if (this.retired) return;
     this.dismissed = false;
     this.recovery.hidden = false;
+    document.addEventListener("keydown", this.onKeys, true);
     this.positionPanel();
     if (focus && !typing()) this.retryBtn.focus();
   }
 
   closeRecovery() {
+    document.removeEventListener("keydown", this.onKeys, true);
     this.recovery.hidden = true;
     this.recovery.remove();
     this.scrim.remove();
@@ -519,6 +555,7 @@ export class Button {
     this.retired = true;
     this.closeRecovery();
     this.markHost(null);
+    this.video.removeEventListener("play", this.onPlay);
     for (const part of [this.el, this.live, this.notice, this.tip]) part.remove();
   }
 }
