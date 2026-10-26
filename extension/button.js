@@ -280,6 +280,8 @@ export class Button {
         this.recoveryTitle.textContent = reason === "missed" ? TEXT.ready : TEXT.title;
         // The title already says what happened; a reason without more to say is left out.
         this.recoveryMessage.textContent = reason === "error" ? "" : message;
+        if (this.recoveryMessage.textContent) this.recovery.setAttribute("aria-describedby", this.recoveryMessage.id);
+        else this.recovery.removeAttribute("aria-describedby");
         // Where nothing can help (a locked video, say), the music is the one
         // choice left, so it becomes the main action.
         const final = FINAL.has(reason);
@@ -420,7 +422,6 @@ export class Button {
     panel.className = "nomusic-dialog";
     panel.setAttribute("role", "alertdialog");
     panel.setAttribute("aria-labelledby", `${id}-title`);
-    panel.setAttribute("aria-describedby", `${id}-message`);
     panel.hidden = true;
     panel.tabIndex = -1; // focused itself when its one action is the music (see openRecovery)
     const title = document.createElement("p");
