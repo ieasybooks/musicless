@@ -24,17 +24,17 @@ const GREEN = "#288563";
 // The note on a 24-unit grid, as in button.js: a round head, a straight stem
 // and a square flag, in YouTube's icon weight, and the strike corner to corner
 // (a little above the diagonal, clear of the head), which cuts a gap of `gap`
-// units on its upper side only.
+// units above it and `low` below it.
 let masks = 0;
-function note({ color = "#fff", stroke = 2, gap = 1.2 } = {}) {
+function note({ color = "#fff", stroke = 2, gap = 1.2, low = 0.7 } = {}) {
   const id = `cut${++masks}`;
-  const shift = (gap / 2) * Math.SQRT1_2; // half the gap, up and to the right
+  const shift = ((gap - low) / 2) * Math.SQRT1_2; // the cut's centre, up and to the right of the strike's
   const at = (x, y) => `${+(x + shift).toFixed(2)} ${+(y - shift).toFixed(2)}`;
   return `<mask id="${id}" maskUnits="userSpaceOnUse"><rect x="-4" y="-4" width="32" height="32" fill="#fff"/>` +
-    `<path d="M${at(3.4, 2.6)} ${at(21.4, 20.6)}" stroke="#000" stroke-width="${+(stroke + gap).toFixed(2)}" stroke-linecap="round"/></mask>` +
-    `<g mask="url(#${id})" fill="${color}"><circle cx="9.2" cy="18.2" r="4.2"/>` +
-    `<rect x="11.4" y="2.2" width="2" height="16"/><rect x="11.4" y="2.2" width="6.4" height="4.4"/></g>` +
-    `<path d="M3.4 2.6 21.4 20.6" stroke="${color}" stroke-width="${stroke}" stroke-linecap="round"/>`;
+    `<path d="M${at(3.4, 2.3)} ${at(21.4, 20.3)}" stroke="#000" stroke-width="${+(stroke + gap + low).toFixed(2)}" stroke-linecap="round"/></mask>` +
+    `<g mask="url(#${id})" fill="${color}"><circle cx="9.2" cy="17.9" r="4.2"/>` +
+    `<rect x="11.4" y="1.9" width="2" height="16"/><rect x="11.4" y="1.9" width="6.4" height="4.4"/></g>` +
+    `<path d="M3.4 2.3 21.4 20.3" stroke="${color}" stroke-width="${stroke}" stroke-linecap="round"/>`;
 }
 
 // The tile with the note in it, as an SVG of `size` px. `inset` is the
@@ -105,13 +105,14 @@ try {
   // The README logo: the tile alone, large.
   await render(page, tile(512), 512, 512, join(ROOT, "assets/logo.png"));
   // The promo tile: the white note and the name on the mark's green, one
-  // lockup, nothing else. The name is set in Roboto Medium, YouTube's face.
+  // lockup, nothing else. The name is set in Roboto, YouTube's face, at the
+  // glyph's weight.
   if (!(await page.evaluate(() => document.fonts.check("500 40px Roboto")))) {
     throw new Error("Roboto is needed for the promo tile's name: install it (or point FONTCONFIG_FILE at a folder that has it).");
   }
   await render(page, `<div style="width:440px;height:280px;display:flex;align-items:center;justify-content:center;gap:14px;background:${GREEN}">
       <svg width="72" height="72" viewBox="0 0 24 24">${note()}</svg>
-      <span style="font:500 52px/1 Roboto;letter-spacing:-0.5px;color:#fff;margin-top:-4px">nomusic</span></div>`, 440, 280, join(ROOT, "docs/store/promo-tile-440x280.png"));
+      <span style="font:400 52px/1 Roboto;letter-spacing:-0.5px;color:#fff;margin-top:-4px">nomusic</span></div>`, 440, 280, join(ROOT, "docs/store/promo-tile-440x280.png"));
   // The white note of the first-run page, which draws the tile itself (it is
   // lighter in the dark).
   writeFileSync(join(ROOT, "extension/icons/note.svg"), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">${note()}</svg>\n`);
