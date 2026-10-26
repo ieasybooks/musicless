@@ -2,29 +2,37 @@
 # Package the extension for release: dist/nomusic-<version>.zip, the archive
 # to upload to a browser's add-on store or to share for "Load unpacked".
 # Run ./setup.sh first: the model and the runtime are built, not committed.
-# The zip is reproducible: sorted entries with fixed timestamps. The test-only
-# recorder (recorder.js) is left out.
+# The zip holds the files git tracks in extension/ plus the four built ones,
+# so nothing else in the folder can slip in; the test-only recorder
+# (recorder.js) is left out. It is reproducible: sorted entries with fixed
+# timestamps.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-for file in extension/model/spleeter-2stems.onnx extension/vendor/ort.wasm.min.mjs \
-  extension/vendor/ort-wasm-simd-threaded.mjs extension/vendor/ort-wasm-simd-threaded.wasm; do
-  [[ -f $file ]] || { echo "Missing $file: run ./setup.sh first." >&2; exit 1; }
-done
-
 python3 - <<'PY'
-import hashlib, json, os, zipfile
+import hashlib, json, os, re, subprocess, sys, zipfile
 
-version = json.load(open("extension/manifest.json"))["version"]
+BUILT = ["model/spleeter-2stems.onnx", "vendor/ort.wasm.min.mjs",
+         "vendor/ort-wasm-simd-threaded.mjs", "vendor/ort-wasm-simd-threaded.wasm"]
+for name in BUILT:
+    if not os.path.isfile(os.path.join("extension", name)):
+        sys.exit(f"Missing extension/{name}: run ./setup.sh first.")
+tracked = subprocess.run(["git", "ls-files", "-z", "extension"], check=True, capture_output=True, text=True).stdout
+files = sorted({os.path.relpath(path, "extension") for path in tracked.split("\0") if path} | set(BUILT))
+files = [name for name in files if name != "recorder.js"]
+
+# Only the tested build goes out: the model setup.sh builds, and no test key.
+manifest = json.load(open("extension/manifest.json"))
+if "nomusic_test" in manifest:
+    sys.exit("extension/manifest.json has the test harness's nomusic_test key.")
+expected = re.search(r"^MODEL_SHA256=(\w+)$", open("setup.sh").read(), re.M).group(1)
+model = hashlib.sha256(open("extension/model/spleeter-2stems.onnx", "rb").read()).hexdigest()
+if model != expected:
+    sys.exit(f"extension/model/spleeter-2stems.onnx is not the model setup.sh builds (sha256 {model}).")
+
+version = manifest["version"]
 os.makedirs("dist", exist_ok=True)
 out = f"dist/nomusic-{version}.zip"
-files = sorted(
-    os.path.relpath(os.path.join(root, name), "extension")
-    for root, dirs, names in os.walk("extension", followlinks=True)  # worktrees may link the built model and runtime
-    for name in names
-    if not name.startswith(".")
-)
-files = [name for name in files if name != "recorder.js"]
 with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
     for name in files:
         info = zipfile.ZipInfo(name, date_time=(1980, 1, 1, 0, 0, 0))

@@ -43,7 +43,7 @@ cd tests && npm run unit
 ```
 
 The browser suites need the media built once, as that document describes.
-`QUICK=1 node local.mjs` is the short local run. CI runs that run.
+`QUICK=1 node local.mjs` is the short local run. CI runs it on the packaged zip.
 
 ## Pull requests
 

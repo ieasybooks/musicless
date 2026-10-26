@@ -94,11 +94,14 @@ git tag -a v1.0.0 main -m "nomusic 1.0.0"
 git push origin v1.0.0
 ```
 
-The Release workflow runs setup and the same tests as CI, builds
-`dist/nomusic-<version>.zip` with `scripts/package.sh`, writes `SHA256SUMS`,
-attests the zip and the checksum file, and opens a draft GitHub Release. A
-tag whose name is not `v` plus the manifest version fails. A tag on the old
-backend history does not run this workflow.
+The Release workflow has two jobs. The first builds
+`dist/nomusic-<version>.zip` with `scripts/package.sh` and tests that
+package: the unit tests, the full browser suite in Chrome and the memory
+check. The second, the only one that can write, builds the zip again without
+the test tools, checks that it is the zip the tests ran (same SHA-256),
+writes `SHA256SUMS`, attests the zip and the checksum file, and opens a
+draft GitHub Release. A tag whose name is not `v` plus the manifest version
+fails. A tag on the old backend history does not run this workflow.
 
 ## 4. Check the draft, then publish it
 
@@ -174,7 +177,7 @@ After `main` is the extension, and before you announce it:
 5. **License.** Confirm the About box says MIT.
 6. **Private vulnerability reporting.** Turn it on. [SECURITY.md](../SECURITY.md) points at that form.
 7. **Dependabot.** Turn on alerts and security updates. `.github/dependabot.yml` covers Actions version updates only.
-8. **Actions.** Workflow permissions: read repository contents. The Release workflow asks for write on its own job.
+8. **Actions.** Workflow permissions: read repository contents. The Release workflow asks for write only in its release job, which runs no test tools.
 9. **Branch protection on `main`.** Require a pull request, with 0 required approving reviews. Require the check `Unit and browser tests (Chrome)`. Block force pushes. Leave admin bypass on. Require signed commits only if you already sign every commit.
 10. **Issues stay on. Discussions stay off.**
 
