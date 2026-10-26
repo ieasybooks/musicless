@@ -9,13 +9,14 @@ import {
   analyze, chooseRecovery, clickButton, debugRequest, dump, frameState, launch, memoryOfChrome, newPage, Report, setAutoStart,
   setSettings, sleep, waitFor, WORK,
 } from "./harness.mjs";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { serve } from "./serve.mjs";
 
 const MEDIA = process.argv[2] ?? `${WORK}/media`;
 const SET = process.env.MEDIA_SET ?? "vlog";
 const QUICK = process.env.QUICK === "1";
 const report = new Report(process.env.REPORT ?? "local");
+const ARABIC = JSON.parse(readFileSync(new URL("../extension/_locales/ar/messages.json", import.meta.url), "utf8"));
 const PORT = Number(process.env.PORT ?? 8811);
 const server = await serve(MEDIA, PORT);
 const { browser, extensionId } = await launch();
@@ -391,7 +392,7 @@ await step("turning automatic removal on applies to the open video", async () =>
 });
 
 await step("nothing is read before consent; consenting starts the next video", async () => {
-  await setSettings(browser, extensionId, { consented: false });
+  await setSettings(browser, extensionId, { consented: false }); // no control turns it off again
   try {
     const page = await open(BASE);
     await play(page);
@@ -400,8 +401,24 @@ await step("nothing is read before consent; consenting starts the next video", a
     const captured = await page.evaluate(() => window.__nomusicCaptureDebug());
     const frames = await engineFrames(page);
     const { paused, time } = await videoState(page);
-    await setSettings(browser, extensionId, { consented: true }); // on the welcome page
+    // On the welcome page the user first chooses Not now with the mouse, then
+    // Turn on nomusic with the keyboard.
+    const welcome = await browser.newPage();
+    await welcome.goto(`chrome-extension://${extensionId}/welcome.html`);
+    await welcome.waitForSelector("#later", { visible: true });
+    await welcome.click("#later");
+    const notNow = await welcome.evaluate(async () => {
+      const status = document.querySelector("#status");
+      return !status.hidden && !status.classList.contains("on") && !(await chrome.storage.sync.get("consented")).consented;
+    });
+    await welcome.reload();
+    await welcome.waitForSelector("#accept", { visible: true });
+    await welcome.focus("#accept");
+    await welcome.keyboard.press("Enter");
     const started = Date.now();
+    await welcome.waitForFunction(() => chrome.storage.sync.get("consented").then((stored) => stored.consented === true), { timeout: 5000 });
+    const turnedOn = await welcome.$eval("#status", (status) => !status.hidden && status.classList.contains("on"));
+    await welcome.close();
     const failed = await waitFor(page, (s) => s.status === "failed", { timeout: 10000, label: "the video that played before" });
     const failMs = Date.now() - started;
     // The next video in the player is read from its start.
@@ -414,13 +431,52 @@ await step("nothing is read before consent; consenting starts the next video", a
     const media = captured.reduce((sum, stream) => sum + stream.media, 0);
     report.record("nothing is read before consent; consenting starts the next video",
       before.status === "setup" && before.originalGain === null && !before.attached && frames === 0 && !paused && time > 2 &&
-        media === 0 && captured.some((stream) => stream.missed) && failed.failure.reason === "uncaptured" && failMs < 5000 &&
-        state.status === "on" && good(a),
+        media === 0 && captured.some((stream) => stream.missed) && notNow && turnedOn &&
+        failed.failure.reason === "uncaptured" && failMs < 5000 && state.status === "on" && good(a),
       { status_before: before.status, routed_before: before.originalGain !== null, engine_frames_before: frames, played_before: !paused,
-        audio_kept_before: media, uncaptured_ms: failMs, next_video_audio_ms: ms, ...a });
+        audio_kept_before: media, not_now_kept_it_off: notNow, turned_on_by_keyboard: turnedOn, uncaptured_ms: failMs,
+        next_video_audio_ms: ms, ...a });
     await page.close();
   } finally {
     await setSettings(browser, extensionId, { consented: true });
+  }
+});
+
+await step("the popup asks before nomusic is on, and its button turns it on", async () => {
+  await setSettings(browser, extensionId, { consented: false });
+  try {
+    const popup = await browser.newPage();
+    await popup.goto(`chrome-extension://${extensionId}/popup.html`);
+    await popup.waitForSelector("#accept", { visible: true });
+    const asks = await popup.$eval("#settings", (section) => section.hidden);
+    await popup.click("#accept");
+    await popup.waitForFunction(() => chrome.storage.sync.get("consented").then((stored) => stored.consented === true), { timeout: 5000 });
+    const shown = await popup.$eval("#settings", (section) => !section.hidden);
+    const focus = await popup.evaluate(() => document.activeElement?.id ?? null);
+    await popup.close();
+    report.record("the popup asks before nomusic is on, and its button turns it on", asks && shown && focus === "autoStart",
+      { settings_hidden_before: asks, settings_shown_after: shown, focus_after: focus });
+  } finally {
+    await setSettings(browser, extensionId, { consented: true });
+  }
+});
+
+await step("in Arabic the welcome page reads right to left, and turns nomusic on", async () => {
+  const arabic = await launch({ lang: "ar", consented: false });
+  try {
+    const welcome = await arabic.browser.newPage();
+    await welcome.goto(`chrome-extension://${arabic.extensionId}/welcome.html`);
+    await welcome.waitForSelector("#accept", { visible: true });
+    const page = await welcome.evaluate(() => ({
+      lang: document.documentElement.lang, dir: document.documentElement.dir, accept: document.querySelector("#accept").textContent,
+    }));
+    await welcome.focus("#accept");
+    await welcome.keyboard.press("Space");
+    await welcome.waitForFunction(() => chrome.storage.sync.get("consented").then((stored) => stored.consented === true), { timeout: 5000 });
+    report.record("in Arabic the welcome page reads right to left, and turns nomusic on",
+      page.lang === "ar" && page.dir === "rtl" && page.accept === ARABIC.consent_accept.message, page);
+  } finally {
+    await arabic.browser.close();
   }
 });
 

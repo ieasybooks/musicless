@@ -89,7 +89,8 @@ export function chromePath() {
 
 // `autoplay: false` keeps the browser's real autoplay policy (sound needs a user gesture).
 // The user has turned nomusic on (`consented`) unless a test says otherwise.
-export async function launch({ headless = true, autoStart = true, autoplay = true, consented = true, diagnostics = true } = {}) {
+// `lang` is the browser's language, which picks nomusic's catalog.
+export async function launch({ headless = true, autoStart = true, autoplay = true, consented = true, diagnostics = true, lang = "en-US" } = {}) {
   const profile = mkdtempSync(join(WORK, "profile-"));
   const executablePath = chromePath();
   const browser = await puppeteer.launch({
@@ -104,7 +105,7 @@ export async function launch({ headless = true, autoStart = true, autoplay = tru
       "--no-first-run",
       "--disable-features=Translate,MediaEngagementBypassAutoplayPolicies",
       "--window-size=1280,900",
-      "--lang=en-US",
+      `--lang=${lang}`,
       // Portable browser copies (and CI containers) cannot set up the sandbox.
       ...(process.env.NOMUSIC_NO_SANDBOX === "1" ? ["--no-sandbox"] : []),
     ],
@@ -138,8 +139,15 @@ export async function setSettings(browser, extensionId, values) {
   return stored;
 }
 
+// Turn automatic removal on or off with the popup's switch, as the user does.
 export async function setAutoStart(browser, extensionId, value) {
-  return (await setSettings(browser, extensionId, { autoStart: value })).autoStart;
+  const popup = await browser.newPage();
+  await popup.goto(`chrome-extension://${extensionId}/popup.html`);
+  await popup.waitForSelector("#autoStart", { visible: true });
+  if ((await popup.$eval("#autoStart", (box) => box.checked)) !== value) await popup.click("#autoStart");
+  await popup.waitForFunction((value) => chrome.storage.sync.get("autoStart").then((stored) => stored.autoStart === value), { timeout: 5000 }, value);
+  await popup.close();
+  return value;
 }
 
 export async function newPage(browser) {
