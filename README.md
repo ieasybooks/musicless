@@ -39,36 +39,39 @@ is no listing URL yet. This page will gain one after the listing is live.
    on **Developer mode**, click **Load unpacked**, and choose the unzipped
    folder.
 4. Reload any YouTube tabs that were already open.
-5. The first time, choose **Turn on** on the page that opens (or turn on the
-   switch in the toolbar popup, under the same words). Until you do, nomusic
-   does not remove music; its button on the player opens that page.
+5. The first time, choose **Turn on** on the page that opens (or in the
+   toolbar popup, under the same words). Until you do, nomusic does not remove
+   music; its button on the player opens that page.
 
-## Use
+## Using nomusic
 
-Play a supported YouTube video. After you turn nomusic on, it removes the
-music by itself. At the start, and after a jump to a part that has not loaded
-yet, the video waits a moment (about 2 to 4 seconds on a typical laptop) while
-nomusic prepares the audio. YouTube's spinner shows in the middle of the
-video, and when the wait lasts, **Removing music** shows at the top.
-
-nomusic's button sits in YouTube's control bar, left of captions (in embedded
-players, in the top row of buttons): a note while the music plays, the note
-struck through while nomusic removes it. Its tooltip says what a click does:
-**Remove music**, or **Stop removing music**. If the browser needs a click before
-it plays sound, a play button shows in the middle of the video.
-
-When the music cannot be removed, the video stays paused and silent, and a
-dialog offers **Try again** or **Play with music**. Some failures ask you to
-**Reload page** instead (the extension was updated, or this video started
-before nomusic could reach its sound). Copy-protected videos, such as rented
-movies, take this path.
-
-The toolbar has one setting, **Remove music from every video**. When it is
-off, use the button in the player on the videos you choose. Videos that are
-already playing keep going until you click the button on them.
+- **Turn it on once.** Choose **Turn on** on the page that opens after you
+  install it, or in the toolbar popup. Reload YouTube tabs that were already
+  open.
+- **Then just play videos.** nomusic removes the music by itself. Each video
+  waits a few seconds as it starts (about 2 to 4 on a typical laptop), with
+  YouTube's spinner and **Removing music** under it. A jump to a part that has
+  not loaded yet can wait again.
+- **One video with its music.** Use nomusic's button in the player's control
+  bar, left of captions (in embedded players, in the top row): a music note,
+  struck through while the music is removed. Its tooltip says what a click
+  does. Click it again to remove the music again.
+- **Choosing videos yourself.** In the toolbar popup, turn off **Remove music
+  from every video**. Then use the player button on the videos you choose.
+- **On Shorts**, the button sits with the Short's own buttons, at its top.
+- **A play button in the middle** of the video means the browser needs a
+  click before it plays sound. Click it.
+- **When the music can't be removed**, the video stays paused and silent, and
+  a dialog says why: choose **Try again** (or **Reload page**), or **Play with
+  music**. Copy-protected videos, such as rented movies, can only play with
+  their music. A video that was already playing when you turned nomusic on
+  needs a reload.
 
 Volume, mute, speed changes (the voice keeps its pitch), seeking, fullscreen,
-Shorts, live streams, ads and embedded YouTube players work.
+live streams, ads and embedded YouTube players work.
+
+Something not working? [Report a problem](https://github.com/IbraheemTuffaha/nomusic/issues/new?template=bug.yml).
+Help in Arabic: [استخدام nomusic](docs/help.ar.md).
 
 ## What to expect
 
@@ -89,9 +92,9 @@ computer. Audio is used only to remove background music during playback. It
 is not uploaded, shared, or saved as an audio file. The developer receives no
 audio, browsing history, identifiers, or usage analytics. There is no account.
 
-The automatic-removal setting, and whether you have chosen **Turn on
-nomusic**, are stored in Chrome's extension storage and may sync between your
-devices if Chrome Sync is enabled. See the [privacy policy](docs/privacy.md).
+The automatic-removal setting, and whether you have chosen **Turn on**, are
+stored in Chrome's extension storage and may sync between your devices if
+Chrome Sync is enabled. See the [privacy policy](docs/privacy.md).
 
 YouTube still loads the video through its own service.
 

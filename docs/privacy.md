@@ -23,8 +23,9 @@ not offer recording, media downloads, or audio export.
 ## Preferences
 
 nomusic stores three values with Chrome's extension storage: the
-automatic-removal setting; whether you have acknowledged the first-run
-local-audio disclosure (the **Turn on** choice); and a random token
+automatic-removal setting; whether you have acknowledged the local-audio
+disclosure, by choosing **Turn on** on the first-run page or in the toolbar
+popup (both show the same disclosure); and a random token
 that lets nomusic's hidden processing frame accept connections only from
 nomusic itself. Chrome may sync the first two between your own devices when
 you enable Chrome Sync; the token stays on this device. The developer does not
@@ -52,7 +53,7 @@ For privacy questions, use the contact email displayed on the Chrome Web Store
 listing or <https://github.com/IbraheemTuffaha/nomusic/issues>. Do not post
 sensitive information in public issues.
 
-Last updated: 25 October 2026.
+Last updated: 26 October 2026.
 
 ## العربية
 
@@ -68,8 +69,8 @@ before the store submission. The Latin name nomusic is the product name.
 يصل nomusic إلى الصوت الذي حمّله مشغّل YouTube أصلًا في صفحات YouTube المدعومة
 والمشغّلات المضمّنة. يعالج صوت الموقع هذا في ذاكرة المتصفح لغرض واحد فقط: فصل
 الأصوات البشرية عن موسيقى الخلفية وتشغيل تلك الأصوات بالتزامن مع الفيديو. لا
-يتلقى المطوّر هذا الصوت. لا يرفع nomusic الصوت ولا يشاركه ولا يحفظه ملفًا
-صوتيًا، ولا يحتفظ بسجل مشاهدة، ولا يجمع تحليلات استخدام أو معرّفات إعلانية أو
+يتلقى المطوّر هذا الصوت. لا يُرسل nomusic الصوت إلى أي مكان ولا يشاركه ولا
+يحفظه ملفًا صوتيًا، ولا يحتفظ بسجل مشاهدة، ولا يجمع تحليلات استخدام أو معرّفات إعلانية أو
 بيانات تسجيل الدخول إلى الحسابات أو ملفات شخصية. ليست له خدمة خلفية.
 
 ### الذاكرة المؤقتة
@@ -82,8 +83,9 @@ before the store submission. The Latin name nomusic is the product name.
 ### التفضيلات
 
 يخزّن nomusic ثلاث قيم في مساحة تخزين إضافات Chrome: إعداد الإزالة التلقائية؛
-وما إذا كنت قد أقررت بالاطلاع على الإفصاح المعروض عند التشغيل الأول بشأن
-معالجة الصوت على الحاسوب (اختيار **شغّل nomusic**)؛ ورمزًا عشوائيًا يجعل إطار
+وما إذا كنت قد أقررت بالاطلاع على الإفصاح بشأن معالجة الصوت على الحاسوب،
+باختيار **تفعيل** في صفحة التشغيل الأول أو في نافذة الإضافة المنبثقة في شريط
+الأدوات (وكلتاهما تعرض الإفصاح نفسه)؛ ورمزًا عشوائيًا يجعل إطار
 المعالجة المخفي في nomusic لا يقبل الاتصال إلا من nomusic نفسه. قد يزامن Chrome
 القيمتين الأوليين بين أجهزتك عندما تفعّل Chrome Sync، أما الرمز فيبقى على هذا
 الجهاز. ولا يتلقى المطوّر أيًّا منها. يمكنك تغيير إعداد الإزالة التلقائية من
@@ -112,4 +114,4 @@ before the store submission. The Latin name nomusic is the product name.
 <https://github.com/IbraheemTuffaha/nomusic/issues>. لا تنشر معلومات حساسة في
 طلبات الدعم العلنية.
 
-آخر تحديث: 25 أكتوبر 2026.
+آخر تحديث: 26 أكتوبر 2026.
