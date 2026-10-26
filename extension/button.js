@@ -257,18 +257,20 @@ export class Button {
       this.tip.textContent = tip;
       this.placeTip();
     }
+    // The end of a wait is said once; other statuses say what their row says.
+    const waited = status === "on" && WAITS.has(this.announced);
     if (status !== this.announced) {
-      // The end of a wait is said once; other statuses say what their row says.
-      this.live.textContent = status === "on" && WAITS.has(this.announced) ? TEXT.done : says;
+      this.live.textContent = waited ? TEXT.done : says;
       this.announced = status;
     }
-    // A video's first wait lasts until its music is first removed (the
-    // session counts made audio across videos in one player).
+    // A video's first wait lasts until it ends in removed music (the session
+    // counts made audio across videos in one player, and a video can show "on"
+    // for a moment before its first hold).
     if (session.sourceUrl !== this.source) {
       this.source = session.sourceUrl;
       this.played = false;
     }
-    if (status === "on") this.played = true;
+    if (waited) this.played = true;
     this.renderNotice(state, says, !this.played);
     if (session.failure !== this.shownFailure) {
       this.shownFailure = session.failure;

@@ -392,6 +392,24 @@ await step("turning automatic removal on applies to the open video", async () =>
   await page.close();
 });
 
+// A video's first wait says why at once, under the spinner (later waits, after
+// a seek, only if they last); the local page has no YouTube spinner, so ours.
+await step("a video's first wait says why at once", async () => {
+  const page = await open(BASE);
+  await play(page);
+  let notice = null;
+  const started = Date.now();
+  while (!notice && Date.now() - started < 15000) {
+    notice = await page.evaluate(() => {
+      const n = document.querySelector(".nomusic-notice:not([hidden])");
+      return n ? { words: n.dataset.words, ours: n.dataset.theirs === "false", text: n.querySelector(".nomusic-notice__text").textContent } : null;
+    });
+    if (!notice) await sleep(50);
+  }
+  report.record("a video's first wait says why at once", notice?.words === "true" && notice.ours && !!notice.text, notice ?? {});
+  await page.close();
+});
+
 await step("nothing is read before consent; consenting starts the next video", async () => {
   await setSettings(browser, extensionId, { consented: false }); // no control turns it off again
   try {
