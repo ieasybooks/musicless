@@ -36,7 +36,7 @@ export class Engine {
     this.port = null;
     this.sessions = new Map(); // stream id -> session
     this.ids = 0;
-    this.model = null; // { seconds, shared } once loaded
+    this.model = null; // { seconds } once loaded
     this.connected = false;
     this.queue = []; // messages held until the worker has its port
     this.idleSince = performance.now();

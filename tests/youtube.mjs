@@ -113,7 +113,7 @@ await step("SpongeBob theme: starts by itself, original never heard", async () =
   const after = await frameState(page);
   report.record("SpongeBob theme: starts by itself, original never heard", first.originalGain === 0 && good(a), {
     first_audio_ms: ms, original_gain_at_start: first.originalGain, model_load_s: state.model?.seconds,
-    shared_model: state.model?.shared, holds: after.holds, chunk_ms: after.timings.map((t) => Math.round(t.total)),
+    holds: after.holds, chunk_ms: after.timings.map((t) => Math.round(t.total)),
     formats: [...new Set(await capturedFormats(page))], ...a,
   });
   await page.close();

@@ -102,7 +102,7 @@ for (const variant of VARIANTS) {
     report.record(`${tag} starts automatically, original never heard`,
       first.originalGain === 0 && state.status === "on" && state.buttonState === "active" && good(a), {
         first_audio_ms: ms, original_gain_at_start: first.originalGain, model_load_s: state.model?.seconds,
-        shared_model: state.model?.shared, first_chunk_ms: Math.round(timing?.total ?? -1), ...a,
+        first_chunk_ms: Math.round(timing?.total ?? -1), ...a,
       });
   });
 
@@ -528,10 +528,11 @@ await step("two tabs share one model", async () => {
   const memory = memoryOfChrome(browser);
   const a1 = analyze(await dump(first, 7), "tab-1", { source });
   const a2 = analyze(await dump(second, 7), "tab-2", { source });
-  const s1 = await frameState(first);
-  report.record("two tabs share one model", s1.model?.shared && state.model?.shared && good(a1) && good(a2) &&
+  // One shared worker holds the model for both tabs.
+  const models = browser.targets().filter((target) => target.type() === "shared_worker" && target.url().endsWith("/model-worker.js")).length;
+  report.record("two tabs share one model", models === 1 && state.model && good(a1) && good(a2) &&
     (!memoryOneTab || memory.extension_mb - memoryOneTab.extension_mb < 250), {
-    second_tab_audio_ms: ms, memory_one_tab: memoryOneTab, memory_two_tabs: memory,
+    model_workers: models, second_tab_audio_ms: ms, memory_one_tab: memoryOneTab, memory_two_tabs: memory,
     tab1_media_env_corr: a1.media_env_corr, tab2_media_env_corr: a2.media_env_corr,
   });
   await first.close();

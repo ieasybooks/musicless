@@ -1,8 +1,8 @@
 // A tab's separation worker. It keeps the captured encoded audio of each video
 // playing in the tab, decodes and resamples the windows the content script
 // asks for (in its priority order), runs them through the model, and sends
-// the vocals back. The model itself usually lives in a shared worker so every
-// tab uses one copy (see model-worker.js); without one, it is loaded here.
+// the vocals back. The model itself lives in a shared worker so every tab uses
+// one copy (see model-worker.js).
 //
 // WebCodecs' AudioDecoder is not available in shared workers, which is why
 // decoding stays in this per-tab worker.
@@ -19,8 +19,7 @@ const LEAD_TOLERANCE = 0.3; // the page asks from 0.25 s before the playhead
 const KEEP_BEHIND_SECONDS = 900;
 const KEEP_AHEAD_SECONDS = 900;
 const MAX_STREAM_BYTES = 64 * 2 ** 20; // far more than 30 minutes of the audio players send
-const SHARED_MODEL_TIMEOUT_MS = 20000;
-const LOAD_TIMEOUT_MS = 60000; // including a fallback to a copy of our own
+const LOAD_TIMEOUT_MS = 60000;
 const RUN_TIMEOUT_MS = 120000;
 const MODEL_PING_MS = 5000;
 const MODEL_SILENT_MS = 30000; // longer than the shared model ever runs one job
@@ -37,23 +36,11 @@ const send = (message, transfer) => port.postMessage(message, transfer ?? []);
 
 // ---- model access -----------------------------------------------------------
 
-function localModel() {
-  let created = null;
-  const get = () => (created ??= import("./model.js").then(({ createModel }) => createModel()));
-  return {
-    shared: false,
-    load: () => get().then((m) => m.load()),
-    run: (magnitude, priority) => get().then((m) => m.run(magnitude, priority)),
-  };
-}
-
-// The shared model, falling back to a local copy if it cannot start. If it
-// stops later (its process crashed, say), the worker cannot go on: the content
-// script starts the engine again.
+// The shared model. If it cannot start, or stops later (its process crashed,
+// say), the worker cannot go on: the content script starts the engine again.
 function sharedModel(modelPort) {
   const pending = new Map();
   let nextId = 1;
-  let fallback = null;
   let started = false;
   let pinged = 0;
   let settle;
@@ -61,13 +48,11 @@ function sharedModel(modelPort) {
     settle = { resolve, reject };
   });
   const failed = (message) => {
-    clearTimeout(timer);
-    if (fallback) return; // no longer used
+    clearInterval(watch);
     if (!started) {
       settle.reject(new Error(message));
       return;
     }
-    clearInterval(watch);
     send({ type: "error", fatal: true, message: `The shared model stopped: ${message}` });
     for (const job of pending.values()) {
       clearTimeout(job.timer);
@@ -75,10 +60,9 @@ function sharedModel(modelPort) {
     }
     pending.clear();
   };
-  const timer = setTimeout(() => failed("the shared model did not answer"), SHARED_MODEL_TIMEOUT_MS);
   // While results are due, ask now and then: a shared model that stays silent has stopped.
   const watch = setInterval(() => {
-    if (!started || fallback || !pending.size) {
+    if (!started || !pending.size) {
       pinged = 0;
     } else if (!pinged) {
       pinged = performance.now();
@@ -89,8 +73,7 @@ function sharedModel(modelPort) {
   }, MODEL_PING_MS);
   modelPort.onmessage = ({ data }) => {
     pinged = 0;
-    if (data.type === "ready" && !fallback) {
-      clearTimeout(timer);
+    if (data.type === "ready") {
       started = true;
       settle.resolve(data.seconds);
     } else if (data.type === "failed") {
@@ -105,20 +88,11 @@ function sharedModel(modelPort) {
     }
   };
   modelPort.postMessage({ type: "load" });
-  const loaded = ready.catch(() => {
-    clearInterval(watch);
-    fallback = localModel();
-    return fallback.load();
-  });
   return {
-    get shared() {
-      return !fallback;
-    },
     failed,
-    load: () => loaded,
+    load: () => ready,
     async run(magnitude, priority) {
-      await loaded;
-      if (fallback) return fallback.run(magnitude, priority);
+      await ready;
       return new Promise((resolve, reject) => {
         const id = nextId++;
         const timer = setTimeout(() => {
@@ -140,7 +114,7 @@ function loadModel() {
     timer = setTimeout(() => reject(new Error("it took too long")), LOAD_TIMEOUT_MS);
   });
   return Promise.race([model.load(), late]).finally(() => clearTimeout(timer)).then(
-    (seconds) => send({ type: "model", seconds, shared: model.shared }),
+    (seconds) => send({ type: "model", seconds }),
     (error) => send({ type: "error", fatal: true, message: `The model failed to load: ${error.message}` }),
   );
 }
@@ -609,7 +583,6 @@ function stats(stream) {
     last: list.length ? list[list.length - 1].time + list[list.length - 1].duration : null,
     ended: stream?.ended ?? false,
     streams: streams.size,
-    sharedModel: model?.shared ?? null,
   };
 }
 
@@ -664,12 +637,12 @@ function onMessage({ data }) {
 
 self.onmessage = (event) => {
   if (event.data?.type === "shared-model-failed") {
-    model?.failed?.("the shared model could not start");
+    model?.failed("the shared model could not start");
     return;
   }
   if (event.data?.type !== "port") return;
   [port] = event.ports;
-  model = event.ports[1] ? sharedModel(event.ports[1]) : localModel();
+  model = sharedModel(event.ports[1]);
   port.onmessage = onMessage;
   send({ type: "connected" });
   loadModel();

@@ -1,6 +1,6 @@
 // The Spleeter network on ONNX Runtime Web (WebAssembly, one CPU thread), with
-// a priority queue in front of it. Loaded either once in a shared worker for
-// every tab (model-worker.js) or inside a tab's own worker as a fallback.
+// a priority queue in front of it. Loaded once, in a shared worker for every
+// tab (model-worker.js).
 
 import * as ort from "./vendor/ort.wasm.min.mjs";
 import { BINS, FRAMES } from "./grid.js";

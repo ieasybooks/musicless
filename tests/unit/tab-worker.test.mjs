@@ -24,7 +24,7 @@ class Port {
   postMessage(message) { this.sent.push(message); }
 }
 
-function workerSandbox({ supported = true, localModel = null, configure = null } = {}) {
+function workerSandbox({ supported = true, configure = null } = {}) {
   let now = 0;
   const timers = new Set();
   const decoders = [];
@@ -63,7 +63,6 @@ function workerSandbox({ supported = true, localModel = null, configure = null }
     synthesize: () => ({ left: new Float32Array(grid.WINDOW_SAMPLES), right: new Float32Array(grid.WINDOW_SAMPLES) }),
     AudioDecoder,
     EncodedAudioChunk: class { constructor(init) { Object.assign(this, init); } },
-    importModel: async () => ({ createModel: () => localModel }),
     performance: { now: () => now },
     setTimeout: (fn, ms = 0) => { const timer = { fn, at: now + ms }; timers.add(timer); return timer; },
     clearTimeout: (timer) => timers.delete(timer),
@@ -71,17 +70,14 @@ function workerSandbox({ supported = true, localModel = null, configure = null }
     clearInterval: (timer) => timers.delete(timer),
     self: {},
   };
-  const inside = load("tab-worker.js", env, {
-    rewrite: (source) => source.replace('import("./model.js")', "importModel()"),
-    expose: ["streams", "addFrames", "invalidate"],
-  });
+  const inside = load("tab-worker.js", env, { expose: ["streams", "addFrames", "invalidate"] });
   const content = new Port();
   const modelPort = new Port();
   const w = {
     env, content, modelPort, decoders, resampled,
     get now() { return now; },
-    start({ shared = true } = {}) {
-      env.self.onmessage({ data: { type: "port" }, ports: shared ? [content, modelPort] : [content] });
+    start() {
+      env.self.onmessage({ data: { type: "port" }, ports: [content, modelPort] });
     },
     fromModel(data) {
       const run = w.runs().find((message) => message.id === data.id);
@@ -188,13 +184,23 @@ test("a shared model that answers its pings is kept", async () => {
 });
 
 test("a model that cannot load ends the worker with a fatal error", async () => {
-  const w = workerSandbox({ localModel: { load: async () => { throw new Error("out of memory"); } } });
+  const w = workerSandbox();
   w.start();
-  w.fromModel({ type: "failed", message: "out of memory" }); // the shared model, then our own copy
+  w.fromModel({ type: "failed", message: "out of memory" });
   await w.advance();
   const fatal = w.errors().find((message) => message.fatal);
   assert.ok(fatal);
   assert.match(fatal.message, /out of memory/);
+});
+
+test("a shared model that cannot start ends the worker with a fatal error at once", async () => {
+  const w = workerSandbox();
+  w.start();
+  w.env.self.onmessage({ data: { type: "shared-model-failed" } }); // what the frame posts
+  await w.advance();
+  const fatal = w.errors().find((message) => message.fatal);
+  assert.ok(fatal);
+  assert.match(fatal.message, /could not start/);
 });
 
 test("the worker answers the content script's pings", async () => {
