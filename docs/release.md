@@ -30,9 +30,10 @@ On Linux, before the tag:
    never heard while removal is on. The button sits in YouTube's control bar,
    left of captions: a plain note while the music plays ("Remove music"), the
    note struck through while it is removed ("Stop removing music"). The first
-   seconds show a spinner in the middle of the video ("Removing music" at the
-   top if the wait lasts).
-   The recovery dialog offers Try again (or Reload page) and Play with music.
+   seconds show YouTube's spinner in the middle of the video, with "Removing
+   music" under it. On a Short the button sits with the Short's own buttons.
+   The recovery dialog offers Try again (or Reload page) and Play with music;
+   a copy-protected video offers only Play with music.
    The first run asks you to **Turn on** before it processes a video.
 7. **Package check.** `./scripts/package.sh` writes `dist/nomusic-<version>.zip`.
    Unzip it and run `NOMUSIC_EXTENSION=<folder> QUICK=1 node local.mjs`, then

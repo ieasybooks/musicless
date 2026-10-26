@@ -41,8 +41,8 @@ nomusic reduces background music while keeping the voices: speech and singing. C
 How it works
 • Audio separation runs on your computer using a bundled, open-source model. No account or backend service is needed.
 • After you choose Turn on, automatic removal is on by default. Turn it off in the toolbar if you prefer to choose videos one by one.
-• The video may wait briefly at the start or after a seek while the processed audio is prepared. A spinner shows in the middle of the video, and Removing music at its top when the wait lasts.
-• nomusic's button sits in the player's control bar, left of captions: a music note, struck through while the music is removed. Click it to play the video with its music, and again to remove the music.
+• Each video waits a few seconds as it starts, while the music is removed: YouTube's spinner shows in the middle of the video, with Removing music under it. A seek can wait again.
+• nomusic's button sits in the player's control bar, left of captions (on Shorts, with the Short's own buttons): a music note, struck through while the music is removed. Click it to play the video with its music, and again to remove the music.
 
 Playback controls
 Volume, mute, seeking, fullscreen, and speed changes are supported. nomusic also works with supported Shorts, live streams, and embedded players on computers.
@@ -53,7 +53,7 @@ nomusic reads audio that the site's own player has already loaded and processes 
 Limits to know
 • Some music may remain, especially quiet background music under speech. Voices can sound less bright. This is not a guarantee of music-free playback.
 • Processing uses one CPU thread and about 400 MB of memory; performance varies by computer and video.
-• Copy-protected videos cannot be processed. When removal fails, the video pauses, the original stays silent, and a dialog ("Couldn’t remove the music") offers Try again or Play with music. Some failures ask you to Reload page instead. If the browser is waiting for a click before it plays sound, a play button shows in the middle of the video.
+• When removal fails, the video pauses and stays silent, and a dialog ("Couldn’t remove the music") offers Try again (or Reload page) and Play with music. Copy-protected videos cannot be processed: they can only play with their music. If the browser is waiting for a click before it plays sound, a play button shows in the middle of the video.
 • A live stream watched right at its live point keeps pausing. Watching a little behind it reduces the pauses.
 • This extension supports the listed site's desktop players, not phone browsers or other video services.
 
@@ -64,9 +64,9 @@ nomusic is an independent project and is not affiliated with or endorsed by YouT
 ```
 
 The player's words in that text are: Remove music and Stop removing music
-(the button's tooltips), Removing music (during a long wait), Couldn’t remove the
-music (the dialog), Try again (or Reload page) and Play with music (its
-choices).
+(the button's tooltips), Removing music (under the spinner while a video
+starts), Couldn’t remove the music (the dialog), Try again (or Reload page) and
+Play with music (its choices).
 
 ## Links and distribution
 
@@ -165,11 +165,11 @@ may stay in English. Describe only behavior the zip actually has.
 ```text
 Purpose: local background-music reduction during playback, keeping speech and singing. No nomusic account, payment, backend, microphone permission, media downloads, or export is needed.
 
-1. Install the submitted package on a desktop Chrome version supported by the manifest. A first-run page opens; nomusic does not process audio until you choose Turn on there (or turn on the toolbar popup's switch, under the same disclosure). Before that, the player button's tooltip says Turn on nomusic and it opens that page. Reload website tabs that were open before installation.
-2. Open a normal, non-copy-protected YouTube video with speech over background music. A public video works; no YouTube login is required for ordinary public playback. Leave the video unmuted. The first audio may take a few seconds to prepare; the video waits during preparation, with a spinner in the middle of the video and, when the wait lasts, "Removing music" at its top.
+1. Install the submitted package on a desktop Chrome version supported by the manifest. A first-run page opens; nomusic does not process audio until you choose Turn on there (or Turn on in the toolbar popup, under the same disclosure). Before that, the player button shows a music note with a small dot; its tooltip says Turn on nomusic and it opens that page, which then offers Back to the video (it reloads that video where it was). A video that was already playing when nomusic was turned on shows "nomusic is on" and Reload page. Reload website tabs that were open before installation.
+2. Open a normal, non-copy-protected YouTube video with speech over background music. A public video works; no YouTube login is required for ordinary public playback. Leave the video unmuted. The first audio may take a few seconds to prepare; the video waits during preparation, with YouTube's spinner in the middle of the video and "Removing music" under it.
 3. nomusic's button sits in the player's control bar, left of captions: a struck-through music note while separation is on. Listen for reduced instruments with retained speech and singing. Some music leakage is expected and is disclosed. Click the button (tooltip: Stop removing music) to hear the original, then click it again (tooltip: Remove music) to turn removal back on.
-4. Try volume, mute, a seek, and a speed change. Check an embedded player as well (the button sits in its top row of buttons). In the toolbar popup, turn automatic removal off, open another supported video, and click the button on its player.
-5. If processing fails or the content is copy-protected, the video remains paused and the original track stays silent, and a dialog ("Couldn’t remove the music") offers Try again or Play with music. Some failures show Reload page instead of Try again. This is deliberate fail-closed behavior. DRM is not bypassed. A live stream at the live edge can pause repeatedly; test slightly behind the edge.
+4. Try volume, mute, a seek, and a speed change. Check an embedded player as well (the button sits in its top row of buttons) and a Short (the button sits with the Short's own buttons at its top). In the toolbar popup, turn automatic removal off, open another supported video, and click the button on its player.
+5. If processing fails or the content is copy-protected, the video remains paused and the original track stays silent, and a dialog ("Couldn’t remove the music") offers Try again or Play with music. Some failures show Reload page instead of Try again; copy-protected videos offer only Play with music. This is deliberate fail-closed behavior. DRM is not bypassed. A live stream at the live edge can pause repeatedly; test slightly behind the edge.
 6. Choose an Arabic browser UI locale and verify the localized controls, first-run page, and right-to-left layout. English and Arabic have identical features and privacy behavior.
 
 Media handling: nomusic does not issue requests to fetch media from YouTube or a third-party service. The normal website player makes its own streaming requests. The extension copies audio bytes that the player supplies to MediaSource/SourceBuffer, uses them temporarily in RAM for separation, and replaces the sound heard during the same player session with the separated voices. It does not save, download, export, redistribute, or provide later offline access to that media. Ads continue through the site's player; nomusic is not an ad blocker.
