@@ -9,14 +9,16 @@
   </head>
   <body class="welcome">
     <main>
-      <p class="brand"><img src="icons/mark.svg" alt="" width="32" height="32" /><span data-i18n="extension_name">nomusic</span></p>
+      <!-- The mark alone: the name follows in the text, and in the heading once turned on. -->
+      <p class="brand"><img src="icons/note.svg" alt="" width="25" height="25" /></p>
 
-      <!-- The two states share one grid, so nothing moves when the first becomes the second.
-           Until the user chooses, nomusic reads no audio: only "Turn on" starts it. -->
+      <!-- The two states share one place, so the heading stays where it is when
+           the first becomes the second. Until the user chooses, nomusic reads
+           no audio: only "Turn on" starts it. -->
       <div class="states">
         <section id="setup" class="off">
           <h1 data-i18n="setup_heading"></h1>
-          <p data-i18n="consent_text"></p>
+          <p><span data-i18n="consent_text"></span> <a href="https://github.com/IbraheemTuffaha/nomusic/blob/main/docs/privacy.md" target="_blank" data-i18n="link_privacy"></a></p>
           <div><button type="button" class="primary" id="accept" data-i18n="consent_accept"></button></div>
         </section>
         <section id="done" class="off">
@@ -26,9 +28,6 @@
         </section>
       </div>
     </main>
-    <footer>
-      <a href="https://github.com/IbraheemTuffaha/nomusic/blob/main/docs/privacy.md" target="_blank" data-i18n="link_privacy"></a>
-    </footer>
     <script type="module" src="welcome.js"></script>
   </body>
 </html>
