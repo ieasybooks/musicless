@@ -29,7 +29,7 @@ On Linux, before the tag:
    music, a song, a seek, a speed change and a live stream. The original is
    never heard while removal is on. The button sits in YouTube's control bar,
    left of captions: a plain note while the music plays ("Remove music"), the
-   note struck through while it is removed ("Play with music"). The first
+   note struck through while it is removed ("Stop removing music"). The first
    seconds show a spinner with "Removing music" in the middle of the video.
    The recovery dialog offers Try again (or Reload page) and Play with music.
    The first run asks you to **Turn on** before it processes a video.

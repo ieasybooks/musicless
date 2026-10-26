@@ -22,13 +22,13 @@ nomusic
 93 of 132 characters.
 
 ```text
-يزيل معظم موسيقى الخلفية من فيديوهات YouTube™ ويُبقي الأصوات البشرية. يعمل كل شيء على حاسوبك.
+يزيل معظم موسيقى الخلفية من فيديوهات YouTube™‎ ويُبقي الأصوات البشرية. يعمل كل شيء على حاسوبك.
 ```
 
 ## الوصف
 
 ```text
-يخفّض nomusic موسيقى الخلفية ويُبقي الأصوات البشرية: الكلام والغناء. متوافق مع YouTube™. صُنع لمن يريد تجنّب الموسيقى لأسباب دينية أو شخصية، ولمن يفضّل الأصوات البشرية مع موسيقى خلفية أقل.
+يخفّض nomusic موسيقى الخلفية ويُبقي الأصوات البشرية: الكلام والغناء. متوافق مع YouTube™‎. صُنع لمن يريد تجنّب الموسيقى لأسباب دينية أو شخصية، ولمن يفضّل الأصوات البشرية مع موسيقى خلفية أقل.
 
 كيف يعمل
 • يجري فصل الصوت على حاسوبك باستخدام نموذج مفتوح المصدر مضمّن في الإضافة. لا حاجة إلى حساب ولا إلى خدمة خلفية.
@@ -63,17 +63,21 @@ extension UI uses the same Arabic (they come from
 
 | English | Arabic |
 | --- | --- |
-| Turn on | تشغيل |
+| Turn on | تفعيل |
 | Remove music | إزالة الموسيقى |
+| Stop removing music | إيقاف إزالة الموسيقى |
 | Play with music | تشغيل مع الموسيقى |
 | Removing music | جارٍ إزالة الموسيقى |
-| Couldn't remove the music | تعذّرت إزالة الموسيقى |
+| Couldn’t remove the music | تعذّرت إزالة الموسيقى |
 | Try again | إعادة المحاولة |
 | Reload page | إعادة تحميل الصفحة |
 
 Buttons use the verbal noun, as Chrome's and YouTube's own Arabic buttons do
 (the earlier imperatives شغّل، حاول مجددًا، أعد تحميل الصفحة were changed in
-the design pass; the native review should confirm). «تشغيل مع الموسيقى» means
+the design pass; the native review should confirm). "Turn on" is «تفعيل», as in
+Chrome: beside a video «تشغيل» reads as "Play". After "YouTube™" an invisible
+left-to-right mark (U+200E) keeps the ™ on the name's right in Arabic text; keep
+it when you copy the text into the dashboard. «تشغيل مع الموسيقى» means
 the video's music will play. Do not soften it to "original". «جارٍ إزالة
 الموسيقى» is the progress line. The voices in the description are
 «الأصوات البشرية: الكلام والغناء»: speech and singing, both. Where removal is

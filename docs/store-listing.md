@@ -53,7 +53,7 @@ nomusic reads audio that the site's own player has already loaded and processes 
 Limits to know
 • Some music may remain, especially quiet background music under speech. Voices can sound less bright. This is not a guarantee of music-free playback.
 • Processing uses one CPU thread and about 400 MB of memory; performance varies by computer and video.
-• Copy-protected videos cannot be processed. When removal fails, the video pauses, the original stays silent, and a dialog ("Couldn't remove the music") offers Try again or Play with music. Some failures ask you to Reload page instead. If the browser is waiting for a click before it plays sound, a play button shows in the middle of the video.
+• Copy-protected videos cannot be processed. When removal fails, the video pauses, the original stays silent, and a dialog ("Couldn’t remove the music") offers Try again or Play with music. Some failures ask you to Reload page instead. If the browser is waiting for a click before it plays sound, a play button shows in the middle of the video.
 • A live stream watched right at its live point keeps pausing. Watching a little behind it reduces the pauses.
 • This extension supports the listed site's desktop players, not phone browsers or other video services.
 
@@ -63,8 +63,8 @@ Privacy policy: https://github.com/IbraheemTuffaha/nomusic/blob/main/docs/privac
 nomusic is an independent project and is not affiliated with or endorsed by YouTube or Google. YouTube is a trademark of Google LLC. Use of this trademark is subject to Google Permissions.
 ```
 
-The player's words in that text are: Remove music and Play with music (the
-button's tooltips), Removing music (under the spinner), Couldn't remove the
+The player's words in that text are: Remove music and Stop removing music
+(the button's tooltips), Removing music (under the spinner), Couldn’t remove the
 music (the dialog), Try again (or Reload page) and Play with music (its
 choices).
 
@@ -169,7 +169,7 @@ Purpose: local background-music reduction during playback, keeping speech and si
 2. Open a normal, non-copy-protected YouTube video with speech over background music. A public video works; no YouTube login is required for ordinary public playback. Leave the video unmuted. The first audio may take a few seconds to prepare; the video waits during preparation, with a spinner and "Removing music" in the middle of the video.
 3. nomusic's button sits in the player's control bar, left of captions: a struck-through music note while separation is on. Listen for reduced instruments with retained speech and singing. Some music leakage is expected and is disclosed. Click the button (tooltip: Play with music) to hear the original, then click it again (tooltip: Remove music) to turn removal back on.
 4. Try volume, mute, a seek, and a speed change. Check an embedded player as well (the button sits in its top row of buttons). In the toolbar popup, turn automatic removal off, open another supported video, and click the button on its player.
-5. If processing fails or the content is copy-protected, the video remains paused and the original track stays silent, and a dialog ("Couldn't remove the music") offers Try again or Play with music. Some failures show Reload page instead of Try again. This is deliberate fail-closed behavior. DRM is not bypassed. A live stream at the live edge can pause repeatedly; test slightly behind the edge.
+5. If processing fails or the content is copy-protected, the video remains paused and the original track stays silent, and a dialog ("Couldn’t remove the music") offers Try again or Play with music. Some failures show Reload page instead of Try again. This is deliberate fail-closed behavior. DRM is not bypassed. A live stream at the live edge can pause repeatedly; test slightly behind the edge.
 6. Choose an Arabic browser UI locale and verify the localized controls, first-run page, and right-to-left layout. English and Arabic have identical features and privacy behavior.
 
 Media handling: nomusic does not issue requests to fetch media from YouTube or a third-party service. The normal website player makes its own streaming requests. The extension copies audio bytes that the player supplies to MediaSource/SourceBuffer, uses them temporarily in RAM for separation, and replaces the sound heard during the same player session with the separated voices. It does not save, download, export, redistribute, or provide later offline access to that media. Ads continue through the site's player; nomusic is not an ad blocker.

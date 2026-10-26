@@ -54,7 +54,7 @@ nomusic prepares the audio; a spinner in the middle of the video says
 nomusic's button sits in YouTube's control bar, left of captions (in embedded
 players, in the top row of buttons): a note while the music plays, the note
 struck through while nomusic removes it. Its tooltip says what a click does:
-**Remove music**, or **Play with music**. If the browser needs a click before
+**Remove music**, or **Stop removing music**. If the browser needs a click before
 it plays sound, a play button shows in the middle of the video.
 
 When the music cannot be removed, the video stays paused and silent, and a
