@@ -29,7 +29,7 @@ video plays, and plays them in place of the original track.
 | `separator.html/js` | The hidden frame, in the extension's own origin (WebAssembly allowed, out of the page's reach). It accepts one connection, and only with a random token that page scripts cannot read: the background service worker makes it once, and the content script sends it only to the extension's own origin, fixed when the frame is created. Then it starts the tab worker and connects it to the shared model. |
 | `tab-worker.js` | Per tab: demuxes (`demux.js`), decodes with WebCodecs, resamples to 44.1 kHz, computes the STFT (`dsp.js`), sends it to the model, synthesizes the voices and crossfades the window edges. Keeps at most 64 MiB of audio per video, nothing more than 15 minutes behind or ahead of the playhead, and separates again whatever the player replaced. |
 | `model-worker.js`, `model.js` | One copy of the model for every tab (a shared worker; WebCodecs is not available there, which is why decoding stays per tab). A priority queue puts the chunk a playing video needs first. |
-| `grid.js` | The fixed window grid shared by both sides. |
+| `grid.js` | The model's numbers and the fixed window grid, shared by both sides (`tests/reference.py` mirrors them). |
 | `stretch.js`, `third_party/soundtouch` | Pitch-preserving time-stretch for speeds other than 1x. |
 | `popup.*`, `welcome.*`, `background.js`, `settings.js` | The toolbar popup, the welcome page, and the stored values: the automatic-removal setting and whether the user chose **Turn on nomusic** (`chrome.storage.sync`), and the frame's token (`chrome.storage.local`). |
 
@@ -144,16 +144,35 @@ audio per video.
   cross-origin file routed that way would play silence, so only Media Source
   (blob:) sources are routed; anything else is held instead.
 
+## Messages
+
+| Between | Channel | Messages | Checked by |
+| --- | --- | --- | --- |
+| Content script → `capture.js` | `window.postMessage`, `nomusic: "control"` | `hello` (announce your streams), `consent` (whether audio may be kept), `subscribe` (replay a stream's audio, then send its appends as they come) | `capture.js` reads only these three; a page can post them too |
+| `capture.js` → content script | `window.postMessage`, `nomusic: "capture"` | `stream` (an id and its `blob:` URL), `closed`, `replay` (the audio kept so far, and whether some went by unkept), `event` (one new entry) | `capture-bus.js`: shapes, types, finite numbers, sizes |
+| `intent.js` → content script | a `nomusic:playback-intent` event on the `<video>` | the page's own `play()` or `pause()` | `playback-intent.js`: a boolean, nothing else |
+| Content script → service worker | `chrome.runtime.sendMessage` | `engine-token`, `open-welcome` | Only the extension's own scripts can send these |
+| Content script → hidden frame | `postMessage` to the extension's origin, with a port | `nomusic-port` (the token) | `separator.js`: the token, one connection |
+| Hidden frame → tab worker | `Worker.postMessage` | `port` (the content script's port and one to the model), `shared-model-failed` | — |
+| Content script ⇄ tab worker | the handed-over port | to the worker: `stream`, `drop`, `entries`, `replayed`, `want`, `stats`, `ping`; from it: `connected`, `model`, `chunk`, `checked`, `changed`, `unsupported`, `error`, `stats`, `pong` | Nothing more: only the content script holds this port |
+| Tab worker ⇄ model worker | a port the frame hands over (`client`) | to the model: `load`, `run`, `ping`; from it: `ready`, `failed`, `result`, `error`, `pong` | Nothing more: both ends are the extension's |
+| Test copy only | `window.postMessage`, `nomusic: "debug"` | `state`, `sessions`, `dump`, answered with `debug-reply` | Added by `tests/harness.mjs`; not in the release |
+
 ## Security
 
 `capture.js` and `intent.js` run in the page's own JavaScript world, so the
-page can see and imitate their messages. nomusic treats everything from that
-world as untrusted: messages are checked for shape and size, a stream that
-closes under a playing video fails closed rather than going quiet, and the
-in-player controls ignore clicks a script fakes. The hidden frame only accepts
-the content script (see the token above). The extension makes no network
-requests, has no remote code, and asks for one permission (`storage`) plus
-access to YouTube's pages. Diagnostics and audio recording exist only in the
-test harness's copy of the extension: they are switched on by a key the
-harness adds to that copy's manifest, and `recorder.js` is not in the release
-zip.
+page can see and imitate their messages, and nomusic cannot tell its own from
+the page's. It treats everything from that world as untrusted: messages are
+checked for shape and size before anything acts on them, and the in-player
+controls ignore clicks a script fakes. The most a page can do with forged
+messages is make a video fail closed, for example by saying its stream closed.
+It cannot make the music play while nomusic is on (the original track is
+silenced in the content script's world, which the page cannot reach), get
+around the separation, or reach the hidden frame and its workers (see the
+token above).
+
+The extension makes no network requests, has no remote code, and asks for one
+permission (`storage`) plus access to YouTube's pages. The release cannot
+record or export audio: the test harness adds the recorder (`recorder.js`,
+which is not in the release zip) and its diagnostics to its own copy of the
+extension, with a key in that copy's manifest.
