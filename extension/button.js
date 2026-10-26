@@ -38,8 +38,10 @@ const STATES = {
   blocked: ["attention", TEXT.restore, TEXT.blocked],
   failed: ["error", TEXT.failed, ""],
 };
-// A hold shorter than this shows nothing (a short one after a stall would only flicker).
+// A hold shorter than this shows nothing (a short one after a stall would only
+// flicker); one that lasts says what it is after the second delay.
 const NOTICE_DELAY_MS = 400;
+const WORDS_DELAY_MS = 1500;
 
 // The glyph, on YouTube's 24 px grid and in its weight: a note (round head,
 // straight stem, square flag), plain while the music plays and struck through
@@ -207,7 +209,7 @@ export class Button {
       this.announced = status;
       this.live.textContent = says;
     }
-    this.renderNotice(state, says, status);
+    this.renderNotice(state, says);
     if (session.failure !== this.shownFailure) {
       this.shownFailure = session.failure;
       this.dismissed = false;
@@ -229,9 +231,10 @@ export class Button {
   // ---- the wait and the click --------------------------------------------------
 
   // One layer over the video, below YouTube's controls. The wait: YouTube's
-  // spinner where YouTube draws it, and the words in YouTube's own message
-  // style hanging under it; clicks go through to the video. The click: the
-  // whole video is the button, a round play button in the middle its sign.
+  // spinner where YouTube draws it, and the words where YouTube writes its own
+  // brief messages (the top of the video); clicks go through to the video. The
+  // click: the whole video is the button, a round play button in the middle
+  // its sign.
   buildNotice() {
     const notice = setLanguage(document.createElement("button"));
     notice.type = "button";
@@ -266,7 +269,7 @@ export class Button {
     return notice;
   }
 
-  renderNotice(state, text, status) {
+  renderNotice(state, text) {
     const now = performance.now();
     if (state === "working") this.workingSince ??= now;
     else this.workingSince = null;
@@ -281,9 +284,9 @@ export class Button {
     // hang under that one.
     const theirs = String(this.host.classList.contains("buffering-mode"));
     if (this.notice.dataset.theirs !== theirs) this.notice.dataset.theirs = theirs;
-    // The words come with the first wait of a video; after a jump the
-    // spinner alone says it.
-    const words = String(status === "starting");
+    // Words only for a wait long enough to wonder about, at a start or after a
+    // jump alike.
+    const words = String(working && now - this.workingSince >= WORDS_DELAY_MS);
     if (this.notice.dataset.words !== words) this.notice.dataset.words = words;
     if (this.noticeText.textContent !== text) this.noticeText.textContent = text;
     const kind = blocked ? "action" : "status";
