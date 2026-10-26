@@ -30,8 +30,6 @@
     --divider: #444746;
     --accent: #8fd6b0;
     --link: #8fd6b0;
-    --tile: #8fd6b0;
-    --on-tile: #0b2b1d;
     --accent-hover: #a6e0c1;
     --on-accent: #0b2b1d;
     --track: #8e918f;
@@ -62,11 +60,10 @@ body {
 h1 { margin: 0; font-weight: 400; }
 p { margin: 0; }
 /* Links in running text: the green as text, underlined, as Chrome's links are
-   blue. Arabic letters hang below the line: the colour alone marks them. */
+   blue. Arabic letters hang below the line: the underline sits lower there. */
 a { color: var(--link); text-decoration: underline; text-underline-offset: 3px; }
 a:hover { text-decoration-thickness: 2px; }
-[lang="ar"] a { text-decoration: none; }
-[lang="ar"] a:hover { text-decoration: underline; }
+[lang="ar"] a { text-underline-offset: 4px; }
 [hidden] { display: none !important; }
 
 button.primary,
@@ -90,6 +87,8 @@ a.button {
 }
 button.primary:hover,
 a.button:hover { background: var(--accent-hover); color: var(--on-accent); text-decoration: none; }
+[lang="ar"] button.primary,
+[lang="ar"] a.button { font-size: 15px; }
 
 button:focus-visible,
 a:focus-visible,
@@ -108,8 +107,8 @@ h1:focus:not(:focus-visible) { outline: none; }
   padding: 28vh 24px 64px;
   text-align: center;
 }
-/* The mark: the toolbar icon's tile, drawn here so that it takes the page's
-   one green, light or dark (the note is a mask, so it takes its colour too). */
+/* The mark: the toolbar icon's tile, the same in light and dark, as a brand
+   mark is (the note is a mask over the tile's colour). */
 .welcome .brand {
   width: 40px;
   height: 40px;
@@ -133,8 +132,8 @@ h1:focus:not(:focus-visible) { outline: none; }
 .welcome section { grid-area: 1 / 1; }
 .welcome section.off { visibility: hidden; }
 .welcome h1 { font-size: 32px; line-height: 40px; margin-bottom: 12px; text-wrap: balance; }
-[lang="ar"] .welcome h1 { line-height: 44px; }
-.welcome section p { max-width: 460px; margin: 0 auto 32px; color: var(--muted); font-size: 16px; line-height: 24px; text-wrap: pretty; }
+[lang="ar"] .welcome h1 { font-size: 34px; line-height: 48px; }
+.welcome section p { max-width: 500px; margin: 0 auto 32px; color: var(--muted); font-size: 16px; line-height: 24px; text-wrap: pretty; }
 [lang="ar"] .welcome section p { font-size: 17px; line-height: 28px; }
 
 /* ---- the toolbar popup: one row, as in Chrome's settings, and Help ---- */
@@ -156,13 +155,15 @@ h1:focus:not(:focus-visible) { outline: none; }
 }
 .popup .setting:hover { background: var(--hover); }
 .popup .setting input { grid-row: 1 / 4; grid-column: 2; }
+/* Beside a long description, the switch stays with its name. */
+.popup .setting:has(#consent:not([hidden])) input { grid-row: 1; }
 .popup .hint { grid-column: 1; margin-top: 4px; color: var(--muted); text-wrap: pretty; }
 /* Help: a second row under a hairline, its sign where the switch is. */
 .popup .row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 48px;
+  min-height: 49px; /* 48 and the hairline */
   box-sizing: border-box;
   padding: 0 16px;
   border-top: 1px solid var(--divider);
