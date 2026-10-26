@@ -3,71 +3,30 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title data-i18n="welcome_title">Welcome to nomusic</title>
+    <meta name="color-scheme" content="light dark" />
+    <title data-i18n="extension_name">nomusic</title>
     <link rel="stylesheet" href="pages.css" />
-    <style>
-      body { font-size: 15px; }
-      main { max-width: 640px; margin: 48px auto; padding: 0 24px; }
-      header { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; }
-      header img { width: 48px; height: 48px; border-radius: 11px; }
-      h1 { margin: 0; font-size: 26px; }
-      h2 { font-size: 17px; margin: 28px 0 10px; }
-      ol, ul { padding-inline-start: 22px; margin: 0; }
-      li { margin-bottom: 8px; }
-      .card { padding: 18px 20px; border-radius: 12px; background: #1a1f29; border: 1px solid #2a3140; }
-      .card h2 { margin-top: 0; }
-      .card .actions { margin: 16px 0 0; }
-      .card p:last-child { margin-bottom: 0; }
-      footer { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 36px; }
-    </style>
   </head>
-  <body>
+  <body class="welcome">
     <main>
-      <header>
-        <img src="icons/icon-128.png" alt="" />
-        <h1 data-i18n="welcome_title"></h1>
-      </header>
+      <img class="mark" src="icons/mark.svg" alt="" width="40" height="40" />
 
-      <!-- Shown until the user chooses; nomusic reads no audio before "Turn on nomusic". -->
-      <section class="card" id="consent" hidden>
-        <h2 data-i18n="consent_heading"></h2>
+      <!-- Until the user chooses, nomusic reads no audio: only "Turn on" starts it. -->
+      <section id="setup" hidden>
+        <h1 data-i18n="setup_heading"></h1>
         <p data-i18n="consent_text"></p>
-        <p class="actions">
-          <button type="button" class="primary" id="accept" data-i18n="consent_accept"></button>
-          <button type="button" class="secondary" id="later" data-i18n="consent_later"></button>
-          <a href="https://github.com/IbraheemTuffaha/nomusic/blob/main/docs/privacy.md" target="_blank" data-i18n="link_privacy"></a>
-        </p>
+        <button type="button" class="primary" id="accept" data-i18n="consent_accept"></button>
       </section>
-      <p class="notice" id="status" role="status" tabindex="-1" hidden></p>
 
-      <h2 data-i18n="welcome_how"></h2>
-      <ol>
-        <li data-i18n="welcome_step_play"></li>
-        <li data-i18n="welcome_step_button" data-i18n-args="button_on"></li>
-        <li data-i18n="welcome_step_toolbar"></li>
-      </ol>
-
-      <h2 data-i18n="welcome_expect"></h2>
-      <ul>
-        <li data-i18n="welcome_expect_voices"></li>
-        <li data-i18n="welcome_expect_fail"></li>
-        <li data-i18n="privacy_summary"></li>
-      </ul>
-
-      <h2 data-i18n="welcome_limits"></h2>
-      <ul>
-        <li data-i18n="welcome_limit_desktop"></li>
-        <li data-i18n="welcome_limit_protected"></li>
-        <li data-i18n="welcome_limit_live"></li>
-        <li data-i18n="welcome_limit_memory"></li>
-      </ul>
-
-      <footer>
-        <a href="https://github.com/IbraheemTuffaha/nomusic/issues" target="_blank" data-i18n="link_help"></a>
-        <a href="THIRD_PARTY_NOTICES.txt" target="_blank" data-i18n="link_licenses"></a>
-        <a href="https://github.com/IbraheemTuffaha/nomusic/blob/main/docs/privacy.md" target="_blank" data-i18n="link_privacy"></a>
-      </footer>
+      <section id="done" hidden>
+        <h1 id="doneHeading" tabindex="-1" data-i18n="done_heading"></h1>
+        <p data-i18n="done_text"></p>
+        <a class="button primary" href="https://www.youtube.com/" data-i18n="done_open"></a>
+      </section>
     </main>
+    <footer>
+      <a href="https://github.com/IbraheemTuffaha/nomusic/blob/main/docs/privacy.md" target="_blank" data-i18n="link_privacy"></a>
+    </footer>
     <script type="module" src="welcome.js"></script>
   </body>
 </html>

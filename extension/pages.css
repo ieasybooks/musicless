@@ -1,88 +1,165 @@
-/* Shared look of the extension's own pages (popup, welcome). Logical
-   properties keep the layout right in Arabic (dir="rtl", set by i18n.js). */
+/* Shared look of the extension's own pages (popup, first run), in the manner
+   of Chrome's own: the system's fonts, its light or dark appearance, one
+   accent colour spent on the one action. Logical properties keep the layout
+   right in Arabic (dir="rtl", set by i18n.js). */
 :root {
-  color-scheme: dark;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  color-scheme: light dark;
+  --bg: #ffffff;
+  --text: #1f1f1f;
+  --muted: #444746;
+  --line: #e1e3e1;
+  --hover: rgba(31, 31, 31, 0.06);
+  --accent: #1f7556; /* the mark's green; white on it is 5.6:1 */
+  --accent-hover: #195f46;
+  --on-accent: #ffffff;
+  --track: #747775;
+  --focus: #1f7556;
 }
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1f1f1f;
+    --text: #e3e3e3;
+    --muted: #c4c7c5;
+    --line: #444746;
+    --hover: rgba(227, 227, 227, 0.08);
+    --accent: #8fd6b0;
+    --accent-hover: #a6e0c1;
+    --on-accent: #0b2b1d;
+    --track: #8e918f;
+    --focus: #8fd6b0;
+  }
+}
+/* On body: Chrome gives extension pages' bodies its own default font. */
 body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans", system-ui, sans-serif;
   margin: 0;
-  background: #11141a;
-  color: #f3f4f7;
-  font-size: 13px;
-  line-height: 1.45;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 20px;
+  -webkit-font-smoothing: antialiased;
 }
-[dir="rtl"] body { line-height: 1.7; }
-a { color: #c3ef1d; }
-p { margin: 0 0 8px; }
-.hint { color: #8a92a0; font-size: 12px; font-weight: 400; }
+[lang="ar"] body {
+  font-family: "Segoe UI", "SF Arabic", "Geeza Pro", "Noto Sans Arabic", "Noto Naskh Arabic UI", Tahoma, system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 24px;
+}
+h1 { margin: 0; font-weight: 400; }
+[dir="rtl"] h1 { font-weight: 500; }
+p { margin: 0; }
+a { color: var(--muted); text-decoration: none; }
+a:hover { color: var(--text); text-decoration: underline; text-underline-offset: 3px; }
 [hidden] { display: none !important; }
 
 button.primary,
-button.secondary {
-  min-height: 32px;
-  padding: 7px 16px;
-  border-radius: 8px;
-  border: 1px solid transparent;
+a.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 40px;
+  padding: 10px 24px;
+  border: 0;
+  border-radius: 20px;
+  background: var(--accent);
+  color: var(--on-accent);
   font: inherit;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 20px;
+  text-decoration: none;
   cursor: pointer;
 }
-button.primary { background: #c3ef1d; color: #11141a; }
-button.primary:hover { background: #d3f64c; }
-button.secondary { background: transparent; color: #f3f4f7; border-color: #3a4255; }
-button.secondary:hover { background: #1f2531; }
-.actions {
-  display: flex;
-  flex-wrap: wrap;
+button.primary:hover,
+a.button:hover { background: var(--accent-hover); color: var(--on-accent); text-decoration: none; }
+
+button:focus-visible,
+a:focus-visible,
+input.switch:focus-visible,
+h1:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+h1:focus:not(:focus-visible) { outline: none; }
+
+/* ---- the first-run page: one column, at the same height in both states ---- */
+.welcome main {
+  box-sizing: border-box;
+  max-width: 536px;
+  margin: 0 auto;
+  padding: 22vh 24px 96px;
+}
+.welcome .mark { display: block; width: 40px; height: 40px; margin-bottom: 24px; }
+.welcome h1 { font-size: 28px; line-height: 36px; margin-bottom: 12px; text-wrap: balance; }
+[dir="rtl"] .welcome h1 { line-height: 44px; }
+.welcome section p { font-size: 16px; line-height: 24px; color: var(--muted); margin-bottom: 32px; }
+[dir="rtl"] .welcome section p { font-size: 17px; line-height: 30px; }
+.welcome footer {
+  position: fixed;
+  inset-inline: 0;
+  bottom: 24px;
+  max-width: 440px;
+  margin: 0 auto;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+/* ---- the toolbar popup ---- */
+.popup { width: 320px; }
+.popup section { padding: 16px 16px 8px; }
+.popup #consent p { margin-bottom: 16px; }
+.popup .actions { display: flex; justify-content: flex-end; }
+.popup button.primary { min-height: 32px; padding: 6px 16px; border-radius: 16px; }
+.popup .notice { margin-bottom: 12px; color: var(--muted); }
+.popup .setting {
+  display: grid;
+  grid-template-columns: 1fr auto;
   align-items: center;
-  gap: 10px 16px;
+  gap: 2px 16px;
+  margin: -8px -16px 0;
+  padding: 8px 16px;
+}
+.popup .setting:hover { background: var(--hover); }
+.popup .setting label { cursor: pointer; }
+.popup .hint { grid-column: 1 / -1; color: var(--muted); font-size: 12px; line-height: 16px; }
+[dir="rtl"] .popup .hint { font-size: 13px; line-height: 20px; }
+.popup footer {
+  display: flex;
+  gap: 16px;
+  padding: 8px 16px 12px;
+  font-size: 12px;
+  line-height: 16px;
 }
 
-/* A short confirmation after the user chose; green when nomusic is on. */
-.notice {
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: #1a1f29;
-  border: 1px solid #3a4255;
-}
-.notice.on {
-  background: rgba(22, 110, 70, 0.25);
-  border-color: rgba(22, 110, 70, 0.7);
-}
-
-/* An on/off switch drawn over a native checkbox (keyboard and screen readers keep working). */
+/* An on/off switch drawn over a native checkbox (keyboard and screen readers
+   keep working), in the proportions of Chrome's own. */
 input.switch {
   appearance: none;
   flex: 0 0 auto;
   position: relative;
-  width: 36px;
-  height: 20px;
+  box-sizing: border-box;
+  width: 28px;
+  height: 16px;
   margin: 0;
-  border-radius: 999px;
-  background: #3a4255;
+  border: 2px solid var(--track);
+  border-radius: 8px;
+  background: transparent;
   cursor: pointer;
-  transition: background 150ms ease;
+  transition: background-color 120ms ease, border-color 120ms ease;
 }
 input.switch::after {
   content: "";
   position: absolute;
   top: 2px;
   inset-inline-start: 2px;
-  width: 16px;
-  height: 16px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background: #f3f4f7;
-  transition: inset-inline-start 150ms ease;
+  background: var(--track);
+  transition: inset-inline-start 120ms ease, background-color 120ms ease, transform 120ms ease;
 }
-input.switch:checked { background: #4caf6e; }
-input.switch:checked::after { inset-inline-start: 18px; }
-
-input.switch:focus-visible,
-button:focus-visible,
-a:focus-visible {
-  outline: 2px solid #b4ddff;
-  outline-offset: 2px;
-}
+input.switch:checked { border-color: var(--accent); background: var(--accent); }
+input.switch:checked::after { inset-inline-start: 14px; background: var(--on-accent); transform: scale(1.25); }
 
 @media (prefers-reduced-motion: reduce) {
   input.switch, input.switch::after { transition: none; }

@@ -714,7 +714,7 @@ await step("extension removed while playing: fails closed", async () => {
   await browser.uninstallExtension(extensionId);
   await sleep(2000);
   const held = await videoState(page);
-  const panel = await page.evaluate(() => document.querySelector(".nomusic-recovery:not([hidden]) .nomusic-recovery__message")?.textContent ?? null);
+  const panel = await page.evaluate(() => document.querySelector(".nomusic-dialog:not([hidden]) .nomusic-dialog__message")?.textContent ?? null);
   await chooseRecovery(page, "original");
   await sleep(1500);
   const resumed = await videoState(page);

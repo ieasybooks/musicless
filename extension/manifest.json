@@ -57,7 +57,6 @@
         "settings.js",
         "stretch.js",
         "third_party/soundtouch/*.js",
-        "icons/button.png",
         "separator.html"
       ],
       "matches": ["https://www.youtube.com/*", "https://m.youtube.com/*", "https://www.youtube-nocookie.com/*"]

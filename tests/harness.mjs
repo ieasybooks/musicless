@@ -183,11 +183,11 @@ export async function frameState(frame) {
   if (!state) return null;
   const button = await frame.evaluate(() => {
     const el = [...document.querySelectorAll(".nomusic-btn")].find((b) => b.style.display !== "none");
-    const panel = document.querySelector(".nomusic-recovery:not([hidden])");
+    const panel = document.querySelector(".nomusic-dialog:not([hidden])");
     return {
-      label: el?.querySelector(".nomusic-btn__label")?.textContent ?? null,
+      label: el?.getAttribute("aria-label") ?? null,
       buttonState: el?.dataset.state ?? null,
-      panel: panel ? panel.querySelector(".nomusic-recovery__message")?.textContent : null,
+      panel: panel ? panel.querySelector(".nomusic-dialog__message")?.textContent : null,
     };
   });
   return { ...state, ...button };
@@ -224,12 +224,12 @@ export async function clickButton(frame) {
   return { covered_by: covered };
 }
 
-// Choose an action in the recovery panel by its data-action ("retry" or
-// "original"), with a real click: the panel ignores synthetic ones.
+// Choose an action in the recovery dialog by its data-action ("retry" or
+// "original"), with a real click: the dialog ignores synthetic ones.
 export async function chooseRecovery(frame, action) {
   const item = await frame.evaluateHandle((action) =>
-    document.querySelector(`.nomusic-recovery:not([hidden]) .nomusic-menu__item[data-action="${action}"]`), action);
-  if (!item.asElement()) throw new Error(`no "${action}" action in the recovery panel`);
+    document.querySelector(`.nomusic-dialog:not([hidden]) .nomusic-dialog__action[data-action="${action}"]`), action);
+  if (!item.asElement()) throw new Error(`no "${action}" action in the recovery dialog`);
   await item.asElement().click();
 }
 

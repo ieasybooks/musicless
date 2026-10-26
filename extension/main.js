@@ -14,11 +14,17 @@ const capture = new CaptureBus();
 const engine = new Engine();
 const controllers = new Map(); // video -> { session, button }
 
-// The closest visible ancestor big enough to be the video's player, or null
-// when the video has no visible box (a torn-down player, a background tab).
+// The video's player: YouTube's player element, else the closest visible
+// ancestor big enough to be one. Null when the video has no visible box (a
+// torn-down player, a background tab).
 function pickHost(video) {
   const box = video.getBoundingClientRect();
   if (box.width < 200 || box.height < 100) return null;
+  const player = video.closest(".html5-video-player");
+  if (player) {
+    const rect = player.getBoundingClientRect();
+    if (rect.width >= 240 && rect.height >= 135) return player;
+  }
   let node = video.parentElement;
   while (node && node !== document.body) {
     const rect = node.getBoundingClientRect();
@@ -144,9 +150,13 @@ function start() {
     engine.tidy();
     capture.consent(consented);
   }, 1000);
-  // Players appear and resize without DOM changes we can see (layout, CSS).
+  // Players appear and resize without DOM changes we can see (layout, CSS),
+  // and YouTube rebuilds its controls (navigation, the miniplayer).
   setInterval(() => {
-    for (const controller of controllers.values()) if (!controller.button || controller.button.el.style.display === "none") anchor(controller);
+    for (const controller of controllers.values()) {
+      const { button, video } = controller;
+      if (!button || button.el.style.display === "none" || !button.placed(pickHost(video))) anchor(controller);
+    }
   }, 2000);
 }
 
