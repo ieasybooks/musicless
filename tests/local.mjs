@@ -402,26 +402,39 @@ await step("nothing is read before consent; consenting starts the next video", a
     const captured = await page.evaluate(() => window.__nomusicCaptureDebug());
     const frames = await engineFrames(page);
     const { paused, time } = await videoState(page);
-    // On the welcome page the user first chooses Not now with the mouse, then
-    // Turn on nomusic with the keyboard.
+    // On the first-run page the user first leaves without choosing (there is
+    // no "Not now": closing the page is the no), then comes back and chooses
+    // Turn on with the keyboard.
+    const consented = async () => {
+      const probe = await browser.newPage();
+      await probe.goto(`chrome-extension://${extensionId}/popup.html`);
+      const stored = await probe.evaluate(() => chrome.storage.sync.get("consented"));
+      await probe.close();
+      return stored.consented === true;
+    };
+    const first = await browser.newPage();
+    await first.goto(`chrome-extension://${extensionId}/welcome.html`);
+    await first.waitForSelector("#accept", { visible: true });
+    await first.close();
+    const leftOff = !(await consented()) && (await frameState(page)).status === "setup";
     const welcome = await browser.newPage();
     await welcome.goto(`chrome-extension://${extensionId}/welcome.html`);
-    await welcome.waitForSelector("#later", { visible: true });
-    await welcome.click("#later");
-    const notNow = await welcome.evaluate(async () => {
-      const status = document.querySelector("#status");
-      return !status.hidden && !status.classList.contains("on") && !(await chrome.storage.sync.get("consented")).consented;
-    });
-    await welcome.reload();
     await welcome.waitForSelector("#accept", { visible: true });
     await welcome.focus("#accept");
     await welcome.keyboard.press("Enter");
     const started = Date.now();
     await welcome.waitForFunction(() => chrome.storage.sync.get("consented").then((stored) => stored.consented === true), { timeout: 5000 });
-    const turnedOn = await welcome.$eval("#status", (status) => !status.hidden && status.classList.contains("on"));
+    const turnedOn = await welcome.evaluate(() =>
+      !document.querySelector("#done").classList.contains("off") && document.activeElement?.id === "doneHeading");
     await welcome.close();
     const failed = await waitFor(page, (s) => s.status === "failed", { timeout: 10000, label: "the video that played before" });
     const failMs = Date.now() - started;
+    // Not a failure to the user: nomusic is on, and a reload will do.
+    const dialog = await page.evaluate(() => {
+      const panel = document.querySelector(".nomusic-dialog:not([hidden])");
+      const main = panel?.querySelector(".nomusic-dialog__action--main");
+      return { title: panel?.querySelector(".nomusic-dialog__title").textContent, main: main?.textContent, focused: document.activeElement === main };
+    });
     // The next video in the player is read from its start.
     await page.evaluate((media, v) => window.load(media, v, 200000, 1000), SET, BASE);
     source = audioFile(BASE);
@@ -432,11 +445,12 @@ await step("nothing is read before consent; consenting starts the next video", a
     const media = captured.reduce((sum, stream) => sum + stream.media, 0);
     report.record("nothing is read before consent; consenting starts the next video",
       before.status === "setup" && before.originalGain === null && !before.attached && frames === 0 && !paused && time > 2 &&
-        media === 0 && captured.some((stream) => stream.missed) && notNow && turnedOn &&
-        failed.failure.reason === "uncaptured" && failMs < 5000 && state.status === "on" && good(a),
+        media === 0 && captured.some((stream) => stream.missed) && leftOff && turnedOn &&
+        failed.failure.reason === "missed" && failMs < 5000 &&
+        dialog.title === "nomusic is on" && dialog.main === "Reload page" && dialog.focused && state.status === "on" && good(a),
       { status_before: before.status, routed_before: before.originalGain !== null, engine_frames_before: frames, played_before: !paused,
-        audio_kept_before: media, not_now_kept_it_off: notNow, turned_on_by_keyboard: turnedOn, uncaptured_ms: failMs,
-        next_video_audio_ms: ms, ...a });
+        audio_kept_before: media, left_without_choosing_kept_it_off: leftOff, turned_on_by_keyboard: turnedOn, missed_ms: failMs,
+        dialog, next_video_audio_ms: ms, ...a });
     await page.close();
   } finally {
     await setSettings(browser, extensionId, { consented: true });
@@ -581,17 +595,28 @@ await step("a closed failure dialog comes back on play", async () => {
   await page.close();
 });
 
-await step("retry after a failure tries again in place", async () => {
+// Trying again in place (a slow computer, an error) is covered by the unit tests.
+await step("a failure nothing can help offers only the music, and a stray key does not start it", async () => {
   const page = await open("drm");
   await play(page);
   await waitFor(page, (s) => s.status === "failed", { timeout: 20000, label: "failure" });
-  await page.evaluate(() => { window.notReloaded = true; });
-  await chooseRecovery(page, "retry");
-  const again = await waitFor(page, (s) => s.status === "failed", { timeout: 20000, label: "failure again" });
-  const inPlace = await page.evaluate(() => window.notReloaded === true);
-  const { paused } = await videoState(page);
-  report.record("retry after a failure tries again in place", inPlace && again.failure.reason === "protected" && paused,
-    { same_page: inPlace, reason: again.failure.reason, paused_again: paused });
+  await sleep(500);
+  const dialog = await page.evaluate(() => {
+    const panel = document.querySelector(".nomusic-dialog:not([hidden])");
+    const shown = [...panel.querySelectorAll(".nomusic-dialog__action")].filter((action) => action.getClientRects().length);
+    return { actions: shown.map((action) => action.dataset.action), main: panel.querySelector(".nomusic-dialog__action--main")?.dataset.action,
+      dialog_focused: document.activeElement === panel };
+  });
+  const before = await videoState(page);
+  await page.keyboard.press("Space"); // meant for the video
+  await page.keyboard.press("Enter");
+  await sleep(1000);
+  const after = await videoState(page);
+  const state = await frameState(page);
+  report.record("a failure nothing can help offers only the music, and a stray key does not start it",
+    dialog.actions.join() === "original" && dialog.main === "original" && dialog.dialog_focused &&
+      after.paused && after.time === before.time && state.status === "failed",
+    { ...dialog, paused_after_keys: after.paused, moved_s: after.time - before.time, status: state.status });
   await page.close();
 });
 

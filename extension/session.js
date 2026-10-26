@@ -34,7 +34,8 @@ const OVERLAP_SECONDS = OVERLAP_SAMPLES / RATE;
 // Why nomusic failed closed, in the user's language. Resolved now (see
 // i18n.js): the "updated" message shows after the extension itself is gone.
 const FAILURES = Object.fromEntries(
-  ["protected", "codec", "uncaptured", "source", "slow", "engine", "error", "audio", "updated"].map((reason) => [reason, t(`failure_${reason}`)]),
+  ["protected", "codec", "missed", "uncaptured", "source", "slow", "engine", "error", "audio", "updated"]
+    .map((reason) => [reason, t(`failure_${reason}`)]),
 );
 
 // Test diagnostics, only in the test harness's copy of the extension: it marks
@@ -50,8 +51,9 @@ export const debugEnabled = () => DEBUG;
 
 // Failures only a fresh page can help: Retry reloads it. That includes sound
 // that cannot start ("audio"): the video's sound already goes through an audio
-// context that will not run, and only a new page gets a new one.
-const RELOAD = new Set(["updated", "uncaptured", "engine", "audio"]);
+// context that will not run, and only a new page gets a new one. And a video
+// whose audio went by before nomusic was turned on ("missed").
+const RELOAD = new Set(["updated", "missed", "uncaptured", "engine", "audio"]);
 
 // Reload the page; a YouTube watch page keeps its position.
 function reloadPage(time) {
@@ -324,7 +326,7 @@ export class Session {
     if (!this.attached || streamId !== this.streamId) return;
     if (replay?.missed) {
       // Its audio went by before nomusic was turned on: only a reload can read it.
-      this.fail("uncaptured");
+      this.fail("missed");
       return;
     }
     for (const entry of entries) {

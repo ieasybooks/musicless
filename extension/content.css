@@ -271,6 +271,7 @@
   user-select: none;
 }
 .nomusic-dialog[hidden] { display: none; }
+.nomusic-dialog:focus { outline: none; } /* focused itself only to be read out */
 /* No player to sit in: over the video, placed by button.js. */
 .nomusic-dialog--floating { position: fixed; inset: auto; margin: 0; max-height: calc(100vh - 16px); }
 .nomusic-dialog__title {
@@ -313,9 +314,10 @@
   line-height: 20px;
   cursor: pointer;
 }
+.nomusic-dialog__action[hidden] { display: none; }
 .nomusic-dialog__action:hover { background: rgba(255, 255, 255, 0.2); }
-.nomusic-dialog__action[data-action="retry"] { background: #f1f1f1; color: #0f0f0f; }
-.nomusic-dialog__action[data-action="retry"]:hover { background: #d9d9d9; }
+.nomusic-dialog__action--main { background: #f1f1f1; color: #0f0f0f; }
+.nomusic-dialog__action--main:hover { background: #d9d9d9; }
 
 /* Fullscreen on a large screen: YouTube scales its controls up too. */
 .ytp-big-mode .nomusic-spinner { width: 128px; height: 128px; margin: -64px 0 0 -64px; }

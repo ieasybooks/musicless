@@ -19,6 +19,7 @@
 
   "failure_protected": { "message": "هذا الفيديو محمي من النسخ." },
   "failure_codec": { "message": "صيغة الصوت في هذا الفيديو غير مدعومة." },
+  "failure_missed": { "message": "أعد تحميل الصفحة لإزالة الموسيقى من هذا الفيديو." },
   "failure_uncaptured": { "message": "إعادة تحميل الصفحة تحلّ المشكلة عادةً." },
   "failure_source": { "message": "لا يمكن الوصول إلى صوت هذا المشغّل." },
   "failure_slow": { "message": "تستغرق الإزالة وقتًا طويلًا. قد يكون حاسوبك مشغولًا." },

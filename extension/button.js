@@ -11,7 +11,8 @@
 //   click: YouTube's spinner, with two words under it, while the first audio is
 //   prepared; a round play button when the browser waits for a click before it
 //   plays sound.
-// - The recovery dialog when nomusic could not remove the music.
+// - The recovery dialog when nomusic could not remove the music, or, on a
+//   video that played before nomusic was turned on, to say that a reload will.
 
 import { setLanguage, t } from "./i18n.js";
 
@@ -26,6 +27,7 @@ const TEXT = {
   done: t("notice_done"),
   blocked: t("notice_blocked"),
   title: t("panel_title"),
+  ready: t("done_heading"),
   retry: t("panel_retry"),
   reload: t("panel_reload"),
   original: t("panel_original"),
@@ -42,6 +44,10 @@ const STATES = {
   failed: ["error", TEXT.failed, ""],
 };
 const WAITS = new Set(["starting", "buffering"]);
+// Failures that no retry and no reload can help: the video's own sound
+// (locked, or in a format nomusic cannot read), or a player whose sound it
+// cannot reach. The dialog offers only the music.
+const FINAL = new Set(["protected", "codec", "source"]);
 // A hold shorter than this shows nothing (a short one after a stall would only flicker).
 const NOTICE_DELAY_MS = 400;
 // Less motion: our still spinner instead of YouTube's turning one.
@@ -238,9 +244,18 @@ export class Button {
       this.shownFailure = session.failure;
       this.dismissed = false;
       if (session.failure) {
+        const { reason, message } = session.failure;
+        // A video that played before nomusic was turned on did not fail: the
+        // dialog says that nomusic is on, and that a reload will do.
+        this.recoveryTitle.textContent = reason === "missed" ? TEXT.ready : TEXT.title;
         // The title already says what happened; a reason without more to say is left out.
-        this.recoveryMessage.textContent = session.failure.reason === "error" ? "" : session.failure.message;
+        this.recoveryMessage.textContent = reason === "error" ? "" : message;
+        // Where nothing can help (a locked video, say), the music is the one
+        // choice left, so it becomes the main action.
+        const final = FINAL.has(reason);
+        this.retryBtn.hidden = final;
         this.retryBtn.textContent = session.retryReloads ? TEXT.reload : TEXT.retry;
+        this.returnBtn.classList.toggle("nomusic-dialog__action--main", final);
         this.openRecovery({ focus: true });
       } else {
         this.closeRecovery();
@@ -369,14 +384,17 @@ export class Button {
     panel.setAttribute("aria-labelledby", `${id}-title`);
     panel.setAttribute("aria-describedby", `${id}-message`);
     panel.hidden = true;
+    panel.tabIndex = -1; // focused itself when its one action is the music (see openRecovery)
     const title = document.createElement("p");
     title.className = "nomusic-dialog__title";
     title.id = `${id}-title`;
     title.textContent = TEXT.title;
+    this.recoveryTitle = title;
     this.recoveryMessage = document.createElement("p");
     this.recoveryMessage.className = "nomusic-dialog__message";
     this.recoveryMessage.id = `${id}-message`;
     this.retryBtn = this.action("retry", () => this.session.retry());
+    this.retryBtn.classList.add("nomusic-dialog__action--main");
     this.returnBtn = this.action("original", () => this.session.returnToOriginal());
     this.returnBtn.textContent = TEXT.original;
     const actions = document.createElement("div");
@@ -394,11 +412,11 @@ export class Button {
         event.stopPropagation();
         this.dismiss();
       } else if (event.key === "Tab") {
-        const order = [this.returnBtn, this.retryBtn];
+        const order = [this.returnBtn, this.retryBtn].filter((action) => !action.hidden);
         const at = order.indexOf(document.activeElement);
         event.preventDefault();
         event.stopPropagation();
-        (at < 0 ? this.retryBtn : order[(at + 1) % order.length]).focus();
+        order[at < 0 ? order.length - 1 : (at + 1) % order.length].focus();
       }
     };
     for (const type of ["pointerdown", "pointerup", "mousedown", "mouseup", "dblclick", "click"]) {
@@ -435,14 +453,16 @@ export class Button {
   }
 
   // Focus moves to the main action (the dialog is read out with its reason)
-  // unless the user is typing somewhere.
+  // unless the user is typing somewhere. When the music is the only choice,
+  // the dialog itself takes focus: a Space or Enter meant for the video must
+  // not start the music.
   openRecovery({ focus = false } = {}) {
     if (this.retired) return;
     this.dismissed = false;
     this.recovery.hidden = false;
     document.addEventListener("keydown", this.onKeys, true);
     this.positionPanel();
-    if (focus && !typing()) this.retryBtn.focus();
+    if (focus && !typing()) (this.retryBtn.hidden ? this.recovery : this.retryBtn).focus();
   }
 
   closeRecovery() {

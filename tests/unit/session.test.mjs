@@ -351,6 +351,7 @@ test("Retry reloads the page for failures only a reload can help, keeping a watc
   assert.equal(slow.session.failure, null);
 });
 
+
 test("before consent a session shows setup and leaves the video alone", () => {
   const { session, video, engine, capture, env } = sessionSandbox({ settings: { consented: false } });
   assert.equal(session.status, "setup");
@@ -381,10 +382,12 @@ test("consenting starts the session; withdrawing it stops and gives the original
   assert.equal(session.status, "setup");
 });
 
-test("a stream whose audio went by before consent fails as uncaptured", () => {
+test("a stream whose audio went by before consent holds the video and asks for a reload", () => {
   const { session } = sessionSandbox();
   session.onEntries(1, [{ kind: "buffer", bufferId: 2, mime: "audio/webm" }], { missed: true });
-  assert.equal(session.failure?.reason, "uncaptured");
+  assert.equal(session.failure?.reason, "missed");
+  assert.equal(session.failure.message, "failure_missed");
+  assert.equal(session.retryReloads, true, "the dialog's main action reloads the page");
   assert.equal(session.intent.held, true);
 });
 
