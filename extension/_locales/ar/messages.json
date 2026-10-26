@@ -2,11 +2,11 @@
   "locale_code": { "message": "ar", "description": "Not translated: the language code of this catalog (BCP 47), for the lang attribute." },
   "locale_dir": { "message": "rtl", "description": "Not translated: the writing direction of this catalog, ltr or rtl." },
   "extension_name": { "message": "nomusic" },
-  "extension_description": { "message": "يزيل معظم موسيقى الخلفية من فيديوهات YouTube™ ويُبقي الأصوات البشرية. يعمل كل شيء على حاسوبك." },
+  "extension_description": { "message": "يزيل معظم موسيقى الخلفية من فيديوهات YouTube™\u200e ويُبقي الأصوات البشرية. يعمل كل شيء على حاسوبك." },
 
   "control_name": { "message": "إزالة الموسيقى" },
-  "control_on": { "message": "تشغيل مع الموسيقى" },
-  "control_setup": { "message": "تشغيل nomusic" },
+  "control_on": { "message": "إيقاف إزالة الموسيقى" },
+  "control_setup": { "message": "تفعيل nomusic" },
   "control_failed": { "message": "لم تُزَل الموسيقى" },
   "notice_working": { "message": "جارٍ إزالة الموسيقى" },
   "notice_blocked": { "message": "انقر للتشغيل" },
@@ -26,15 +26,15 @@
   "failure_audio": { "message": "لم يبدأ الصوت. إعادة تحميل الصفحة تحلّ المشكلة عادةً." },
   "failure_updated": { "message": "تم تحديث nomusic أو إيقافه. أعد تحميل الصفحة للمتابعة." },
 
-  "setup_heading": { "message": "إزالة الموسيقى مع إبقاء الأصوات البشرية" },
-  "consent_text": { "message": "يقرأ nomusic صوت فيديوهات YouTube التي تشاهدها ويزيل منه معظم الموسيقى على هذا الحاسوب. لا يرفع الصوت ولا يحفظه، والإعدادات وحدها قد تتزامن عبر Chrome\u00a0Sync." },
-  "consent_accept": { "message": "تشغيل" },
-  "done_heading": { "message": "إزالة الموسيقى مفعّلة" },
-  "done_text": { "message": "أعد تحميل أي علامة تبويب YouTube كانت مفتوحة." },
+  "setup_heading": { "message": "مشاهدة YouTube بدون موسيقى" },
+  "consent_text": { "message": "على هذا الحاسوب فقط، يقرأ nomusic صوت فيديوهات\u00a0YouTube التي تشاهدها، دون أن يرفعه أو يحفظه. وقد يزامن Chrome إعداداتك." },
+  "consent_accept": { "message": "تفعيل" },
+  "done_heading": { "message": "تم تفعيل nomusic" },
+  "done_text": { "message": "إن كانت علامة تبويب YouTube مفتوحة من قبل، فأعد تحميلها." },
   "done_open": { "message": "فتح YouTube" },
 
   "popup_autostart_label": { "message": "إزالة الموسيقى من كل فيديو" },
-  "popup_autostart_hint": { "message": "أو اختر الفيديوهات واحدًا واحدًا من المشغّل." },
-  "link_help": { "message": "المساعدة" },
+  "popup_autostart_hint": { "message": "استخدم الزر في المشغّل لتفعيله لفيديو واحد." },
+  "link_help": { "message": "مساعدة" },
   "link_privacy": { "message": "سياسة الخصوصية" }
 }
