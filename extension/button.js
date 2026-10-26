@@ -136,7 +136,7 @@ function controlRow(host) {
   const right = host.querySelector(".ytp-right-controls");
   if (shown(right)) {
     const row = right.querySelector(".ytp-right-controls-left") ?? right;
-    return { row, before: row.querySelector(".ytp-subtitles-button") ?? row.firstElementChild, bar: "ytp" };
+    return { row, before: childHolding(row, row.querySelector(".ytp-subtitles-button")), bar: "ytp" };
   }
   const top = host.querySelector(".player-controls-top-right") ??
     (host.id === "movie_player" ? document.querySelector("#player-controls .player-controls-top-right") : null);
@@ -145,6 +145,19 @@ function controlRow(host) {
     return { row: top, before: captions ?? top.firstElementChild, bar: "top" };
   }
   return null;
+}
+// The row's own child that holds `element`, else its first child: YouTube may
+// wrap a button in a container, and only a child of the row can be the place
+// to insert before.
+function childHolding(row, element) {
+  while (element && element.parentElement !== row) element = element.parentElement;
+  return element ?? row.firstElementChild;
+}
+// Does YouTube's spinner really show (it may be hidden some other way than the
+// one nomusic-waiting undoes)?
+function renders(element) {
+  const box = element.getBoundingClientRect();
+  return box.width > 0 && box.height > 0 && getComputedStyle(element).visibility !== "hidden";
 }
 // YouTube's miniplayer shows only play and close: no button of ours either.
 const minimized = (host) => host.classList.contains("ytp-player-minimized");
@@ -165,6 +178,7 @@ export class Button {
     this.wantedPlay = false;
     this.host = null;
     this.marked = null; // [player, class]: YouTube's spinner shown for our wait, or hidden under the play button
+    this.unseen = null; // YouTube's spinner, if it did not show when marked: ours is drawn instead
     this.rtl = false; // the player's direction, which the corners follow
 
     this.el = setLanguage(document.createElement("button"));
@@ -224,7 +238,7 @@ export class Button {
     const status = session.status;
     const [state, tip, says] = STATES[status] ?? STATES.off;
     if (this.el.dataset.state !== state) this.el.dataset.state = state;
-    this.el.dataset.nomusicStatus = status;
+    if (this.el.dataset.nomusicStatus !== status) this.el.dataset.nomusicStatus = status;
     // A toggle while it is one (named for what it does, pressed while it does
     // it); setup and a failure open something instead.
     const toggle = status !== "setup" && status !== "failed";
@@ -334,7 +348,10 @@ export class Button {
     // it shows while loading, so the two never differ); ours is for other
     // players, and for anyone who asks for less motion (it stands still).
     // While the play button asks for the click, YouTube's stays out.
-    const theirs = !stillness.matches && !!this.host?.querySelector(".ytp-spinner");
+    const spinner = this.host?.querySelector(".ytp-spinner");
+    const marked = !!spinner && this.marked?.[0] === this.host && this.marked[1] === "nomusic-waiting";
+    if (marked && renders(this.host) && !renders(spinner)) this.unseen = spinner;
+    const theirs = !stillness.matches && !!spinner && spinner !== this.unseen;
     this.markHost(show ? this.host : null, blocked ? "nomusic-blocked" : theirs ? "nomusic-waiting" : null);
     if (!show) return;
     if (this.notice.dataset.theirs !== String(theirs)) this.notice.dataset.theirs = String(theirs);
@@ -352,7 +369,10 @@ export class Button {
 
   markHost(host, mark = null) {
     const [was, wasMark] = this.marked ?? [];
-    if (was === host && wasMark === mark) return;
+    if (was === host && wasMark === mark) {
+      if (mark && !host.classList.contains(mark)) host.classList.add(mark); // the player rewrote its classes
+      return;
+    }
     if (wasMark) was.classList.remove(wasMark);
     if (host && mark) host.classList.add(mark);
     this.marked = host && mark ? [host, mark] : null;
@@ -533,8 +553,13 @@ export class Button {
     if (this.marked) this.markHost(host, this.marked[1]);
     this.rtl = getComputedStyle(host).direction === "rtl";
     const row = controlRow(host);
-    if (row) {
-      if (this.el.parentElement !== row.row || this.el.nextElementSibling !== row.before) row.row.insertBefore(this.el, row.before);
+    let inRow = !!row;
+    try {
+      if (row && (this.el.parentElement !== row.row || this.el.nextElementSibling !== row.before)) row.row.insertBefore(this.el, row.before);
+    } catch {
+      inRow = false; // whatever YouTube changed in its row, the corner still works
+    }
+    if (inRow) {
       this.el.classList.toggle("ytp-button", row.bar === "ytp");
       this.el.dataset.place = row.bar;
       this.el.style.left = this.el.style.right = "";
@@ -545,7 +570,7 @@ export class Button {
       this.el.style.left = this.rtl ? "8px" : "";
       this.el.style.right = this.rtl ? "" : "8px";
     }
-    this.el.style.display = !row && minimized(host) ? "none" : "";
+    this.el.style.display = !inRow && minimized(host) ? "none" : "";
     for (const part of [this.live, this.notice]) if (part.parentElement !== host) host.append(part);
     // The player got its box back while a failure waits: show the dialog again.
     if (this.session.failure && this.recovery.hidden && !this.dismissed) this.openRecovery();
