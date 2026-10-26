@@ -191,17 +191,17 @@ and in Arabic (`ar-*.png`, captured on Arabic YouTube with the Arabic
 catalog); upload each set with its locale. The player shots show NASA
 Goddard's public-domain "Tour of the Moon in 4K"
 (<https://www.youtube.com/watch?v=nr5Pj6GQL2o>) on a real YouTube watch page,
-cropped to the player. The recovery panel comes from a copy of the extension
+cropped to the player. The recovery dialog comes from a copy of the extension
 that the script makes fail on purpose; the extension itself is unchanged.
-There is no × on the button and no "100% music-free" claim.
+There is no "100% music-free" claim.
 
 | File | What it shows | Caption |
 | --- | --- | --- |
-| `en-1-music-removed.png` | The Music removed button on the player, with YouTube's controls showing | Removes most of the music. Keeps the voices. |
-| `en-2-turn-on-once.png` | The welcome page's Turn on nomusic card | Turn it on once. Then it works by itself. |
-| `en-3-you-choose.png` | The recovery panel: Music not removed, Try again, Play with music | If it can't remove the music, you choose what plays. |
-| `en-4-one-setting.png` | The toolbar popup | One setting. Audio never leaves your computer. |
-| `promo-tile-440x280.png` | The logo and the name only; a tile cannot be localized | none |
+| `en-1-music-removed.png` | nomusic's struck note in YouTube's control bar, its tooltip "Stop removing music" | Removes most of the music. Keeps the voices. |
+| `en-2-turn-on-once.png` | The first-run page: the disclosure and Turn on | Turn it on once. Then it works by itself. |
+| `en-3-you-choose.png` | The recovery dialog: Couldn’t remove the music, Play with music, Try again | If the music can’t be removed, the video waits for you. |
+| `en-4-one-setting.png` | The toolbar popup: the one setting and Help | One setting. Everything runs on your computer. |
+| `promo-tile-440x280.png` | The white note alone on the mark's green; no text (the store's advice, and a tile cannot be localized) | none |
 | `store-icon-128.png` | The store icon: the artwork near 96×96 on a transparent 128×128 canvas | none |
 
 The Arabic files have the same numbers and names (`ar-1-music-removed.png`

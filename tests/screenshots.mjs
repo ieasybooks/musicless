@@ -1,12 +1,12 @@
 // Store images (docs/store/): four 1280x800 screenshots in English (en-*.png)
-// and in Arabic (ar-*.png), plus the 440x280 promo tile. The button and the
-// recovery panel are captured on a real YouTube watch page playing NASA
-// Goddard's public-domain "Tour of the Moon in 4K"
-// (https://www.youtube.com/watch?v=nr5Pj6GQL2o), cropped to the player; the
-// other two show the extension's own welcome page and popup. The recovery
-// panel comes from a throwaway copy of the extension patched to fail on
+// and in Arabic (ar-*.png). The button and the recovery dialog are captured on
+// a real YouTube watch page playing NASA Goddard's public-domain "Tour of the
+// Moon in 4K" (https://www.youtube.com/watch?v=nr5Pj6GQL2o), cropped to the
+// player; the other two show the extension's own first-run page and popup.
+// The dialog comes from a throwaway copy of the extension patched to fail on
 // purpose; the extension's source is not changed. The Arabic set uses the
-// Arabic catalog (--lang=ar) on Arabic YouTube (hl=ar).
+// Arabic catalog (--lang=ar) on Arabic YouTube (hl=ar). The promo tile and
+// the store icon come from tools/icons.mjs.
 // Usage (from tests/): node screenshots.mjs [en] [ar] [--reframe]
 // --reframe redoes only the frames and captions from the last captures (kept
 // in the work folder), without opening YouTube again.
@@ -26,17 +26,17 @@ const LANGUAGES = {
     captions: [
       "Removes most of the music. Keeps the voices.",
       "Turn it on once. Then it works by itself.",
-      "If it can't remove the music, you choose what plays.",
-      "One setting. Audio never leaves your computer.",
+      "If the music can’t be removed, the video waits for you.",
+      "One setting. Everything runs on your computer.",
     ],
   },
   ar: {
     lang: "ar", dir: "rtl", query: "&hl=ar&persist_hl=1", // YouTube follows hl, not the browser language
     captions: [
       "يزيل معظم الموسيقى. ويُبقي الأصوات البشرية.",
-      "شغّله مرة واحدة. بعد ذلك يعمل تلقائيًا.",
-      "إذا لم يستطع إزالة الموسيقى، تختار أنت ما يُشغَّل.",
-      "إعداد واحد. ولا يغادر الصوت حاسوبك أبدًا.",
+      "فعّله مرة واحدة. بعد ذلك يعمل تلقائيًا.",
+      "إذا تعذّرت إزالة الموسيقى، ينتظرك الفيديو.",
+      "إعداد واحد. ويعمل كل شيء على حاسوبك.",
     ],
   },
 };
@@ -84,6 +84,7 @@ async function open(language, extension) {
       "--disable-features=Translate,MediaEngagementBypassAutoplayPolicies",
       "--window-size=1280,900",
       `--lang=${language.lang}`,
+      "--disable-lcd-text", // grey antialiasing, as the store shows text
       ...(process.env.NOMUSIC_NO_SANDBOX === "1" ? ["--no-sandbox"] : []),
     ],
     defaultViewport: { width: 1280, height: 900 },
@@ -114,10 +115,13 @@ async function openWatch(browser, language) {
   return page;
 }
 
-// Wait until the button on the main video says `status` and no ad is showing.
-async function waitForButton(page, status, timeout = 90000) {
+// Wait until the button on the main video has said `status` for `steady` ms
+// and no ad is showing (YouTube may switch streams just after the start, which
+// makes nomusic wait for the new one).
+async function waitForButton(page, status, { timeout = 90000, steady = 0 } = {}) {
   const started = Date.now();
   let last = null;
+  let since = null;
   while (Date.now() - started < timeout) {
     last = await page.evaluate(() => {
       const video = document.querySelector("#movie_player video");
@@ -126,38 +130,51 @@ async function waitForButton(page, status, timeout = 90000) {
       const button = [...document.querySelectorAll(".nomusic-btn")].find((b) => b.style.display !== "none");
       return { status: button?.dataset.nomusicStatus ?? null, t: video?.currentTime ?? 0, ad: !!document.querySelector(".ad-showing") };
     });
-    if (last.status === status && !last.ad && last.t > 1) return last;
+    const ok = last.status === status && !last.ad && last.t > 1;
+    since = ok ? since ?? Date.now() : null;
+    if (ok && Date.now() - since >= steady) return last;
     await sleep(250);
   }
   throw new Error(`timed out waiting for the button to say "${status}"; last ${JSON.stringify(last)}`);
 }
 
 // The player alone, with YouTube's controls showing (they hide a few seconds
-// after the pointer rests).
-async function shootPlayer(page, file) {
+// after the pointer rests); `hover` rests the pointer on nomusic's button, so
+// its tooltip shows.
+async function shootPlayer(page, file, { hover = false } = {}) {
   const clip = await page.evaluate(() => {
     const { left, top, width, height } = document.querySelector("#movie_player").getBoundingClientRect();
     return { x: left, y: top, width, height };
   });
-  await page.mouse.move(clip.x + clip.width / 2, clip.y + clip.height / 2);
+  await page.mouse.move(clip.x + clip.width / 2, clip.y + clip.height / 2, { steps: 4 });
   await sleep(150);
-  await page.mouse.move(clip.x + clip.width / 2 + 24, clip.y + clip.height / 2 + 12);
-  await sleep(400);
-  await page.screenshot({ path: file, clip });
+  await page.mouse.move(clip.x + clip.width / 2 + 24, clip.y + clip.height / 2 + 12, { steps: 4 });
+  if (hover) {
+    const button = await page.evaluate(() => {
+      const r = document.querySelector("#movie_player .nomusic-btn").getBoundingClientRect();
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    });
+    await page.mouse.move(button.x, button.y, { steps: 4 });
+  }
+  await sleep(500);
+  await page.screenshot({ path: file, clip, captureBeyondViewport: false });
 }
 
-// The welcome page before the first-run choice: the heading and the card.
+// The first-run page before the choice, around its one column.
 async function shootWelcome(browser, extensionId, file) {
   await setSettings(browser, extensionId, { consented: false });
   const page = await browser.newPage();
-  await page.setViewport({ width: 720, height: 720, deviceScaleFactor: 2 });
+  await page.setViewport({ width: 720, height: 640, deviceScaleFactor: 2 });
   await page.goto(`chrome-extension://${extensionId}/welcome.html`);
-  await page.waitForSelector("#consent:not([hidden])");
+  await page.waitForSelector("#setup:not(.off)");
   await sleep(300);
-  const clip = await page.evaluate(() => ({
-    x: 0, y: 0, width: document.documentElement.clientWidth,
-    height: Math.ceil(document.getElementById("consent").getBoundingClientRect().bottom + 28),
-  }));
+  const clip = await page.evaluate(() => {
+    const main = document.querySelector("main").getBoundingClientRect();
+    const end = document.getElementById("accept").getBoundingClientRect().bottom;
+    return { x: 0, y: Math.max(0, main.top + parseFloat(getComputedStyle(document.querySelector("main")).paddingTop) - 56), width: document.documentElement.clientWidth, height: 0, end };
+  });
+  clip.height = Math.ceil(clip.end + 56 - clip.y);
+  delete clip.end;
   await page.screenshot({ path: file, clip });
   await page.close();
   await setSettings(browser, extensionId, { consented: true });
@@ -170,40 +187,32 @@ async function shootPopup(browser, extensionId, file) {
   await page.goto(`chrome-extension://${extensionId}/popup.html`);
   await page.waitForSelector("#settings:not([hidden])");
   await sleep(300);
-  const box = await page.evaluate(() => ({ width: document.documentElement.clientWidth, height: document.body.scrollHeight }));
-  await page.screenshot({ path: file, clip: { x: 0, y: 0, ...box } });
+  const box = await page.evaluate(() => {
+    const r = document.body.getBoundingClientRect();
+    return { x: Math.floor(r.left), y: 0, width: Math.ceil(r.width), height: Math.ceil(document.body.scrollHeight) };
+  });
+  await page.screenshot({ path: file, clip: box });
   await page.close();
 }
 
 const pngWidth = (file) => readFileSync(file).readUInt32BE(16);
 
-// A capture framed on a dark canvas under its caption, at 1280x800. The
-// caption must stay readable when the store scales the image to 640x400. The
-// popup is shown at its captured size (twice its CSS size); the rest fills
-// the space left.
+// A capture under its caption on a quiet canvas, at 1280x800. The caption
+// must stay readable when the store scales the image to 640x400. The popup is
+// shown at its captured size (twice its CSS size); the rest fills the space
+// left.
 async function showcase(browser, language, name, caption, image, { width } = {}) {
   const page = await browser.newPage();
   await page.setViewport({ width: 1280, height: 800, deviceScaleFactor: 1 });
   const data = readFileSync(image).toString("base64");
-  await page.setContent(`<!doctype html><html lang="${language.lang}" dir="${language.dir}"><body style="margin:0;box-sizing:border-box;width:1280px;height:800px;padding:34px 60px;background:#0d1015;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;font:700 44px/1.3 system-ui,sans-serif;color:#f3f4f7;text-align:center">
+  const font = language.dir === "rtl" ? `'Segoe UI', 'SF Arabic', 'Noto Sans Arabic', system-ui, sans-serif` : `-apple-system, 'Segoe UI', Roboto, system-ui, sans-serif`;
+  await page.setContent(`<!doctype html><html lang="${language.lang}" dir="${language.dir}"><body style="margin:0;box-sizing:border-box;width:1280px;height:800px;padding:44px 64px;background:#eef2ef;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:32px;font:500 40px/1.3 ${font};color:#1f2a24;text-align:center">
     <div style="flex:0 0 auto">${caption}</div>
     <div style="flex:0 1 auto;min-height:0;display:flex;align-items:center;justify-content:center;width:100%">
-      <img src="data:image/png;base64,${data}" style="${width ? `width:${width}px;` : "max-width:100%;"}max-height:100%;border-radius:14px;box-shadow:0 18px 50px rgba(0,0,0,.6)">
+      <img src="data:image/png;base64,${data}" style="${width ? `width:${width}px;` : "max-width:100%;"}max-height:100%;border-radius:12px;box-shadow:0 2px 12px rgba(31,42,36,.18)">
     </div></body></html>`);
   await page.screenshot({ path: `${OUT}${name}.png` });
-  await page.close();
-}
-
-// The promo tile: the logo and the name, nothing to translate.
-async function shootTile(browser) {
-  const page = await browser.newPage();
-  await page.setViewport({ width: 440, height: 280, deviceScaleFactor: 1 });
-  const logo = readFileSync(new URL("../assets/logo.png", import.meta.url)).toString("base64");
-  await page.setContent(`<!doctype html><html lang="en"><body style="margin:0;width:440px;height:280px;background:#0d1015;
-    display:flex;align-items:center;justify-content:center;gap:24px;font:700 46px system-ui,sans-serif;color:#f3f4f7;letter-spacing:-0.02em">
-    <img src="data:image/png;base64,${logo}" style="width:124px;height:124px"><div>nomusic</div></body></html>`);
-  await page.screenshot({ path: `${OUT}promo-tile-440x280.png` });
   await page.close();
 }
 
@@ -222,7 +231,6 @@ if (reframe) {
   const { browser } = await open(LANGUAGES.en);
   try {
     for (const code of languages) await frames(browser, code);
-    await shootTile(browser);
   } finally {
     await browser.close();
   }
@@ -234,9 +242,8 @@ if (reframe) {
       await shootWelcome(browser, extensionId, raw(code, 1));
       await shootPopup(browser, extensionId, raw(code, 3));
       const page = await openWatch(browser, language);
-      await waitForButton(page, "on");
-      await sleep(2500); // a steady picture
-      await shootPlayer(page, raw(code, 0));
+      await waitForButton(page, "on", { steady: 4000 }); // a steady picture
+      await shootPlayer(page, raw(code, 0), { hover: true });
       await page.close();
     } finally {
       await browser.close();
@@ -245,12 +252,11 @@ if (reframe) {
     try {
       const page = await openWatch(browser, language);
       await waitForButton(page, "failed");
-      await page.evaluate(() => document.activeElement?.blur()); // the panel focused Try again
+      await page.evaluate(() => document.activeElement?.blur()); // the dialog focused Try again
       await sleep(500);
       await shootPlayer(page, raw(code, 2));
       await page.close();
       await frames(browser, code);
-      if (code === languages[0]) await shootTile(browser);
     } finally {
       await browser.close();
     }
