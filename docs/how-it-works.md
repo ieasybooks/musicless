@@ -91,8 +91,8 @@ chunk a playing video needs comes before look-ahead work in any tab.
 ## Before nomusic is turned on
 
 On install, the first-run page says in two sentences what nomusic does with
-audio and asks the user to choose **Turn on** (the toolbar popup offers the
-same choice). Until then nomusic reads no audio: capture keeps only format
+audio and asks the user to choose **Turn on** (in the toolbar popup, the same
+words sit under the one switch, and turning it on is the same choice). Until then nomusic reads no audio: capture keeps only format
 headers, no session routes or separates anything, and the button on the
 player ("Turn on nomusic") opens the first-run page.
 

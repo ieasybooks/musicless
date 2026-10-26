@@ -39,17 +39,17 @@ is no listing URL yet. This page will gain one after the listing is live.
    on **Developer mode**, click **Load unpacked**, and choose the unzipped
    folder.
 4. Reload any YouTube tabs that were already open.
-5. The first time, choose **Turn on** on the page that opens (the toolbar popup
-   offers the same choice). Until you do, nomusic does not remove music; its
-   button on the player opens that page.
+5. The first time, choose **Turn on** on the page that opens (or turn on the
+   switch in the toolbar popup, under the same words). Until you do, nomusic
+   does not remove music; its button on the player opens that page.
 
 ## Use
 
 Play a supported YouTube video. After you turn nomusic on, it removes the
 music by itself. At the start, and after a jump to a part that has not loaded
 yet, the video waits a moment (about 2 to 4 seconds on a typical laptop) while
-nomusic prepares the audio; a spinner in the middle of the video says
-**Removing music** while it does.
+nomusic prepares the audio. YouTube's spinner shows in the middle of the
+video, and when the wait lasts, **Removing music** shows at the top.
 
 nomusic's button sits in YouTube's control bar, left of captions (in embedded
 players, in the top row of buttons): a note while the music plays, the note

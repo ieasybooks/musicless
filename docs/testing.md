@@ -100,7 +100,7 @@ node controls.mjs
 ```
 
 Where nomusic sits in YouTube's own player, which YouTube changes often: the
-button joins the control bar before captions, the spinner shows while the first
+button joins the control bar before captions, the wait shows while the first
 audio is prepared, a real click turns the music removal off and on again, the
 tooltip sits above the bar, the button hides with YouTube's controls, and in an
 embedded player it joins the top row of buttons. Run it after YouTube changes
