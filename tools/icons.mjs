@@ -124,12 +124,12 @@ const browser = await puppeteer.launch({
 try {
   const page = await browser.newPage();
   await render(page, PIXEL_ICON, 16, 16, join(ROOT, "extension/icons/icon-16.png"), { script: true });
-  // The 128 px icon (also the store's) fills 112 px of it: a flat tile needs
-  // no more margin, and the other listings fill all 128.
+  // The 128 px icon (also the store's): 96 px of art in 16 px of transparent
+  // margin, as Chrome's guidelines ask.
   const ICONS = {
     32: tile(32, { inset: 1, radius: 0.2 }),
     48: tile(48, { inset: 2 }),
-    128: tile(128, { inset: 8 }),
+    128: tile(128, { inset: 16 }),
   };
   for (const [size, svg] of Object.entries(ICONS)) await render(page, svg, +size, +size, join(ROOT, `extension/icons/icon-${size}.png`));
   await render(page, ICONS[128], 128, 128, join(ROOT, "docs/store/store-icon-128.png"));
