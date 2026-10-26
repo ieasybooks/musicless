@@ -120,8 +120,8 @@
 /* One layer over the video while nomusic needs a wait or a click, below
    YouTube's controls (they stay usable). The wait: YouTube's own spinner
    (ours, drawn as YouTube's, in players without one), and two words under it
-   in YouTube's tooltip pill; clicks go through to the video. The click: the whole
-   video is the button, the round play button in the middle drawn as
+   in YouTube's tooltip pill; clicks go through to the video. The click: the
+   whole video is the button, the round play button in the middle drawn as
    YouTube's own. */
 .nomusic-notice {
   position: absolute;
@@ -194,6 +194,7 @@
   white-space: nowrap;
 }
 .nomusic-notice[lang="ar"] .nomusic-notice__text { font-size: 14px; }
+.nomusic-notice[data-kind="status"][data-words="false"] .nomusic-notice__text { display: none; }
 .nomusic-notice__disc { display: none; }
 .nomusic-notice[data-kind="action"] { pointer-events: auto; cursor: pointer; }
 .nomusic-notice[data-kind="action"] .nomusic-notice__disc {

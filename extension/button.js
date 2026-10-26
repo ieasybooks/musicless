@@ -50,6 +50,9 @@ const WAITS = new Set(["starting", "buffering"]);
 const FINAL = new Set(["protected", "codec", "source"]);
 // A hold shorter than this shows nothing (a short one after a stall would only flicker).
 const NOTICE_DELAY_MS = 400;
+// The words come with the spinner while a video starts, when nobody knows yet
+// why it waits; on later holds (a seek), only if the spinner stays this long.
+const WORDS_DELAY_MS = 1500;
 // Less motion: our still spinner instead of YouTube's turning one.
 const stillness = matchMedia("(prefers-reduced-motion: reduce)");
 
@@ -157,6 +160,8 @@ export class Button {
     this.dismissed = false; // the user closed the dialog without choosing
     this.announced = null;
     this.workingSince = null;
+    this.source = null; // the video (its source URL) the first wait belongs to
+    this.played = false; // its music has been removed at least once
     this.wantedPlay = false;
     this.host = null;
     this.marked = null; // [player, class]: YouTube's spinner shown for our wait, or hidden under the play button
@@ -239,7 +244,14 @@ export class Button {
       this.live.textContent = status === "on" && WAITS.has(this.announced) ? TEXT.done : says;
       this.announced = status;
     }
-    this.renderNotice(state, says);
+    // A video's first wait lasts until its music is first removed (the
+    // session counts made audio across videos in one player).
+    if (session.sourceUrl !== this.source) {
+      this.source = session.sourceUrl;
+      this.played = false;
+    }
+    if (status === "on") this.played = true;
+    this.renderNotice(state, says, !this.played);
     if (session.failure !== this.shownFailure) {
       this.shownFailure = session.failure;
       this.dismissed = false;
@@ -308,11 +320,13 @@ export class Button {
     return notice;
   }
 
-  renderNotice(state, text) {
+  renderNotice(state, text, first) {
     const now = performance.now();
     if (state === "working") this.workingSince ??= now;
     else this.workingSince = null;
     const working = state === "working" && now - this.workingSince >= NOTICE_DELAY_MS;
+    const words = String(working && (first || now - this.workingSince >= WORDS_DELAY_MS));
+    if (this.notice.dataset.words !== words) this.notice.dataset.words = words;
     const blocked = state === "attention";
     const show = (working || blocked) && !!this.host;
     if (this.notice.hidden === show) this.notice.hidden = !show;
