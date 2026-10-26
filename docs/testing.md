@@ -58,10 +58,14 @@ references are cached next to the media, keyed by the model and
 It covers starting by itself, seeking, stalls, pausing (including during a
 hold), speed changes, volume, fullscreen, the button, the next video in the
 same player, three minutes of continuous play, preparing before play, muted
-videos, the setting, every failure path (Try again or Reload page, and Play
-with music), two tabs sharing one model, capture memory on a long stream, a
-paused video releasing the model, the browser's real autoplay policy, and the
-extension being removed while a video plays.
+videos, the setting, the words of a video's first wait, consent through the
+real controls (the first-run page by keyboard, the popup's button, the Arabic
+page, and Back to the video from a video's button), every failure path (Try
+again or Reload page, and Play with music; only Play with music where nothing
+can help; a closed dialog coming back on play), two tabs sharing one model,
+capture memory on a long stream, a paused video releasing the model, the
+browser's real autoplay policy, and the extension being removed while a video
+plays.
 
 Other browsers: `CHROME=/path/to/browser QUICK=1 node local.mjs`. Portable
 browser copies and CI containers need `NOMUSIC_NO_SANDBOX=1`. Browsers without
