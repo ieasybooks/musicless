@@ -1,16 +1,13 @@
 // What nomusic shows on each video: a view of one Session.
-// - A button that turns nomusic on or off for the current video. It joins the
-//   player's own row of buttons and is drawn as YouTube draws its mute button:
-//   a note while the music plays, the note struck through while nomusic
-//   removes it. On Shorts it joins the Short's own row of buttons at its top.
-//   Where a player has no such row (other sites' players) it is the same
-//   glyph in the player's top corner, shown with the player's controls.
-//   Before the first run and after a failure (both wait for the user), it is
-//   the plain note with a small dot.
+// - A button that turns nomusic on or off for the current video, in the
+//   player's own row of buttons (YouTube's bar, an embed's or a Short's top
+//   row), else in its top corner: a note while the music plays, struck through
+//   while nomusic removes it, as YouTube draws mute; with a small dot while
+//   nomusic waits for the user (before the first run, after a failure).
 // - In the middle of the video, only while nomusic needs the user to wait or to
-//   click: YouTube's spinner, with two words under it, while the first audio is
-//   prepared; a round play button when the browser waits for a click before it
-//   plays sound.
+//   click: YouTube's spinner with two words under it while the first audio is
+//   prepared; a round play button when the browser waits for a click to play
+//   sound.
 // - The recovery dialog when nomusic could not remove the music, or, on a
 //   video that played before nomusic was turned on, to say that a reload will.
 
@@ -21,11 +18,8 @@ import { setLanguage, t } from "./i18n.js";
 const TEXT = {
   remove: t("control_name"),
   restore: t("control_on"),
-  setup: t("control_setup"),
-  failed: t("control_failed"),
   working: t("notice_working"),
   done: t("notice_done"),
-  blocked: t("notice_blocked"),
   title: t("panel_title"),
   ready: t("done_heading"),
   retry: t("panel_retry"),
@@ -35,13 +29,13 @@ const TEXT = {
 // status -> [data-state, the tooltip (what a click does, as YouTube's own
 // "Mute" and "Unmute" say), what the live region says]
 const STATES = {
-  setup: ["setup", TEXT.setup, ""],
+  setup: ["setup", t("control_setup"), ""],
   off: ["idle", TEXT.remove, ""],
   starting: ["working", TEXT.restore, TEXT.working],
   buffering: ["working", TEXT.restore, TEXT.working],
   on: ["active", TEXT.restore, ""],
-  blocked: ["attention", TEXT.restore, TEXT.blocked],
-  failed: ["error", TEXT.failed, ""],
+  blocked: ["attention", TEXT.restore, t("notice_blocked")],
+  failed: ["error", t("control_failed"), ""],
 };
 const WAITS = new Set(["starting", "buffering"]);
 // Failures that no retry and no reload can help: the video's own sound
@@ -56,32 +50,33 @@ const WORDS_DELAY_MS = 1500;
 // Less motion: our still spinner instead of YouTube's turning one.
 const stillness = matchMedia("(prefers-reduced-motion: reduce)");
 
-// The glyph, on YouTube's 24 px grid and in its weight: a note (round head,
-// straight stem, square flag), plain while the music plays and struck through
-// while nomusic removes it. The struck note is the plain one with a strike
-// corner to corner, which cuts a gap through it, wider on its upper side, as
-// Material's "off" icons do. tools/icons.mjs draws the mark from the same note. Built
-// with DOM calls: YouTube's pages accept only trusted markup.
+// The glyph, on YouTube's 24 px grid and in its 2-unit weight: a note (round
+// head, straight stem, square flag), plain while the music plays; struck through
+// while nomusic removes it, the strike a little above the diagonal so it clears
+// the head, cutting a gap 1.2 units above it and 0.7 below, as Material's "off"
+// icons do; and a dot at the bottom right while nomusic waits for the user.
+// tools/icons.mjs draws the player's glyphs from the same note. Built with DOM
+// calls: YouTube's pages accept only trusted markup.
 const SVG = "http://www.w3.org/2000/svg";
-// One weight, YouTube's: the stem, the flag's height and the strike are 2 units
-// or twice that. The stem is long enough to show above and below the strike.
 const NOTE = [
   ["circle", { cx: 9.2, cy: 17.9, r: 4.2 }],
   ["rect", { x: 11.4, y: 1.9, width: 2, height: 16 }],
   ["rect", { x: 11.4, y: 1.9, width: 6.4, height: 4.4 }],
 ];
-// Corner to corner, a little above the diagonal, so that it clears the head.
 const STRIKE = "M3.4 2.3 21.4 20.3";
-// Bottom right, where the note leaves room: the dot that says nomusic waits for the user.
-const DOT = { cx: 19.6, cy: 19.6, r: 2.6 };
-// The strike's width (2) with a gap of 1.2 above it and 0.7 below, so that it
-// reads as a stroke laid over the note.
 const CUT = "M3.58 2.12 21.58 20.12";
+const DOT = { cx: 19.6, cy: 19.6, r: 2.6 };
 const PLAY = "M8 5.5v13l10.5-6.5z";
 let glyphs = 0;
 function svg(tag, attributes, ...children) {
   const element = document.createElementNS(SVG, tag);
   for (const [name, value] of Object.entries(attributes)) element.setAttribute(name, value);
+  element.append(...children);
+  return element;
+}
+// An HTML element with its properties set and its children in it.
+function html(tag, properties, ...children) {
+  const element = Object.assign(document.createElement(tag), properties);
   element.append(...children);
   return element;
 }
@@ -98,7 +93,6 @@ function glyph() {
       svg("path", { d: STRIKE, stroke: "currentColor", "stroke-width": 2, "stroke-linecap": "round", fill: "none" })),
     svg("circle", { class: "nomusic-glyph-dot", ...DOT }));
 }
-const icon = (d) => svg("svg", { viewBox: "0 0 24 24", "aria-hidden": "true", focusable: "false" }, svg("path", { d, fill: "currentColor" }));
 
 // Only the user's own clicks operate nomusic, never ones the page dispatches.
 const trusted = (handler) => (event) => {
@@ -108,8 +102,8 @@ const trusted = (handler) => (event) => {
 };
 // Keep the player from treating clicks on our controls as clicks on the video
 // (play/pause, double-click fullscreen).
-function keepPointer(element) {
-  for (const type of ["pointerdown", "pointerup", "mousedown", "mouseup", "dblclick"]) {
+function keepPointer(element, ...more) {
+  for (const type of ["pointerdown", "pointerup", "mousedown", "mouseup", "dblclick", ...more]) {
     element.addEventListener(type, (event) => event.stopPropagation());
   }
 }
@@ -127,6 +121,11 @@ const typing = () => {
   return !!active && (active.isContentEditable || /^(input|textarea|select)$/i.test(active.tagName));
 };
 const shown = (element) => !!element && element.offsetWidth > 0 && element.offsetHeight > 0;
+// Set an attribute, or remove it for null, touching the DOM only on a change.
+function attr(element, name, value) {
+  if (value === null) element.removeAttribute(name);
+  else if (element.getAttribute(name) !== value) element.setAttribute(name, value);
+}
 
 // The player's own row of buttons, when it shows one: YouTube's control bar
 // (the button goes before captions), or the top row of the embedded and mobile
@@ -179,16 +178,11 @@ export class Button {
     this.workingSince = null;
     this.source = null; // the video (its source URL) the first wait belongs to
     this.played = false; // its music has been removed at least once
-    this.wantedPlay = false;
     this.host = null;
     this.marked = null; // [player, class]: YouTube's spinner shown for our wait, or hidden under the play button
     this.unseen = null; // YouTube's spinner, if it did not show when marked: ours is drawn instead
-    this.rtl = false; // the player's direction, which the corners follow
 
-    this.el = setLanguage(document.createElement("button"));
-    this.el.type = "button";
-    this.el.className = "nomusic-btn";
-    this.el.append(glyph());
+    this.el = setLanguage(html("button", { type: "button", className: "nomusic-btn" }, glyph()));
     keepPointer(this.el);
     keepKeys(this.el);
     this.el.addEventListener("click", trusted(() => {
@@ -207,16 +201,15 @@ export class Button {
     // A play attempt while a failure waits for the user's choice (the dialog
     // was closed) brings the choice back. Our own hold re-pauses the video, so
     // nothing is heard (fail closed); the intent stays "play", so this listens
-    // for each attempt rather than for a change of intent.
+    // for each attempt rather than for a change of intent. (A page's play()
+    // reaches the element too: intent.js passes it on.)
     this.onPlay = () => {
       if (!this.retired && this.session.failure && this.dismissed) this.openRecovery({ focus: true });
     };
     video.addEventListener("play", this.onPlay);
     // A tooltip in the player's own style, on hover and on keyboard focus.
-    this.tip = setLanguage(document.createElement("div"));
-    this.tip.className = "nomusic-tip";
+    this.tip = setLanguage(html("div", { className: "nomusic-tip", hidden: true }));
     this.tip.setAttribute("aria-hidden", "true");
-    this.tip.hidden = true;
     this.el.addEventListener("pointerenter", () => this.showTip());
     this.el.addEventListener("pointerleave", () => this.hideTip());
     this.el.addEventListener("focus", () => {
@@ -226,8 +219,7 @@ export class Button {
 
     // Status changes for screen readers: a live region beside the button (one
     // inside a button is unreliable), written only when the status changes.
-    this.live = setLanguage(document.createElement("span"));
-    this.live.className = "nomusic-sr-only";
+    this.live = setLanguage(html("span", { className: "nomusic-sr-only" }));
     this.live.setAttribute("role", "status");
 
     this.notice = this.buildNotice();
@@ -246,13 +238,8 @@ export class Button {
     // A toggle while it is one (named for what it does, pressed while it does
     // it); setup and a failure open something instead.
     const toggle = status !== "setup" && status !== "failed";
-    const pressed = toggle ? String(session.on) : null;
-    if (this.el.getAttribute("aria-pressed") !== pressed) {
-      if (pressed === null) this.el.removeAttribute("aria-pressed");
-      else this.el.setAttribute("aria-pressed", pressed);
-    }
-    const name = toggle ? TEXT.remove : tip;
-    if (this.el.getAttribute("aria-label") !== name) this.el.setAttribute("aria-label", name);
+    attr(this.el, "aria-pressed", toggle ? String(session.on) : null);
+    attr(this.el, "aria-label", toggle ? TEXT.remove : tip);
     if (this.tip.textContent !== tip) {
       this.tip.textContent = tip;
       this.placeTip();
@@ -274,7 +261,6 @@ export class Button {
     this.renderNotice(state, says, !this.played);
     if (session.failure !== this.shownFailure) {
       this.shownFailure = session.failure;
-      this.dismissed = false;
       if (session.failure) {
         const { reason, message } = session.failure;
         // A video that played before nomusic was turned on did not fail: the
@@ -282,8 +268,7 @@ export class Button {
         this.recoveryTitle.textContent = reason === "missed" ? TEXT.ready : TEXT.title;
         // The title already says what happened; a reason without more to say is left out.
         this.recoveryMessage.textContent = reason === "error" ? "" : message;
-        if (this.recoveryMessage.textContent) this.recovery.setAttribute("aria-describedby", this.recoveryMessage.id);
-        else this.recovery.removeAttribute("aria-describedby");
+        attr(this.recovery, "aria-describedby", this.recoveryMessage.textContent ? this.recoveryMessage.id : null);
         // Where nothing can help (a locked video, say), the music is the one
         // choice left, so it becomes the main action.
         const final = FINAL.has(reason);
@@ -295,11 +280,6 @@ export class Button {
         this.closeRecovery();
       }
     }
-    // Closed without a choice: it comes back when the user tries to play (a
-    // play event, above, or a page reporting the intent).
-    const wantsPlay = !!session.intent?.wantsPlay;
-    if (session.failure && this.dismissed && wantsPlay && !this.wantedPlay) this.openRecovery({ focus: true });
-    this.wantedPlay = wantsPlay;
   }
 
   // ---- the wait and the click --------------------------------------------------
@@ -309,31 +289,10 @@ export class Button {
   // already is; clicks go through to the video. The click: the whole video is
   // the button, a round play button in the middle its sign.
   buildNotice() {
-    const notice = setLanguage(document.createElement("button"));
-    notice.type = "button";
-    notice.className = "nomusic-notice";
-    notice.hidden = true;
-    notice.tabIndex = -1;
-    const half = () => {
-      const part = document.createElement("span");
-      part.className = "nomusic-spinner__half";
-      const arc = document.createElement("span");
-      arc.className = "nomusic-spinner__arc";
-      part.append(arc);
-      return part;
-    };
-    const spinner = document.createElement("span");
-    spinner.className = "nomusic-spinner";
-    const rotator = document.createElement("span");
-    rotator.className = "nomusic-spinner__rotator";
-    rotator.append(half(), half());
-    spinner.append(rotator);
-    const disc = document.createElement("span");
-    disc.className = "nomusic-notice__disc";
-    disc.append(icon(PLAY));
-    this.noticeText = document.createElement("span");
-    this.noticeText.className = "nomusic-notice__text";
-    notice.append(spinner, disc, this.noticeText);
+    const play = svg("svg", { viewBox: "0 0 24 24", "aria-hidden": "true", focusable: "false" }, svg("path", { d: PLAY, fill: "currentColor" }));
+    this.noticeText = html("span", { className: "nomusic-notice__text" });
+    const notice = setLanguage(html("button", { type: "button", className: "nomusic-notice", hidden: true, tabIndex: -1 },
+      html("span", { className: "nomusic-spinner" }), html("span", { className: "nomusic-notice__disc" }, play), this.noticeText));
     keepPointer(notice);
     keepKeys(notice);
     notice.addEventListener("click", trusted(() => {
@@ -370,8 +329,7 @@ export class Button {
       // The wait is read out by the live region; the play button is a button,
       // named by its text.
       this.notice.tabIndex = blocked ? 0 : -1;
-      if (blocked) this.notice.removeAttribute("aria-hidden");
-      else this.notice.setAttribute("aria-hidden", "true");
+      attr(this.notice, "aria-hidden", blocked ? null : "true");
     }
   }
 
@@ -420,54 +378,37 @@ export class Button {
 
   buildRecovery() {
     const id = `nomusic-dialog-${++dialogs}`;
-    const panel = setLanguage(document.createElement("div"));
-    panel.className = "nomusic-dialog";
-    panel.setAttribute("role", "alertdialog");
-    panel.setAttribute("aria-labelledby", `${id}-title`);
-    panel.hidden = true;
-    panel.tabIndex = -1; // focused itself when its one action is the music (see openRecovery)
-    const title = document.createElement("p");
-    title.className = "nomusic-dialog__title";
-    title.id = `${id}-title`;
-    title.textContent = TEXT.title;
-    this.recoveryTitle = title;
-    this.recoveryMessage = document.createElement("p");
-    this.recoveryMessage.className = "nomusic-dialog__message";
-    this.recoveryMessage.id = `${id}-message`;
+    // Its title and reason are written by render(), before it first shows.
+    this.recoveryTitle = html("p", { className: "nomusic-dialog__title", id: `${id}-title` });
+    this.recoveryMessage = html("p", { className: "nomusic-dialog__message", id: `${id}-message` });
     this.retryBtn = this.action("retry", () => this.session.retry());
     this.retryBtn.classList.add("nomusic-dialog__action--main");
     this.returnBtn = this.action("original", () => this.session.returnToOriginal());
     this.returnBtn.textContent = TEXT.original;
-    const actions = document.createElement("div");
-    actions.className = "nomusic-dialog__actions";
     // The way out first, as a quiet text button; the action that keeps the
-    // music off last, where dialogs put their main one, and focused.
-    actions.append(this.returnBtn, this.retryBtn);
+    // music off last, where dialogs put their main one, and focused. The
+    // dialog itself is focused when its one action is the music (openRecovery).
+    const panel = setLanguage(html("div", { className: "nomusic-dialog", hidden: true, tabIndex: -1 }, this.recoveryTitle,
+      this.recoveryMessage, html("div", { className: "nomusic-dialog__actions" }, this.returnBtn, this.retryBtn)));
+    panel.setAttribute("role", "alertdialog");
+    panel.setAttribute("aria-labelledby", this.recoveryTitle.id);
     keepKeys(panel, { all: true });
     // While it is open, wherever focus is: Escape closes it, Tab moves between
     // its two actions.
     this.onKeys = (event) => {
-      if (this.recovery.hidden) return;
-      if (event.key === "Escape" && !typing()) {
-        event.preventDefault();
-        event.stopPropagation();
-        this.dismiss();
-      } else if (event.key === "Tab") {
-        const order = [this.returnBtn, this.retryBtn].filter((action) => !action.hidden);
-        const at = order.indexOf(document.activeElement);
-        event.preventDefault();
-        event.stopPropagation();
-        order[at < 0 ? order.length - 1 : (at + 1) % order.length].focus();
-      }
+      const escape = event.key === "Escape" && !typing();
+      if (this.recovery.hidden || !(escape || event.key === "Tab")) return;
+      event.preventDefault();
+      event.stopPropagation();
+      if (escape) return this.dismiss();
+      const order = [this.returnBtn, this.retryBtn].filter((action) => !action.hidden);
+      const at = order.indexOf(document.activeElement);
+      order[at < 0 ? order.length - 1 : (at + 1) % order.length].focus();
     };
-    for (const type of ["pointerdown", "pointerup", "mousedown", "mouseup", "dblclick", "click"]) {
-      panel.addEventListener(type, (event) => event.stopPropagation());
-    }
-    panel.append(title, this.recoveryMessage, actions);
+    keepPointer(panel, "click");
     // Over the video around it, a clear layer (below YouTube's own controls): a
     // click there closes the dialog, as Escape does; the video stays paused.
-    this.scrim = document.createElement("div");
-    this.scrim.className = "nomusic-scrim";
+    this.scrim = html("div", { className: "nomusic-scrim" });
     keepPointer(this.scrim);
     this.scrim.addEventListener("click", trusted(() => this.dismiss()));
     return panel;
@@ -482,9 +423,7 @@ export class Button {
   }
 
   action(name, handler) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = "nomusic-dialog__action";
+    const button = html("button", { type: "button", className: "nomusic-dialog__action" });
     button.dataset.action = name;
     button.addEventListener("click", trusted(() => {
       if (shown(this.el)) this.el.focus();
@@ -512,8 +451,15 @@ export class Button {
     this.recovery.remove();
     this.scrim.remove();
     this.recovery.style.cssText = "";
-    window.removeEventListener("scroll", this.onReposition, true);
-    window.removeEventListener("resize", this.onReposition, true);
+    this.follow(false);
+  }
+
+  // A floating dialog follows the video as the page scrolls or resizes.
+  follow(on) {
+    for (const type of ["scroll", "resize"]) {
+      if (on) window.addEventListener(type, this.onReposition, true);
+      else window.removeEventListener(type, this.onReposition, true);
+    }
   }
 
   // The dialog sits in the middle of the player. A player too small to hold
@@ -529,8 +475,7 @@ export class Button {
       }
       this.recovery.classList.remove("nomusic-dialog--floating");
       this.recovery.style.left = this.recovery.style.top = "";
-      window.removeEventListener("scroll", this.onReposition, true);
-      window.removeEventListener("resize", this.onReposition, true);
+      this.follow(false);
       return;
     }
     const layer = document.fullscreenElement ?? document.body;
@@ -540,8 +485,7 @@ export class Button {
       focused?.focus();
     }
     this.recovery.classList.add("nomusic-dialog--floating");
-    window.addEventListener("scroll", this.onReposition, true);
-    window.addEventListener("resize", this.onReposition, true);
+    this.follow(true);
     const rect = this.video.getBoundingClientRect();
     const { offsetWidth: width, offsetHeight: height } = this.recovery;
     const left = rect.left + (rect.width - width) / 2;
@@ -558,7 +502,6 @@ export class Button {
     if (this.retired) return;
     this.host = host;
     if (this.marked) this.markHost(host, this.marked[1]);
-    this.rtl = getComputedStyle(host).direction === "rtl";
     const row = controlRow(host);
     let inRow = !!row;
     try {
@@ -574,8 +517,9 @@ export class Button {
       if (this.el.parentElement !== host) host.append(this.el);
       this.el.classList.remove("ytp-button");
       this.el.dataset.place = "corner";
-      this.el.style.left = this.rtl ? "8px" : "";
-      this.el.style.right = this.rtl ? "" : "8px";
+      const rtl = getComputedStyle(host).direction === "rtl";
+      this.el.style.left = rtl ? "8px" : "";
+      this.el.style.right = rtl ? "" : "8px";
     }
     this.el.style.display = !inRow && minimized(host) ? "none" : "";
     for (const part of [this.live, this.notice]) if (part.parentElement !== host) host.append(part);
@@ -598,22 +542,22 @@ export class Button {
   // needs a decision: the dialog alone, over the video.
   float() {
     if (this.retired) return;
-    this.host = null;
-    this.el.style.display = "none";
-    this.notice.hidden = true;
-    this.markHost(null);
-    this.hideTip();
+    this.leavePlayer();
     if (this.session.failure && this.recovery.hidden && !this.dismissed) this.openRecovery({ focus: true });
     else this.positionPanel();
   }
 
   hide() {
+    this.leavePlayer();
+    this.closeRecovery();
+  }
+
+  leavePlayer() {
     this.host = null;
     this.el.style.display = "none";
     this.notice.hidden = true;
     this.markHost(null);
     this.hideTip();
-    this.closeRecovery();
   }
 
   destroy() {

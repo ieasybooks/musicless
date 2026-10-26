@@ -2,9 +2,9 @@
 // then what to expect, where the control is, and the one thing left to do.
 import { localizePage, localizeWithGlyph } from "./i18n.js";
 
-localizePage();
-localizeWithGlyph(document.getElementById("doneControl"), "done_control", { on: true });
 const $ = (id) => document.getElementById(id);
+localizePage();
+localizeWithGlyph($("doneControl"), "done_control", { on: true });
 
 function show(consented) {
   $("setup").classList.toggle("off", consented);
@@ -12,10 +12,6 @@ function show(consented) {
 }
 
 chrome.storage.sync.get({ consented: false }).then(({ consented }) => show(consented));
-// Turned on in the popup meanwhile.
-chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === "sync" && "consented" in changes) show(changes.consented.newValue === true);
-});
 $("accept").addEventListener("click", async () => {
   await chrome.storage.sync.set({ consented: true });
   show(true);
@@ -35,7 +31,9 @@ function offerBack(id) {
 chrome.storage.session.get("videoTab").then(({ videoTab: id }) => {
   if (Number.isInteger(id)) chrome.tabs.get(id).then(() => offerBack(id), () => offerBack(null));
 });
+// Turned on in the popup meanwhile; or another video's button asked.
 chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === "sync" && "consented" in changes) show(changes.consented.newValue === true);
   if (area === "session" && "videoTab" in changes) offerBack(changes.videoTab.newValue);
 });
 $("back").addEventListener("click", async () => {

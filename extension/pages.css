@@ -13,11 +13,8 @@
   --accent: #c27f0a; /* the mark's amber, the page's one colour; its dark label is 5:1 */
   --accent-hover: #d08d1c;
   --on-accent: #1f1f1f;
-  --tile: #c27f0a; /* the mark's own amber */
-  --on-tile: #ffffff;
   --track: #747775;
   --track-fill: #e1e3e1;
-  --focus: #c27f0a;
 }
 @media (prefers-color-scheme: dark) {
   :root {
@@ -81,7 +78,7 @@ a.button {
   cursor: pointer;
 }
 button.primary:hover,
-a.button:hover { background: var(--accent-hover); color: var(--on-accent); text-decoration: none; }
+a.button:hover { background: var(--accent-hover); }
 [lang="ar"] button.primary,
 [lang="ar"] a.button { font-size: 15px; }
 
@@ -89,10 +86,9 @@ button:focus-visible,
 a:focus-visible,
 input.switch:focus-visible,
 h1:focus-visible {
-  outline: 2px solid var(--focus);
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
-h1:focus:not(:focus-visible) { outline: none; }
 
 /* ---- the first-run page: one centred column, a little above the middle ---- */
 .welcome main {
@@ -103,7 +99,7 @@ h1:focus:not(:focus-visible) { outline: none; }
   text-align: center;
 }
 /* The mark: the toolbar icon's tile, the same in light and dark, as a brand
-   mark is (the speech mark is a mask over the tile's colour). */
+   mark is (the white speech mark is a mask over the amber). */
 .welcome .brand {
   display: grid;
   place-items: center;
@@ -111,13 +107,13 @@ h1:focus:not(:focus-visible) { outline: none; }
   height: 64px;
   margin: 0 auto 28px;
   border-radius: 16px;
-  background: var(--tile);
+  background: var(--accent);
 }
 .welcome .brand::before {
   content: "";
   width: 52px;
   height: 52px;
-  background: var(--on-tile);
+  background: #fff;
   -webkit-mask: url(icons/mark.svg) center / contain no-repeat;
   mask: url(icons/mark.svg) center / contain no-repeat;
 }

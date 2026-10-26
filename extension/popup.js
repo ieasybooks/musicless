@@ -3,9 +3,9 @@
 import { localizePage, localizeWithGlyph, t } from "./i18n.js";
 import { DEFAULTS } from "./settings.js";
 
-localizePage();
-localizeWithGlyph(document.getElementById("oneVideo"), "popup_one_video");
 const $ = (id) => document.getElementById(id);
+localizePage();
+localizeWithGlyph($("oneVideo"), "popup_one_video");
 $("help").href = t("link_help_url");
 
 function show(consented) {
