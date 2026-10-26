@@ -15,7 +15,8 @@ const isOn = (s) => s.status === "on" && !s.holding;
 const good = (a) => a.over_silence === 0 && ((a.windows === 0 && a.reference_db < -40 && a.output_db < -40) ||
   (a.windows > 0 && Math.abs(a.lag_ms) <= 30 && a.lag_spread_ms <= 40 && a.corr >= 0.8 && a.silent_gaps === 0 && a.dropouts === 0));
 
-// A step an ad interrupted is retried once; the first attempt is kept in the report.
+// A step an ad interrupted is retried once. The first attempt stays in the
+// report, marked as retried; only the retry counts.
 async function step(name, fn, { retry = false } = {}) {
   try {
     await fn();
@@ -25,6 +26,7 @@ async function step(name, fn, { retry = false } = {}) {
   const last = report.rows[report.rows.length - 1];
   if (retry && last && !last.ok && last.ad_during) {
     last.scenario += " (ad interrupted, retried)";
+    last.retried = true;
     await step(name, fn);
   }
 }
@@ -322,8 +324,9 @@ await step("Embedded player on another site", async () => {
 }, { retry: true });
 
 report.save();
-const failed = report.rows.filter((row) => !row.ok).length;
-console.log(`\n${report.rows.length - failed}/${report.rows.length} passed`);
+const counted = report.rows.filter((row) => !row.retried);
+const failed = counted.filter((row) => !row.ok).length;
+console.log(`\n${counted.length - failed}/${counted.length} passed`);
 await browser.close();
 server.close();
 process.exit(failed ? 1 : 0);
