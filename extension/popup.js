@@ -13,7 +13,7 @@ function show(consented) {
 }
 
 // `consented` stays false until the user turns nomusic on, here or on the welcome page.
-chrome.storage.sync.get({ consented: false, ...DEFAULTS }).then((stored) => {
+chrome.storage.sync.get(DEFAULTS).then((stored) => {
   $("autoStart").checked = stored.autoStart;
   show(stored.consented);
 });
