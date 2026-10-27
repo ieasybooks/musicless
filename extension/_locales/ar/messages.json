@@ -1,12 +1,12 @@
 {
   "locale_code": { "message": "ar", "description": "Not translated: the language code of this catalog (BCP 47), for the lang attribute." },
   "locale_dir": { "message": "rtl", "description": "Not translated: the writing direction of this catalog, ltr or rtl." },
-  "extension_name": { "message": "nomusic" },
+  "extension_name": { "message": "Musicless" },
   "extension_description": { "message": "يزيل معظم موسيقى الخلفية من فيديوهات YouTube™\u200e ويُبقي الأصوات البشرية. يعمل كل شيء على حاسوبك." },
 
   "control_name": { "message": "إزالة الموسيقى" },
   "control_on": { "message": "إيقاف إزالة الموسيقى" },
-  "control_setup": { "message": "تفعيل nomusic" },
+  "control_setup": { "message": "تفعيل Musicless" },
   "control_failed": { "message": "لم تُزَل الموسيقى" },
   "notice_working": { "message": "تُزال الموسيقى" },
   "notice_done": { "message": "إزالة الموسيقى مفعّلة" },
@@ -26,12 +26,12 @@
   "failure_engine": { "message": "إعادة تحميل الصفحة تحلّ المشكلة عادةً." },
   "failure_error": { "message": "حدث خطأ ما." },
   "failure_audio": { "message": "لم يبدأ الصوت. إعادة تحميل الصفحة تحلّ المشكلة عادةً." },
-  "failure_updated": { "message": "تم تحديث nomusic أو إيقافه. أعد تحميل الصفحة للمتابعة." },
+  "failure_updated": { "message": "تم تحديث Musicless أو إيقافه. أعد تحميل الصفحة للمتابعة." },
 
   "setup_heading": { "message": "شاهد YouTube بدون موسيقى" },
-  "consent_text": { "message": "لإزالة معظم الموسيقى، يقرأ nomusic صوت فيديوهات\u00a0YouTube التي تشاهدها ويعالجه على هذا الحاسوب فقط. ولا يرسل الصوت إلى أي مكان ولا يحفظه، وقد يتزامن إعداده عبر Chrome\u00a0Sync." },
+  "consent_text": { "message": "لإزالة معظم الموسيقى، يقرأ Musicless صوت فيديوهات\u00a0YouTube التي تشاهدها ويعالجه على هذا الحاسوب فقط. ولا يرسل الصوت إلى أي مكان ولا يحفظه، وقد يتزامن إعداده عبر Chrome\u00a0Sync." },
   "consent_accept": { "message": "تفعيل" },
-  "done_heading": { "message": "تم تفعيل nomusic" },
+  "done_heading": { "message": "تم تفعيل Musicless" },
   "done_wait": { "message": "ينتظر كل فيديو بضع ثوانٍ عند بدايته، ريثما تُزال الموسيقى." },
   "done_control": { "message": "لتشغيل فيديو مع موسيقاه، استخدم {icon} في المشغّل." },
   "done_text": { "message": "إن كانت علامة تبويب YouTube مفتوحة من قبل، فأعد تحميلها." },
@@ -41,6 +41,6 @@
   "popup_autostart_label": { "message": "إزالة الموسيقى من كل فيديو" },
   "popup_one_video": { "message": "لإزالة الموسيقى من فيديو واحد، استخدم {icon} في المشغّل." },
   "link_help": { "message": "مساعدة" },
-  "link_help_url": { "message": "https://github.com/IbraheemTuffaha/nomusic/blob/main/docs/help.ar.md" },
+  "link_help_url": { "message": "https://github.com/IbraheemTuffaha/musicless/blob/main/docs/help.ar.md" },
   "link_privacy": { "message": "سياسة الخصوصية" }
 }

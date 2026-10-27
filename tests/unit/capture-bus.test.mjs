@@ -24,7 +24,7 @@ function bus() {
 
 const append = (extra = {}) => ({ kind: "append", bufferId: 2, bytes: new Uint8Array([1, 2, 3]), offset: 0, segment: "media", ...extra });
 
-test("well-formed entries pass on with only the fields nomusic reads", () => {
+test("well-formed entries pass on with only the fields Musicless reads", () => {
   const { capture, received } = bus();
   capture.receive({ type: "event", streamId: 5, entry: append({ note: "x".repeat(1000) }) });
   capture.receive({ type: "replay", streamId: 5, entries: [{ kind: "buffer", bufferId: 2, mime: "audio/webm" }, append(), { kind: "end" }] });

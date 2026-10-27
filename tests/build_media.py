@@ -11,8 +11,8 @@ The first form writes, from a video file or from generated audio and video
   <out>/muxed/, <out>/muxed-gap/       one fragmented MP4 with both tracks, appended in byte
                                       slices like a progressive player
   <out>/drm/                           ClearKey-encrypted audio (Common Encryption), which
-                                      nomusic must refuse to process
-  <out>/progressive.mp4                a plain file nomusic cannot capture
+                                      Musicless must refuse to process
+  <out>/progressive.mp4                a plain file Musicless cannot capture
 The second form writes a long audio-only WebM/Opus stream (default 25 minutes)
 for the capture memory tests.
 """
@@ -133,7 +133,7 @@ for name, extra in (("muxed", ["-bf", "0"]), ("muxed-gap", [])):
 run("-i", str(src), *limit, *VIDEO, "-c:a", "aac", "-movflags", "+faststart", str(out / "progressive.mp4"))
 
 # Encrypted audio (Opus in fragmented MP4, Common Encryption): the player plays it
-# with a ClearKey license; nomusic sees an encrypted sample entry and must stop.
+# with a ClearKey license; Musicless sees an encrypted sample entry and must stop.
 folder = out / "drm"
 folder.mkdir(parents=True, exist_ok=True)
 run("-i", str(out / "webm-opus" / "audio.webm"), "-map", "0:a", "-c:a", "copy", "-f", "mp4",

@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for looking. nomusic is a small extension. The useful contributions
+Thanks for looking. Musicless is a small extension. The useful contributions
 are bug reports with a video URL, and small patches that keep the behavior
 in the README.
 
@@ -19,8 +19,8 @@ You need `curl`, `tar`, and `python3`. Browser tests also need `ffmpeg`
 and Google Chrome, Edge, Brave, or another Chromium browser.
 
 ```sh
-git clone https://github.com/IbraheemTuffaha/nomusic
-cd nomusic
+git clone https://github.com/IbraheemTuffaha/musicless
+cd musicless
 ./setup.sh --dev
 ```
 
@@ -31,8 +31,8 @@ Those directories are not in git. Do not commit them.
 Load the `extension` folder at `chrome://extensions` with Developer mode
 on, then choose Load unpacked. Reload any YouTube tab that was already open.
 
-The first time, choose **Turn on nomusic** on the welcome page. Until you
-do, nomusic does not remove music.
+The first time, choose **Turn on Musicless** on the welcome page. Until you
+do, Musicless does not remove music.
 
 ## Tests
 

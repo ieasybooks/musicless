@@ -18,9 +18,9 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 90
     env:
-      NOMUSIC_TEST_DIR: ${{ github.workspace }}/tests/.work
+      MUSICLESS_TEST_DIR: ${{ github.workspace }}/tests/.work
       # The runner's AppArmor profile blocks Chrome's sandbox.
-      NOMUSIC_NO_SANDBOX: "1"
+      MUSICLESS_NO_SANDBOX: "1"
       CHROME: /usr/bin/google-chrome
     outputs:
       sha256: ${{ steps.package.outputs.sha256 }}
@@ -48,23 +48,23 @@ jobs:
 
       - name: Build synthetic test media
         run: |
-          tests/.venv/bin/python tests/build_media.py synthetic "$NOMUSIC_TEST_DIR/media/synth" 240
-          tests/.venv/bin/python tests/build_media.py long "$NOMUSIC_TEST_DIR/media/long" 25
+          tests/.venv/bin/python tests/build_media.py synthetic "$MUSICLESS_TEST_DIR/media/synth" 240
+          tests/.venv/bin/python tests/build_media.py long "$MUSICLESS_TEST_DIR/media/long" 25
 
       - name: Package
         id: package
         run: |
           ./scripts/package.sh
-          echo "sha256=$(sha256sum dist/nomusic-*.zip | cut -d ' ' -f 1)" >> "$GITHUB_OUTPUT"
-          unzip -q dist/nomusic-*.zip -d "$RUNNER_TEMP/nomusic"
+          echo "sha256=$(sha256sum dist/musicless-*.zip | cut -d ' ' -f 1)" >> "$GITHUB_OUTPUT"
+          unzip -q dist/musicless-*.zip -d "$RUNNER_TEMP/musicless"
 
       - name: Browser tests of the package on local Media Source pages
         working-directory: tests
-        run: NOMUSIC_EXTENSION="$RUNNER_TEMP/nomusic" MEDIA_SET=synth node local.mjs
+        run: MUSICLESS_EXTENSION="$RUNNER_TEMP/musicless" MEDIA_SET=synth node local.mjs
 
       - name: Memory while separating and after
         working-directory: tests
-        run: NOMUSIC_EXTENSION="$RUNNER_TEMP/nomusic" MEDIA_SET=synth node memory.mjs
+        run: MUSICLESS_EXTENSION="$RUNNER_TEMP/musicless" MEDIA_SET=synth node memory.mjs
 
   # Builds the zip again, apart from the test tools, and attests it only if it
   # is the zip the tests ran.
@@ -91,7 +91,7 @@ jobs:
         run: |
           ./scripts/package.sh
           cd dist
-          sha256sum nomusic-*.zip > SHA256SUMS
+          sha256sum musicless-*.zip > SHA256SUMS
           cat SHA256SUMS
           test "$(cut -d ' ' -f 1 SHA256SUMS)" = "$TESTED"
 
@@ -100,7 +100,7 @@ jobs:
         uses: actions/attest-build-provenance@v4
         with:
           subject-path: |
-            dist/nomusic-*.zip
+            dist/musicless-*.zip
             dist/SHA256SUMS
 
       - name: Release notes and attestation bundle
@@ -110,7 +110,7 @@ jobs:
         run: |
           version=$(python3 -c 'import json; print(json.load(open("extension/manifest.json"))["version"])')
           test "$GITHUB_REF_NAME" = "v$version"
-          cp "$BUNDLE" "dist/nomusic-${version}.attestation.json"
+          cp "$BUNDLE" "dist/musicless-${version}.attestation.json"
           VERSION="$version" python3 - <<'PY'
           import os
           from pathlib import Path
@@ -125,7 +125,7 @@ jobs:
               "## Verify",
               "",
               "    sha256sum -c SHA256SUMS",
-              "    gh attestation verify nomusic-*.zip --repo IbraheemTuffaha/nomusic",
+              "    gh attestation verify musicless-*.zip --repo IbraheemTuffaha/musicless",
               "",
           ])
           notes = body + "\n" + verify
@@ -144,6 +144,6 @@ jobs:
             --draft \
             --title "$GITHUB_REF_NAME" \
             --notes-file dist/release-notes.md \
-            "dist/nomusic-${version}.zip" \
+            "dist/musicless-${version}.zip" \
             dist/SHA256SUMS \
-            "dist/nomusic-${version}.attestation.json"
+            "dist/musicless-${version}.attestation.json"

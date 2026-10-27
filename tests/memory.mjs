@@ -1,5 +1,5 @@
 // Memory cost of the extension: resident memory of the browser's processes
-// with nomusic off, while separating, and after turning it off again (the
+// with Musicless off, while separating, and after turning it off again (the
 // model is released 30 s after nothing needs it).
 // Usage: node memory.mjs [media dir]   (MEDIA_SET=vlog|synth)
 import { clickButton, launch, memoryOfChrome, newPage, Report, sleep, waitFor, WORK } from "./harness.mjs";
@@ -33,7 +33,7 @@ const after = memoryOfChrome(browser);
 const engineFrames = await page.evaluate(() => document.querySelectorAll('iframe[src*="separator.html"]').length);
 
 const added = on.total_mb - off.total_mb;
-report.record("memory while separating", added <= 700, { off, on, added_by_nomusic_mb: added });
+report.record("memory while separating", added <= 700, { off, on, added_by_musicless_mb: added });
 report.record("memory is released after turning off", engineFrames === 0 && after.total_mb - off.total_mb <= 150,
   { after, left_over_mb: after.total_mb - off.total_mb, engine_frames: engineFrames });
 report.save();

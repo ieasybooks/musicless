@@ -55,7 +55,7 @@ function sandbox({ streamLimit = 120_000, totalLimit = 400_000, maxEntries = 100
   // Inside the sandbox `window` is its global proxy: messages must come from it.
   const self = vm.runInContext("window", context);
   const control = (message) => {
-    for (const fn of listeners) fn({ source: self, data: { nomusic: "control", ...message } });
+    for (const fn of listeners) fn({ source: self, data: { musicless: "control", ...message } });
   };
   if (consented !== null) control({ type: "consent", consented });
   return { context, posted, control };
@@ -211,7 +211,7 @@ test("a subscribed stream gets each new append live", () => {
   assert.ok(CLUSTER_SECONDS > 0);
 });
 
-test("calls the browser refuses are not recorded, and nomusic's own errors never reach the page", () => {
+test("calls the browser refuses are not recorded, and Musicless's own errors never reach the page", () => {
   const env = sandbox();
   const mediaSource = new env.context.MediaSource();
   env.context.URL.createObjectURL(mediaSource);
@@ -223,7 +223,7 @@ test("calls the browser refuses are not recorded, and nomusic's own errors never
   mediaSource.updating = true;
   assert.throws(() => mediaSource.endOfStream(), /InvalidStateError/);
   mediaSource.updating = false;
-  sb.appendBuffer(Symbol("not a buffer")); // the browser took it; nomusic cannot copy it
+  sb.appendBuffer(Symbol("not a buffer")); // the browser took it; Musicless cannot copy it
   const { entries } = replay(env, 1);
   assert.equal(entries.map((e) => e.kind).join(), "buffer,append", "only what the browser accepted");
 });

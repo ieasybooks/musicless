@@ -48,7 +48,7 @@ appended ahead of the playhead, abort and re-append on seek), with options to
 mute, autoplay, hide its Media Source in another frame or a worker, and play
 ClearKey-encrypted media. The suite installs the extension in a fresh profile
 with diagnostics added to its own copy of the extension: a recorder of the
-page's audio and nomusic's output on the same clock, and requests for nomusic's
+page's audio and Musicless's output on the same clock, and requests for Musicless's
 state. The release has neither. `analyze.py` then checks sync (against Spleeter run offline),
 dropouts and gaps (against 1x Spleeter of the exact source, at the media time
 each block was heard) and output while the video is silent. Its offline
@@ -68,18 +68,18 @@ browser's real autoplay policy, and the extension being removed while a video
 plays.
 
 Other browsers: `CHROME=/path/to/browser QUICK=1 node local.mjs`. Portable
-browser copies and CI containers need `NOMUSIC_NO_SANDBOX=1`. Browsers without
+browser copies and CI containers need `MUSICLESS_NO_SANDBOX=1`. Browsers without
 H.264 and AAC (open-source Chromium) get the VP9/Opus pages automatically.
 
 Results go to `.work/results/<REPORT>.json` and recordings to
-`.work/recordings/`; `NOMUSIC_TEST_DIR` moves the work folder,
-`NOMUSIC_EXTENSION` tests another copy of the extension (such as an unzipped
+`.work/recordings/`; `MUSICLESS_TEST_DIR` moves the work folder,
+`MUSICLESS_EXTENSION` tests another copy of the extension (such as an unzipped
 release package) and `PORT` lets several browsers run side by side.
 
 `soak.mjs [minutes]` plays a long stream (`LONG_SET`, built with
-`build_media.py long`) and checks that nomusic's own memory stays flat and
+`build_media.py long`) and checks that Musicless's own memory stays flat and
 sync holds. (The whole browser grows slowly while playing a long Media Source
-stream, by about as much without nomusic: 61 MB with nomusic off against 80 MB
+stream, by about as much without Musicless: 61 MB with Musicless off against 80 MB
 with it on over the same 12 minutes.)
 
 ## YouTube
@@ -93,7 +93,7 @@ video through YouTube's own navigation), a vlog at 1.5x, a heavy song, a 24/7
 live stream, Shorts, muted inline previews and an embedded player. Ads and bot
 checks make this suite noisy: steps an ad interrupted are retried once.
 
-Headless YouTube treats the browser as a bot, also without nomusic installed: it
+Headless YouTube treats the browser as a bot, also without Musicless installed: it
 stops serving a video about a minute into playback ("Something went wrong") and
 never loads a new position after a seek. So each group of steps opens a fresh
 page and seeks stay within the audio already loaded; the local suite covers
@@ -103,7 +103,7 @@ seeking into new audio and long sessions.
 node controls.mjs
 ```
 
-Where nomusic sits in YouTube's own player, which YouTube changes often: the
+Where Musicless sits in YouTube's own player, which YouTube changes often: the
 button joins the control bar before captions, the wait shows while the first
 audio is prepared, a real click turns the music removal off and on again, the
 tooltip sits above the bar, the button hides with YouTube's controls, it stays
@@ -131,7 +131,7 @@ to remake them.
 node memory.mjs
 ```
 
-The browser's resident memory with nomusic off, while separating, and 45 s
+The browser's resident memory with Musicless off, while separating, and 45 s
 after turning it off (the model is released 30 s after nothing needs it).
 
 ## CI

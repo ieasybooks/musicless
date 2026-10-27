@@ -2,7 +2,7 @@
 
 Usage: analyze.py <base path> <sample rate> [--source <media file>]
 Reads <base>.original.s16 (the page's own audio, tapped before it is silenced)
-and <base>.output.s16 (what nomusic played), both mono on the same clock, and
+and <base>.output.s16 (what Musicless played), both mono on the same clock, and
 prints one JSON line. Sync is measured against Spleeter run offline on the
 recorded original (vocals against vocals), which stays reliable when the
 music is much louder than the voice:
@@ -130,7 +130,7 @@ for i in range(len(reference) // half):
         dropouts += 1
 
 # Talking over silence: half-second stretches where the page's own audio is
-# silent (paused or stalled video) but nomusic still plays something.
+# silent (paused or stalled video) but Musicless still plays something.
 over_silence = 0
 for i in range(len(original) // half):
     if db(original[i * half : (i + 1) * half]) < -70 and db(output[i * half : (i + 1) * half]) > -50:

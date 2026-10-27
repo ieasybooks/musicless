@@ -1,94 +1,27 @@
-// Draws nomusic's mark and writes every image made from it: the toolbar and
-// extension icons (16, 32, 48 and 128 px), the white mark the first-run page
-// sets on its own tile, the store icon and promo tile, and the README logo;
-// and the player button's two glyphs, for the sentences that point at it.
-//
-// The mark is a closing speech mark, white on an amber tile: what nomusic
-// keeps is speech. (The other extensions that do this job all show a
-// struck-through note.) The player button keeps the note, struck through while
-// the music is removed, as YouTube draws mute; button.js draws the same note.
-// The 16 px icon is set pixel by pixel, since a scaled-down drawing turns to
-// mush at that size; the others are vectors. Only the promo tile's name needs a
-// font: Roboto.
+// Render Musicless's supplied brand artwork in ink and paper. The mark is a
+// snapped eighth note with a gap in its stem. The 16 and 32 px toolbar icons
+// each have their own drawing so the gap stays clear at those sizes.
+// The logo is outlined artwork: no font is needed to render any brand image.
+// YouTube's player glyphs stay separate and keep their original geometry.
 //
 // Usage (from the repository root): node tools/icons.mjs
 // Needs the test tools (./setup.sh --dev) and a Chromium browser (CHROME, as
 // for the tests).
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import puppeteer from "../tests/node_modules/puppeteer-core/lib/esm/puppeteer/puppeteer-core.js";
 
 const ROOT = new URL("../", import.meta.url).pathname;
-// The tile stands apart from Chrome's white and dark toolbars at 3:1 or more
-// (white 3.3:1, #3c3c3c 3.3:1, #1f1f1f 5:1), and the white mark on it is
-// 3.3:1. The pages' one button is this amber too, with a dark label (pages.css).
-const AMBER = "#c27f0a";
+const BRAND = join(ROOT, "assets/brand");
+const INK = "#1f1d1a";
 
-// The speech mark: a pair of closing quotation marks, each a round bowl whose
-// tail sweeps from its right side down to a point under its left, as a
-// typeface draws ” (so it reads as speech, not as the digits 99). `r` is the
-// bowl's radius; the tail falls TAIL radii below the bowl; the marks stand GAP
-// bowl widths apart. Drawn from (x, y), `width` wide (bowl to bowl).
-const n = (v) => +v.toFixed(3);
-const TAIL = 2;
-const GAP = 0.58;
-function quote(cx, cy, r) {
-  const X = (x) => n(cx + x * r);
-  const Y = (y) => n(cy + y * r);
-  const tip = [-0.75, 1 + TAIL];
-  const foot = [0.25, Math.sqrt(1 - 0.25 ** 2)];
-  return `M${X(0)} ${Y(-1)}A${n(r)} ${n(r)} 0 0 1 ${X(1)} ${Y(0)}` +
-    `C${X(1)} ${Y(1 + TAIL * 0.55)} ${X(tip[0] + 0.9)} ${Y(tip[1] - 0.35)} ${X(tip[0])} ${Y(tip[1])}` +
-    `C${X(tip[0] + 0.55)} ${Y(tip[1] - 0.75)} ${X(foot[0] + 0.12)} ${Y(foot[1] + 0.45)} ${X(foot[0])} ${Y(foot[1])}` +
-    `A${n(r)} ${n(r)} 0 0 1 ${X(-1)} ${Y(0)}A${n(r)} ${n(r)} 0 0 1 ${X(0)} ${Y(-1)}Z`;
+// Set only the displayed size; the supplied paths and viewBox are unchanged.
+function sized(name, width) {
+  const source = readFileSync(join(BRAND, name), "utf8").trim();
+  const [, , w, h] = source.match(/viewBox="([^"]+)"/)[1].split(" ").map(Number);
+  return source.replace(/ width="[^"]*" height="[^"]*"/, ` width="${width}" height="${+(width * h / w).toFixed(2)}"`);
 }
-function mark(x, y, width, color = "#fff") {
-  const r = width / (4 + 2 * GAP);
-  return `<path fill="${color}" d="${quote(x + r, y + r, r)}${quote(x + 3 * r + 2 * GAP * r, y + r, r)}"/>`;
-}
-const HEIGHT = (2 + TAIL) / (4 + 2 * GAP); // the pair's height for its width
-
-// The tile with the mark in it, as an SVG of `size` px. `inset` is the
-// transparent margin; `share` the mark's width as a share of the tile. The
-// pair sits a little below the middle: its weight is in its bowls.
-function tile(size, { inset = 0, radius = 0.25, share = 0.62, color = AMBER } = {}) {
-  const side = size - 2 * inset;
-  const width = side * share;
-  const x = inset + (side - width) / 2;
-  const y = inset + (side - width * HEIGHT) / 2 + side * 0.04;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">` +
-    `<rect x="${inset}" y="${inset}" width="${side}" height="${side}" rx="${n(side * radius)}" fill="${color}"/>${mark(x, y, width)}</svg>`;
-}
-
-// 16 px, pixel by pixel and in whole pixels: two bowls of four with their
-// corners cut, 2 px apart, each with a tail 2 px wide that falls five rows,
-// a pixel to the left every two (short tails read as two dots).
-const PIXELS = [
-  "................",
-  "................",
-  "................",
-  "................",
-  "....##....##....",
-  "...####..####...",
-  "...####..####...",
-  "....###...###...",
-  ".....##....##...",
-  ".....##....##...",
-  "....##....##....",
-  "....##....##....",
-  "...##....##.....",
-  "................",
-  "................",
-  "................",
-];
-const PIXEL_ICON = `<canvas id="c" width="16" height="16"></canvas><script>
-  const c = document.getElementById("c").getContext("2d");
-  c.fillStyle = "${AMBER}";
-  c.beginPath(); c.roundRect(0, 0, 16, 16, 3); c.fill();
-  c.fillStyle = "#fff";
-  ${JSON.stringify(PIXELS)}.forEach((row, y) => [...row].forEach((p, x) => p === "#" && c.fillRect(x, y, 1, 1)));
-</script>`;
 
 // The player button's note on its 24-unit grid, as in button.js: a round
 // head, a straight stem and a square flag, in YouTube's icon weight; struck
@@ -106,51 +39,37 @@ function note({ color = "#fff", stroke = 2, gap = 1.2, low = 0.7 } = {}) {
 }
 const PLAIN = `<circle cx="9.2" cy="17.9" r="4.2"/><rect x="11.4" y="1.9" width="2" height="16"/><rect x="11.4" y="1.9" width="6.4" height="4.4"/>`;
 
-async function render(page, html, width, height, file, { script = false } = {}) {
+async function render(page, html, width, height, file) {
   await page.setViewport({ width, height, deviceScaleFactor: 1 });
   await page.setContent(`<!doctype html><body style="margin:0;background:transparent">${html}</body>`, { waitUntil: "load" });
-  if (script) await new Promise((resolve) => setTimeout(resolve, 100));
   await page.screenshot({ path: file, omitBackground: true, clip: { x: 0, y: 0, width, height } });
 }
 
 const chrome = process.env.CHROME ?? ["/usr/bin/google-chrome", "/usr/bin/chromium", "/usr/bin/chromium-browser",
   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"].find((path) => existsSync(path));
 if (!chrome) throw new Error("No browser found: set CHROME to a Chromium browser.");
-const profile = mkdtempSync(join(process.env.TMPDIR ?? tmpdir(), "nomusic-icons-"));
+const profile = mkdtempSync(join(process.env.TMPDIR ?? tmpdir(), "musicless-icons-"));
 const browser = await puppeteer.launch({
   executablePath: chrome, headless: true, pipe: true, userDataDir: profile,
-  args: ["--no-first-run", ...(process.env.NOMUSIC_NO_SANDBOX === "1" ? ["--no-sandbox"] : [])],
+  args: ["--no-first-run", "--mute-audio", "--disable-gpu", ...(process.env.MUSICLESS_NO_SANDBOX === "1" ? ["--no-sandbox"] : [])],
 });
 try {
   const page = await browser.newPage();
-  await render(page, PIXEL_ICON, 16, 16, join(ROOT, "extension/icons/icon-16.png"), { script: true });
-  // The 128 px icon (also the store's): 96 px of art in 16 px of transparent
-  // margin, as Chrome's guidelines ask.
-  const ICONS = {
-    32: tile(32, { inset: 1, radius: 0.2 }),
-    48: tile(48, { inset: 2 }),
-    128: tile(128, { inset: 16 }),
-  };
-  for (const [size, svg] of Object.entries(ICONS)) await render(page, svg, +size, +size, join(ROOT, `extension/icons/icon-${size}.png`));
-  await render(page, ICONS[128], 128, 128, join(ROOT, "docs/store/store-icon-128.png"));
-  // The README logo: the tile alone, large.
-  await render(page, tile(512), 512, 512, join(ROOT, "assets/logo.png"));
-  // The promo tile: the white mark over the name on the amber, one lockup,
-  // nothing else (beside a word the mark would read as a quotation). The name
-  // is set in Roboto Medium, YouTube's face, near the mark's weight.
-  if (!(await page.evaluate(() => document.fonts.check("500 40px Roboto")))) {
-    throw new Error("Roboto is needed for the promo tile's name: install it (or point FONTCONFIG_FILE at a folder that has it).");
+  for (const size of [16, 32, 48]) {
+    const file = size < 48 ? `musicless-icon-${size}.svg` : "musicless-icon.svg";
+    await render(page, sized(file, size), size, size, join(ROOT, `extension/icons/icon-${size}.png`));
   }
-  await render(page, `<div style="width:440px;height:280px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;background:${AMBER}">
-      <svg width="92" height="${n(92 * HEIGHT)}" viewBox="0 0 92 ${n(92 * HEIGHT)}">${mark(0, 0, 92)}</svg>
-      <span style="font:500 44px/1 Roboto;letter-spacing:-0.5px;color:#fff;margin-bottom:4px">nomusic</span></div>`, 440, 280, join(ROOT, "docs/store/promo-tile-440x280.png"));
-  // The white mark of the first-run page, which draws the tile itself.
-  writeFileSync(join(ROOT, "extension/icons/mark.svg"),
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">${mark(3, 12 - (18 * HEIGHT) / 2 + 0.8, 18)}</svg>\n`);
+  // 96 px of art inside a 16 px transparent margin, as Chrome asks.
+  const large = `<div style="padding:16px;line-height:0">${sized("musicless-icon.svg", 96)}</div>`;
+  await render(page, large, 128, 128, join(ROOT, "extension/icons/icon-128.png"));
+  copyFileSync(join(ROOT, "extension/icons/icon-128.png"), join(ROOT, "docs/store/store-icon-128.png"));
+  const promo = `<div style="width:440px;height:280px;background:${INK};display:grid;place-items:center;line-height:0">${sized("musicless-logo-paper.svg", 320)}</div>`;
+  await render(page, promo, 440, 280, join(ROOT, "docs/store/promo-tile-440x280.png"));
+  copyFileSync(join(BRAND, "musicless-icon.svg"), join(ROOT, "extension/icons/icon.svg"));
   // The player button's two glyphs, for sentences that point at it.
   writeFileSync(join(ROOT, "extension/icons/player-on.svg"), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">${note()}</svg>\n`);
   writeFileSync(join(ROOT, "extension/icons/player-off.svg"), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g fill="#fff">${PLAIN}</g></svg>\n`);
-  console.log("wrote extension/icons/icon-{16,32,48,128}.png, extension/icons/{mark,player-on,player-off}.svg, docs/store/store-icon-128.png, docs/store/promo-tile-440x280.png, assets/logo.png");
+  console.log("wrote extension/icons/icon-{16,32,48,128}.png, extension/icons/{icon,player-on,player-off}.svg, docs/store/store-icon-128.png, docs/store/promo-tile-440x280.png");
 } finally {
   await browser.close();
   rmSync(profile, { recursive: true, force: true });

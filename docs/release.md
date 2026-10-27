@@ -35,8 +35,8 @@ On Linux, before the tag:
    The recovery dialog offers Try again (or Reload page) and Play with music;
    a copy-protected video offers only Play with music.
    The first run asks you to **Turn on** before it processes a video.
-7. **Package check.** `./scripts/package.sh` writes `dist/nomusic-<version>.zip`.
-   Unzip it and run `NOMUSIC_EXTENSION=<folder> QUICK=1 node local.mjs`, then
+7. **Package check.** `./scripts/package.sh` writes `dist/musicless-<version>.zip`.
+   Unzip it and run `MUSICLESS_EXTENSION=<folder> QUICK=1 node local.mjs`, then
    load that folder in a clean profile and play one video. The release zip
    has no debug recorder and no audio-export path. Confirm the unzipped tree
    before you tag. The workflow builds the zip you will actually upload. This
@@ -83,7 +83,7 @@ git push origin main
 Do not force-push `main`. If the push is rejected, `main` is not on top of
 `origin/main`.
 
-After this, `https://github.com/IbraheemTuffaha/nomusic/blob/main/docs/privacy.md`
+After this, `https://github.com/IbraheemTuffaha/musicless/blob/main/docs/privacy.md`
 must show the privacy policy while you are signed out. That URL is the one
 you put in the store.
 
@@ -94,12 +94,12 @@ and `manifest.json` says `1.0.0`. If you tag on a later day than the date in
 `CHANGELOG.md` and the privacy policy, update those dates first.
 
 ```sh
-git tag -a v1.0.0 main -m "nomusic 1.0.0"
+git tag -a v1.0.0 main -m "Musicless 1.0.0"
 git push origin v1.0.0
 ```
 
 The Release workflow has two jobs. The first runs the unit tests, builds
-`dist/nomusic-<version>.zip` with `scripts/package.sh`, and tests the
+`dist/musicless-<version>.zip` with `scripts/package.sh`, and tests the
 unzipped package: the full browser suite in Chrome and the memory check.
 The second, the only one that can write, builds the zip again without
 the test tools, checks that it is the zip the tests ran (same SHA-256),
@@ -113,7 +113,7 @@ Download the draft's zip, `SHA256SUMS`, and attestation file into one folder.
 
 ```sh
 sha256sum -c SHA256SUMS
-gh attestation verify nomusic-1.0.0.zip --repo IbraheemTuffaha/nomusic
+gh attestation verify musicless-1.0.0.zip --repo IbraheemTuffaha/musicless
 ```
 
 On macOS, `shasum -a 256 -c SHA256SUMS` checks the same file.
@@ -150,7 +150,7 @@ and the popup, once in English and once in Arabic, and writes `en-1-…png` to
 and the promo tile come from `node tools/icons.mjs` (from the repository
 root) after any change to the mark.
 A YouTube bot check or an ad can spoil a run; run it again. Portable browser
-copies need `NOMUSIC_NO_SANDBOX=1`. Upload the English screenshots with the
+copies need `MUSICLESS_NO_SANDBOX=1`. Upload the English screenshots with the
 English listing and the Arabic ones with the Arabic locale; the promo tile
 and `store-icon-128.png` are global.
 
@@ -164,7 +164,7 @@ pending for more than three weeks, contact developer support. Use deferred
 publishing if the release must wait for a chosen launch time.
 
 When you publish, install from the store in a clean profile, choose **Turn
-on nomusic**, and play one video. Put the store URL in the README's install
+on Musicless**, and play one video. Put the store URL in the README's install
 section, and in the repository homepage, only after the listing is live.
 
 ## 6. Edge Add-ons

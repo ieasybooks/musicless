@@ -1,28 +1,28 @@
-/* All injected UI is namespaced under .nomusic-* so it never collides with the
+/* All injected UI is namespaced under .musicless-* so it never collides with the
    page's styles. button.js sets lang and dir from the extension's language,
    and the corners from the player's. Text over the picture is white on a dark
    ground that keeps it above 4.5:1 even over a white video. */
 
-.nomusic-btn,
-.nomusic-tip,
-.nomusic-notice,
-.nomusic-dialog {
+.musicless-btn,
+.musicless-tip,
+.musicless-notice,
+.musicless-dialog {
   box-sizing: border-box;
   font-family: "YouTube Noto", Roboto, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 /* Arabic: YouTube's Latin face first, so the Latin words in Arabic text
-   (YouTube, nomusic) look as they do everywhere else, then the systems' Arabic
+   (YouTube, Musicless) look as they do everywhere else, then the systems' Arabic
    faces. */
-.nomusic-tip[lang="ar"],
-.nomusic-notice[lang="ar"],
-.nomusic-dialog[lang="ar"] {
+.musicless-tip[lang="ar"],
+.musicless-notice[lang="ar"],
+.musicless-dialog[lang="ar"] {
   font-family: "YouTube Noto", Roboto, "Segoe UI", "SF Arabic", "Geeza Pro", "Noto Sans Arabic", "Noto Naskh Arabic UI", Tahoma, sans-serif;
 }
 
 /* The button. In YouTube's control bar, YouTube's own .ytp-button gives it its
    size, its hover, its keyboard focus ring, and hides it with the controls. */
-.nomusic-btn {
+.musicless-btn {
   position: relative;
   margin: 0;
   padding: 0;
@@ -32,37 +32,37 @@
   cursor: pointer;
 }
 /* YouTube's own icons are pure white; its bar would make ours #eee. */
-.ytp-chrome-controls .nomusic-btn.ytp-button { color: #fff; }
-.nomusic-btn svg {
+.ytp-chrome-controls .musicless-btn.ytp-button { color: #fff; }
+.musicless-btn svg {
   display: block;
   width: 24px;
   height: 24px;
   margin: auto;
   pointer-events: none;
 }
-.nomusic-btn:is([data-place="ytp"], [data-place="top"]) { display: inline-flex; align-items: center; justify-content: center; }
+.musicless-btn:is([data-place="ytp"], [data-place="top"]) { display: inline-flex; align-items: center; justify-content: center; }
 /* The top row of the embedded and mobile players, and of a Short: 48 px icon
    buttons. Shorts' row lets clicks through to the video, and only its own
    buttons take them, as this one does. */
-.nomusic-btn[data-place="top"] { width: 48px; height: 48px; pointer-events: auto; }
+.musicless-btn[data-place="top"] { width: 48px; height: 48px; pointer-events: auto; }
 
-/* The note plain while the music plays, struck through while nomusic removes
+/* The note plain while the music plays, struck through while Musicless removes
    it, as YouTube draws its mute button. */
-.nomusic-btn .nomusic-glyph-plain,
-.nomusic-btn .nomusic-glyph-dot { display: none; }
-.nomusic-btn .nomusic-glyph-struck { display: inline; }
+.musicless-btn .musicless-glyph-plain,
+.musicless-btn .musicless-glyph-dot { display: none; }
+.musicless-btn .musicless-glyph-struck { display: inline; }
 /* Off, before the first run and after a failure, the music is not removed:
-   the plain note. Before the first run and after a failure nomusic also waits
+   the plain note. Before the first run and after a failure Musicless also waits
    for the user: a small dot in YouTube's red, where YouTube puts its own
    badges. */
-.nomusic-btn:is([data-state="idle"], [data-state="setup"], [data-state="error"]) .nomusic-glyph-plain { display: inline; }
-.nomusic-btn:is([data-state="idle"], [data-state="setup"], [data-state="error"]) .nomusic-glyph-struck { display: none; }
-.nomusic-btn:is([data-state="setup"], [data-state="error"]) .nomusic-glyph-dot { display: inline; fill: #ff0033; }
+.musicless-btn:is([data-state="idle"], [data-state="setup"], [data-state="error"]) .musicless-glyph-plain { display: inline; }
+.musicless-btn:is([data-state="idle"], [data-state="setup"], [data-state="error"]) .musicless-glyph-struck { display: none; }
+.musicless-btn:is([data-state="setup"], [data-state="error"]) .musicless-glyph-dot { display: inline; fill: #ff0033; }
 
 /* Where the player has no row of buttons: the bare glyph in its top corner
    (button.js sets the side), with the soft shadow YouTube gives its overlay
    icons, shown and hidden with the player's controls. */
-.nomusic-btn[data-place="corner"] {
+.musicless-btn[data-place="corner"] {
   position: absolute;
   top: 8px;
   z-index: 2147483600;
@@ -75,33 +75,33 @@
   transition: opacity 100ms linear;
 }
 /* In YouTube's players, below their own top-corner buttons. */
-.html5-video-player .nomusic-btn[data-place="corner"] { top: 64px; }
+.html5-video-player .musicless-btn[data-place="corner"] { top: 64px; }
 /* Hidden with the controls, it is not a target either: a click there goes to
    the video, as on the rest of the picture. */
-.ytp-autohide .nomusic-btn[data-place="corner"]:not(:focus-visible) {
+.ytp-autohide .musicless-btn[data-place="corner"]:not(:focus-visible) {
   opacity: 0;
   pointer-events: none;
 }
 
 /* A white ring, as YouTube draws over the picture. */
-.nomusic-btn[data-place="corner"]:focus-visible,
-.nomusic-btn[data-place="top"]:focus-visible,
-.nomusic-notice:focus-visible .nomusic-notice__disc,
-.nomusic-dialog__action:focus-visible {
+.musicless-btn[data-place="corner"]:focus-visible,
+.musicless-btn[data-place="top"]:focus-visible,
+.musicless-notice:focus-visible .musicless-notice__disc,
+.musicless-dialog__action:focus-visible {
   outline: 2px solid #fff;
   outline-offset: 2px;
 }
 /* In the control bar, YouTube draws its own ring when the keyboard is in use;
    this one is for when it does not. */
-.html5-video-player:not(.ytp-probably-keyboard-focus) .nomusic-btn[data-place="ytp"]:focus-visible {
+.html5-video-player:not(.ytp-probably-keyboard-focus) .musicless-btn[data-place="ytp"]:focus-visible {
   outline: 2px solid #fff;
   outline-offset: -4px;
   border-radius: 8px;
 }
 
 /* YouTube's tooltip pill: our tooltip, and the words under the spinner. */
-.nomusic-tip,
-.nomusic-notice__text {
+.musicless-tip,
+.musicless-notice__text {
   position: absolute;
   height: 25px;
   padding: 0 9px;
@@ -113,17 +113,17 @@
   line-height: 25px;
   white-space: nowrap;
 }
-.nomusic-tip[lang="ar"],
-.nomusic-notice[lang="ar"] .nomusic-notice__text { font-size: 14px; }
-.nomusic-tip { z-index: 2147483602; max-width: 260px; pointer-events: none; }
+.musicless-tip[lang="ar"],
+.musicless-notice[lang="ar"] .musicless-notice__text { font-size: 14px; }
+.musicless-tip { z-index: 2147483602; max-width: 260px; pointer-events: none; }
 
-/* One layer over the video while nomusic needs a wait or a click, below
+/* One layer over the video while Musicless needs a wait or a click, below
    YouTube's controls (they stay usable). The wait: YouTube's own spinner
    (ours, drawn as YouTube's, in players without one), and two words under it
    in YouTube's tooltip pill; clicks go through to the video. The click: the
    whole video is the button, the round play button in the middle drawn as
    YouTube's own. */
-.nomusic-notice {
+.musicless-notice {
   position: absolute;
   z-index: 57;
   inset: 0;
@@ -136,16 +136,16 @@
   font-weight: 400;
   line-height: 25px;
   pointer-events: none;
-  animation: nomusic-in 200ms ease-out;
+  animation: musicless-in 200ms ease-out;
 }
-.nomusic-notice:focus-visible { outline: none; }
-.nomusic-tip[hidden],
-.nomusic-notice[hidden],
-.nomusic-dialog[hidden],
-.nomusic-dialog__action[hidden] { display: none; }
+.musicless-notice:focus-visible { outline: none; }
+.musicless-tip[hidden],
+.musicless-notice[hidden],
+.musicless-dialog[hidden],
+.musicless-dialog__action[hidden] { display: none; }
 /* Our spinner, for players without YouTube's and for less motion: a ring of
    YouTube's size and grey, three quarters of it drawn, turning. */
-.nomusic-spinner {
+.musicless-spinner {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -156,15 +156,15 @@
   border: 6px solid #ddd;
   border-left-color: transparent;
   border-radius: 50%;
-  animation: nomusic-spin 1s linear infinite;
+  animation: musicless-spin 1s linear infinite;
 }
-.nomusic-notice[data-theirs="true"] .nomusic-spinner,
-.nomusic-notice[data-kind="action"] .nomusic-spinner { display: none; }
-.nomusic-notice__text { top: calc(50% + 48px); left: 50%; transform: translateX(-50%); }
-.nomusic-notice[data-kind="status"][data-words="false"] .nomusic-notice__text { display: none; }
-.nomusic-notice__disc { display: none; }
-.nomusic-notice[data-kind="action"] { pointer-events: auto; cursor: pointer; }
-.nomusic-notice[data-kind="action"] .nomusic-notice__disc {
+.musicless-notice[data-theirs="true"] .musicless-spinner,
+.musicless-notice[data-kind="action"] .musicless-spinner { display: none; }
+.musicless-notice__text { top: calc(50% + 48px); left: 50%; transform: translateX(-50%); }
+.musicless-notice[data-kind="status"][data-words="false"] .musicless-notice__text { display: none; }
+.musicless-notice__disc { display: none; }
+.musicless-notice[data-kind="action"] { pointer-events: auto; cursor: pointer; }
+.musicless-notice[data-kind="action"] .musicless-notice__disc {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -178,26 +178,26 @@
   transition: background-color 100ms linear, transform 100ms ease-out;
 }
 /* A play sign's weight sits left of its box: 2 px to the right looks centred. */
-.nomusic-notice__disc svg { display: block; width: 60px; height: 60px; margin-left: 2px; }
-.nomusic-notice[data-kind="action"]:hover .nomusic-notice__disc { background: rgba(0, 0, 0, 0.65); }
-.nomusic-notice[data-kind="action"]:active .nomusic-notice__disc { transform: scale(0.96); }
+.musicless-notice__disc svg { display: block; width: 60px; height: 60px; margin-left: 2px; }
+.musicless-notice[data-kind="action"]:hover .musicless-notice__disc { background: rgba(0, 0, 0, 0.65); }
+.musicless-notice[data-kind="action"]:active .musicless-notice__disc { transform: scale(0.96); }
 /* YouTube's spinner, shown for our wait (YouTube hides it with an inline
    display: none), and out of the way while the play button asks for the click. */
-.nomusic-waiting .ytp-spinner { display: block !important; }
-.nomusic-blocked .ytp-spinner { visibility: hidden; }
-@keyframes nomusic-spin { to { transform: rotate(360deg); } }
-@keyframes nomusic-in { from { opacity: 0; } }
+.musicless-waiting .ytp-spinner { display: block !important; }
+.musicless-blocked .ytp-spinner { visibility: hidden; }
+@keyframes musicless-spin { to { transform: rotate(360deg); } }
+@keyframes musicless-in { from { opacity: 0; } }
 
 /* Around the dialog: a clear layer over the video, below YouTube's own
    controls. A click on it closes the dialog. */
-.nomusic-scrim {
+.musicless-scrim {
   position: absolute;
   z-index: 30;
   inset: 0;
 }
 
 /* The recovery dialog, in the middle of the player. */
-.nomusic-dialog {
+.musicless-dialog {
   position: absolute;
   z-index: 2147483601;
   inset: 0;
@@ -216,36 +216,36 @@
   text-align: center; /* a short title over two choices: one centred column */
   user-select: none;
 }
-.nomusic-dialog:focus { outline: none; } /* focused itself only to be read out */
+.musicless-dialog:focus { outline: none; } /* focused itself only to be read out */
 /* No player to sit in: over the video, placed by button.js. */
-.nomusic-dialog--floating { position: fixed; inset: auto; margin: 0; max-height: calc(100vh - 16px); }
-.nomusic-dialog__title {
+.musicless-dialog--floating { position: fixed; inset: auto; margin: 0; max-height: calc(100vh - 16px); }
+.musicless-dialog__title {
   margin: 0 0 4px;
   font-size: 17px;
   font-weight: 500;
   line-height: 26px;
 }
-.nomusic-dialog__message {
+.musicless-dialog__message {
   margin: 0 0 20px;
   color: #aaa;
   font-size: 14px;
   line-height: 22px;
   overflow-wrap: anywhere;
 }
-.nomusic-dialog__message:empty { display: none; }
-.nomusic-dialog__title:has(+ .nomusic-dialog__message:empty) { margin-bottom: 20px; }
+.musicless-dialog__message:empty { display: none; }
+.musicless-dialog__title:has(+ .musicless-dialog__message:empty) { margin-bottom: 20px; }
 /* Arabic letters are smaller than Latin ones at the same size: one step up,
    in the same boxes. */
-.nomusic-dialog[lang="ar"] .nomusic-dialog__title { font-size: 18px; font-weight: 600; }
-.nomusic-dialog[lang="ar"] .nomusic-dialog__message { font-size: 15px; }
-.nomusic-dialog[lang="ar"] .nomusic-dialog__action { font-size: 15px; }
-.nomusic-dialog__actions {
+.musicless-dialog[lang="ar"] .musicless-dialog__title { font-size: 18px; font-weight: 600; }
+.musicless-dialog[lang="ar"] .musicless-dialog__message { font-size: 15px; }
+.musicless-dialog[lang="ar"] .musicless-dialog__action { font-size: 15px; }
+.musicless-dialog__actions {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 8px;
 }
-.nomusic-dialog__action {
+.musicless-dialog__action {
   min-height: 36px;
   margin: 0;
   padding: 8px 16px;
@@ -259,23 +259,23 @@
   line-height: 20px;
   cursor: pointer;
 }
-.nomusic-dialog__action:hover { background: rgba(255, 255, 255, 0.2); }
-.nomusic-dialog__action--main { background: #f1f1f1; color: #0f0f0f; }
-.nomusic-dialog__action--main:hover { background: #d9d9d9; }
+.musicless-dialog__action:hover { background: rgba(255, 255, 255, 0.2); }
+.musicless-dialog__action--main { background: #f1f1f1; color: #0f0f0f; }
+.musicless-dialog__action--main:hover { background: #d9d9d9; }
 
 /* Fullscreen on a large screen: YouTube scales its controls up too. */
-.ytp-big-mode .nomusic-spinner { width: 128px; height: 128px; margin: -64px 0 0 -64px; border-width: 12px; }
-.ytp-big-mode .nomusic-notice__text { top: calc(50% + 88px); height: 34px; padding: 0 12px; border-radius: 10px; font-size: 18px; line-height: 34px; }
-.ytp-big-mode .nomusic-notice[data-kind="action"] .nomusic-notice__disc { width: 144px; height: 144px; margin: -72px 0 0 -72px; }
-.ytp-big-mode .nomusic-notice__disc svg { width: 90px; height: 90px; }
-.ytp-big-mode .nomusic-dialog { width: min(440px, calc(100% - 24px)); }
-.ytp-big-mode .nomusic-dialog__title { font-size: 20px; line-height: 28px; }
-.ytp-big-mode .nomusic-dialog__message,
-.ytp-big-mode .nomusic-dialog__action { font-size: 17px; line-height: 24px; }
+.ytp-big-mode .musicless-spinner { width: 128px; height: 128px; margin: -64px 0 0 -64px; border-width: 12px; }
+.ytp-big-mode .musicless-notice__text { top: calc(50% + 88px); height: 34px; padding: 0 12px; border-radius: 10px; font-size: 18px; line-height: 34px; }
+.ytp-big-mode .musicless-notice[data-kind="action"] .musicless-notice__disc { width: 144px; height: 144px; margin: -72px 0 0 -72px; }
+.ytp-big-mode .musicless-notice__disc svg { width: 90px; height: 90px; }
+.ytp-big-mode .musicless-dialog { width: min(440px, calc(100% - 24px)); }
+.ytp-big-mode .musicless-dialog__title { font-size: 20px; line-height: 28px; }
+.ytp-big-mode .musicless-dialog__message,
+.ytp-big-mode .musicless-dialog__action { font-size: 17px; line-height: 24px; }
 
 /* Text for screen readers only: the live region, and the play button's name. */
-.nomusic-sr-only,
-.nomusic-notice[data-kind="action"] .nomusic-notice__text {
+.musicless-sr-only,
+.musicless-notice[data-kind="action"] .musicless-notice__text {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -290,5 +290,5 @@
 /* Less motion: nothing fades, and the wait is a still ring (button.js uses
    ours rather than YouTube's turning one); the words say what it is. */
 @media (prefers-reduced-motion: reduce) {
-  .nomusic-btn, .nomusic-notice, .nomusic-notice__disc, .nomusic-spinner { transition: none; animation: none; }
+  .musicless-btn, .musicless-notice, .musicless-notice__disc, .musicless-spinner { transition: none; animation: none; }
 }

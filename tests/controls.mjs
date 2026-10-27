@@ -1,4 +1,4 @@
-// Live check of how nomusic sits in YouTube's own player: the button joins
+// Live check of how Musicless sits in YouTube's own player: the button joins
 // the control bar before captions, shows the wait notice while the first
 // audio is prepared, turns the music removal off and on with a real click, shows
 // its tooltip, hides with YouTube's controls, and stays in the bar when YouTube
@@ -24,18 +24,18 @@ async function step(name, fn) {
 
 // The button's place and look, read from the page.
 const button = (frame) => frame.evaluate(() => {
-  const el = document.querySelector(".nomusic-btn");
+  const el = document.querySelector(".musicless-btn");
   if (!el) return null;
   const shownPart = (selector) => getComputedStyle(el.querySelector(selector)).display !== "none";
   const bar = el.closest(".ytp-chrome-bottom");
   return {
-    status: el.dataset.nomusicStatus,
+    status: el.dataset.musiclessStatus,
     place: el.dataset.place,
     inBar: !!el.closest(".ytp-right-controls"),
     beforeCaptions: !!el.nextElementSibling?.matches(".ytp-subtitles-button"),
     pressed: el.getAttribute("aria-pressed"),
-    struck: shownPart(".nomusic-glyph-struck"),
-    plain: shownPart(".nomusic-glyph-plain"),
+    struck: shownPart(".musicless-glyph-struck"),
+    plain: shownPart(".musicless-glyph-plain"),
     barOpacity: bar ? getComputedStyle(bar).opacity : null,
     autohide: !!el.closest(".ytp-autohide"),
   };
@@ -60,7 +60,7 @@ await step("the button joins YouTube's control bar, before captions", async () =
     await page.evaluate(() => [...document.querySelectorAll("button")].find((b) => /reject all|accept all/i.test(b.textContent))?.click());
     await page.waitForNavigation({ waitUntil: "domcontentloaded" }).catch(() => {});
   }
-  await page.waitForSelector("#movie_player .nomusic-btn", { timeout: 30000 });
+  await page.waitForSelector("#movie_player .musicless-btn", { timeout: 30000 });
   const b = await button(page);
   report.record("the button joins YouTube's control bar, before captions", b.place === "ytp" && b.inBar && b.beforeCaptions, b);
 });
@@ -70,7 +70,7 @@ await step("the notice says what happens while the first audio is prepared", asy
   const started = Date.now();
   while (Date.now() - started < 20000 && !seen) {
     seen = await page.evaluate(() => {
-      const notice = document.querySelector("#movie_player .nomusic-notice:not([hidden])");
+      const notice = document.querySelector("#movie_player .musicless-notice:not([hidden])");
       return notice ? { kind: notice.dataset.kind, text: notice.textContent, paused: document.querySelector("#movie_player video").paused } : null;
     });
     if (!seen) await sleep(100);
@@ -82,17 +82,17 @@ await step("on: the note is struck through, the button pressed", async () => {
   await waitFor(page, (s) => s.status === "on" && !s.holding, { timeout: 60000, label: "on" });
   await showControls();
   const b = await button(page);
-  const notice = await page.evaluate(() => !!document.querySelector("#movie_player .nomusic-notice:not([hidden])"));
+  const notice = await page.evaluate(() => !!document.querySelector("#movie_player .musicless-notice:not([hidden])"));
   report.record("on: the note is struck through, the button pressed", b.pressed === "true" && b.struck && !b.plain && !notice, { ...b, notice_shown: notice });
 });
 
 await step("hovering shows the tooltip above the bar", async () => {
   await showControls();
-  const box = await page.evaluate(() => { const r = document.querySelector(".nomusic-btn").getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2, top: r.top }; });
+  const box = await page.evaluate(() => { const r = document.querySelector(".musicless-btn").getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2, top: r.top }; });
   await page.mouse.move(box.x, box.y, { steps: 3 });
   await sleep(300);
   const tip = await page.evaluate(() => {
-    const t = document.querySelector(".nomusic-tip:not([hidden])");
+    const t = document.querySelector(".musicless-tip:not([hidden])");
     const bar = document.querySelector(".ytp-chrome-bottom").getBoundingClientRect();
     return t ? { text: t.textContent, bottom: Math.round(t.getBoundingClientRect().bottom), barTop: Math.round(bar.top) } : null;
   });
@@ -101,10 +101,10 @@ await step("hovering shows the tooltip above the bar", async () => {
 
 await step("a click turns it off for this video, another turns it back on", async () => {
   await showControls();
-  await page.click(".nomusic-btn");
+  await page.click(".musicless-btn");
   await sleep(1200);
   const off = { ...(await button(page)), ...(await frameState(page)) };
-  await page.click(".nomusic-btn");
+  await page.click(".musicless-btn");
   const on = await waitFor(page, (s) => s.status === "on" && !s.holding, { timeout: 60000, label: "back on" });
   const b = await button(page);
   report.record("a click turns it off for this video, another turns it back on",
@@ -133,24 +133,24 @@ await step("when YouTube wraps its captions button, the button stays in the bar"
   await page.evaluate(() => {
     const captions = document.querySelector("#movie_player .ytp-subtitles-button");
     const wrapper = document.createElement("div");
-    wrapper.className = "nomusic-test-wrapper";
+    wrapper.className = "musicless-test-wrapper";
     captions.before(wrapper);
     wrapper.append(captions);
-    document.querySelector("#movie_player .nomusic-btn").remove(); // as when YouTube rebuilds its controls
+    document.querySelector("#movie_player .musicless-btn").remove(); // as when YouTube rebuilds its controls
   });
   let b = null;
   const started = Date.now();
   while (Date.now() - started < 8000) {
     b = await page.evaluate(() => {
-      const el = document.querySelector("#movie_player .nomusic-btn");
-      return el ? { place: el.dataset.place, beforeWrapper: !!el.nextElementSibling?.matches(".nomusic-test-wrapper") } : null;
+      const el = document.querySelector("#movie_player .musicless-btn");
+      return el ? { place: el.dataset.place, beforeWrapper: !!el.nextElementSibling?.matches(".musicless-test-wrapper") } : null;
     });
     if (b?.place) break;
     await sleep(250);
   }
   page.off("pageerror", onError);
   await page.evaluate(() => {
-    const wrapper = document.querySelector(".nomusic-test-wrapper");
+    const wrapper = document.querySelector(".musicless-test-wrapper");
     wrapper?.before(...wrapper.childNodes);
     wrapper?.remove();
   });
@@ -165,18 +165,18 @@ await step("on Shorts the button joins the Short's own buttons, and shows and hi
   await shorts.setUserAgent((await browser.userAgent()).replace("HeadlessChrome", "Chrome"));
   await shorts.goto("https://www.youtube.com/shorts/", { waitUntil: "domcontentloaded" });
   await shorts.waitForSelector("#shorts-player video", { timeout: 30000 });
-  await shorts.waitForSelector("#right-controls .nomusic-btn", { timeout: 30000 });
+  await shorts.waitForSelector("#right-controls .musicless-btn", { timeout: 30000 });
   const look = () => shorts.evaluate(() => {
-    const el = document.querySelector("#right-controls .nomusic-btn");
+    const el = document.querySelector("#right-controls .musicless-btn");
     const overlay = el?.closest(".player-controls");
-    return el && { place: el.dataset.place, status: el.dataset.nomusicStatus, overlay: overlay ? getComputedStyle(overlay).opacity : null };
+    return el && { place: el.dataset.place, status: el.dataset.musiclessStatus, overlay: overlay ? getComputedStyle(overlay).opacity : null };
   });
   const video = await shorts.evaluate(() => { const r = document.querySelector("#shorts-player video").getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; });
   await shorts.mouse.move(video.x, video.y, { steps: 4 });
   await shorts.mouse.move(video.x + 12, video.y + 8, { steps: 3 });
   await sleep(500);
   const shownWithRow = await look();
-  const box = await shorts.evaluate(() => { const r = document.querySelector("#right-controls .nomusic-btn").getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; });
+  const box = await shorts.evaluate(() => { const r = document.querySelector("#right-controls .musicless-btn").getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; });
   await shorts.mouse.move(box.x, box.y, { steps: 3 });
   const status = (await look()).status;
   await shorts.mouse.click(box.x, box.y); // a real click turns removal off (automatic mode) or on
@@ -203,14 +203,14 @@ await step("in an embedded player it joins the top row of buttons", async () => 
     }
     throw new Error("no embed frame");
   })();
-  await frame.waitForSelector(".nomusic-btn", { timeout: 30000 });
+  await frame.waitForSelector(".musicless-btn", { timeout: 30000 });
   await frame.click(".ytp-large-play-button, .ytp-play-button").catch(() => {});
   let where = null;
   const started = Date.now();
   while (Date.now() - started < 30000) {
     where = await frame.evaluate(() => {
-      const el = document.querySelector(".nomusic-btn");
-      return { place: el?.dataset.place, inTopRow: !!el?.closest(".player-controls-top-right"), status: el?.dataset.nomusicStatus };
+      const el = document.querySelector(".musicless-btn");
+      return { place: el?.dataset.place, inTopRow: !!el?.closest(".player-controls-top-right"), status: el?.dataset.musiclessStatus };
     });
     if (where.place === "top" || where.place === "ytp") break;
     await sleep(500);

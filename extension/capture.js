@@ -17,15 +17,15 @@
 // first (its errors reach the page as before), records only what the browser
 // accepted, and swallows any error of its own.
 //
-// Before the user turns nomusic on, only format headers are kept (any audio
+// Before the user turns Musicless on, only format headers are kept (any audio
 // read later needs them). That holds until the content script has said so,
-// too: audio is kept only once it is known that the user turned nomusic on.
+// too: audio is kept only once it is known that the user turned Musicless on.
 
 (() => {
-  if (window.__nomusicCapture) return;
-  window.__nomusicCapture = true;
+  if (window.__musiclessCapture) return;
+  window.__musiclessCapture = true;
 
-  const NS = "nomusic";
+  const NS = "musicless";
   const AUDIO_CODECS = /mp4a|opus/i;
   const STREAM_LIMIT = 16 * 2 ** 20; // ~14 minutes of YouTube audio
   const TOTAL_LIMIT = 48 * 2 ** 20; // across all streams on the page
@@ -44,7 +44,7 @@
     try {
       fn();
     } catch {
-      // Only nomusic's copy suffers: missing audio makes the session fail closed.
+      // Only Musicless's copy suffers: missing audio makes the session fail closed.
     }
   };
 

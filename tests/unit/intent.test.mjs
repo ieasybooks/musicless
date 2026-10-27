@@ -1,6 +1,6 @@
 // PlaybackIntent with the page-world bridge (intent.js), against a media
 // element stand-in that queues events like a browser. Ported from the main
-// nomusic extension's tests.
+// Musicless extension's tests.
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -128,9 +128,9 @@ test("a hold puts back the attribute the page bridge needs", async () => {
   const MediaElement = mediaClass({ bridge: true });
   const video = new MediaElement();
   const intent = new PlaybackIntent(video);
-  delete video.dataset.nomusicPlaybackTrack; // a page script removed it
+  delete video.dataset.musiclessPlaybackTrack; // a page script removed it
   intent.hold();
-  assert.equal(video.dataset.nomusicPlaybackTrack, "1");
+  assert.equal(video.dataset.musiclessPlaybackTrack, "1");
   video.pause(); // the user pauses during the hold: still reported
   intent.release();
   await flush();

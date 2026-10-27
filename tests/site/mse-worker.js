@@ -1,6 +1,6 @@
 // Media Source in a dedicated worker (Chrome 108+): the page attaches it with
-// video.srcObject = handle and never calls appendBuffer itself, so nomusic's
-// capture cannot see the audio. Used to test that nomusic then fails closed.
+// video.srcObject = handle and never calls appendBuffer itself, so Musicless's
+// capture cannot see the audio. Used to test that Musicless then fails closed.
 self.onmessage = async ({ data: { url, mime, slice } }) => {
   const mediaSource = new MediaSource();
   self.postMessage({ handle: mediaSource.handle }, [mediaSource.handle]);

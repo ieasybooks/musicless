@@ -1,6 +1,6 @@
 // Real-site suite: the shipped extension (YouTube matches only, plus the local
 // embed page) in a headless Chromium browser against live YouTube pages.
-// nomusic starts by itself (the default setting); no step clicks to enable it.
+// Musicless starts by itself (the default setting); no step clicks to enable it.
 // Usage: node youtube.mjs
 import {
   analyze, clickButton, debugRequest, dump, frameState, launch, newPage, Report, sleep, waitFor, WORK,
@@ -49,13 +49,13 @@ async function openWatch(id, start = 0) {
   await page.waitForSelector("video", { timeout: 30000 });
   const blocked = await page.evaluate(() => /confirm you.?re not a bot|sign in to confirm/i.test(document.body.innerText));
   if (blocked) throw new Error("YouTube bot check blocked playback");
-  const first = await waitFor(page, (s) => s.status !== "off", { timeout: 20000, label: "nomusic starting" });
+  const first = await waitFor(page, (s) => s.status !== "off", { timeout: 20000, label: "musicless starting" });
   await waitForPlaying(page);
   return { page, first };
 }
 
 // Wait until the main video plays; after `adPatience` ms an ad that is still
-// playing is accepted (nomusic removes music from ads too).
+// playing is accepted (Musicless removes music from ads too).
 async function waitForPlaying(page, timeout = 60000, adPatience = 20000) {
   const started = Date.now();
   let last = null;
@@ -91,16 +91,16 @@ async function listen(frame, name, seconds) {
     timeline.push(await frame.evaluate(() => {
       const videos = [...document.querySelectorAll("video")];
       const main = videos.find((v) => v.closest("#movie_player, #shorts-player")) ?? videos[0];
-      const button = [...document.querySelectorAll(".nomusic-btn")].find((b) => b.style.display !== "none");
+      const button = [...document.querySelectorAll(".musicless-btn")].find((b) => b.style.display !== "none");
       return {
         t: +(main?.currentTime ?? -1).toFixed(1), paused: main?.paused, rs: main?.readyState, muted: main?.muted,
-        videos: videos.length, ad: !!document.querySelector(".ad-showing"), nomusic: button?.dataset.nomusicStatus ?? "-",
+        videos: videos.length, ad: !!document.querySelector(".ad-showing"), musicless: button?.dataset.musiclessStatus ?? "-",
       };
     }).catch((error) => ({ error: error.message.slice(0, 80) })));
   }
   const a = analyze(await dump(frame, seconds - 1), name);
   a.ad_during = timeline.some((row) => row.ad);
-  a.timeline = timeline.map((row) => row.error ?? `${row.t}${row.paused ? "p" : ""}${row.rs < 3 ? `r${row.rs}` : ""}${row.ad ? "A" : ""}${row.muted ? "m" : ""}${row.videos > 1 ? `v${row.videos}` : ""}:${row.nomusic[0]}`).join(" ");
+  a.timeline = timeline.map((row) => row.error ?? `${row.t}${row.paused ? "p" : ""}${row.rs < 3 ? `r${row.rs}` : ""}${row.ad ? "A" : ""}${row.muted ? "m" : ""}${row.videos > 1 ? `v${row.videos}` : ""}:${row.musicless[0]}`).join(" ");
   return a;
 }
 
@@ -143,7 +143,7 @@ await step("Tutorial: the button turns it off and on again", async () => {
 });
 
 // Headless YouTube stops serving a video about a minute into playback ("Something
-// went wrong", also without nomusic), and never loads a new position after a seek.
+// went wrong", also without Musicless), and never loads a new position after a seek.
 // So the steps below use a fresh page and stay inside the audio the player already
 // buffered; seeking into unloaded audio is covered by local.mjs.
 await step("Tutorial: reopened for the next steps", async () => {
@@ -191,7 +191,7 @@ await step("Tutorial: fullscreen keeps the button on the player", async () => {
   await cdp.send("Runtime.evaluate", { expression: "document.getElementById('movie_player').requestFullscreen()", userGesture: true, awaitPromise: true });
   await sleep(1500);
   const where = await tutorial.evaluate(() => {
-    const button = [...document.querySelectorAll(".nomusic-btn")].find((b) => b.style.display !== "none");
+    const button = [...document.querySelectorAll(".musicless-btn")].find((b) => b.style.display !== "none");
     return {
       fullscreen: !!document.fullscreenElement,
       inside: !!document.fullscreenElement?.contains(button),
@@ -214,7 +214,7 @@ await step("Tutorial: next video through YouTube's own navigation", async () => 
   });
   if (!href) throw new Error("no recommended video link found");
   await sleep(3000);
-  // A pre-roll ad may play first; nomusic follows it and then the video.
+  // A pre-roll ad may play first; Musicless follows it and then the video.
   const adSeen = await tutorial.evaluate(() => !!document.querySelector(".ad-showing"));
   await waitForPlaying(tutorial, 90000);
   // Listen to the video itself, not the hand-over from a long ad.

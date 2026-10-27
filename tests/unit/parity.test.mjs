@@ -77,7 +77,7 @@ function energy(a, b = null, scale = 1) {
 const db = (ratio) => 10 * Math.log10(ratio);
 
 test("the browser pipeline matches the Python reference", { skip, timeout: 300000 }, async (t) => {
-  const dir = mkdtempSync(join(tmpdir(), "nomusic-parity-"));
+  const dir = mkdtempSync(join(tmpdir(), "musicless-parity-"));
   try {
     const wav = join(dir, "clip.wav");
     execFileSync(PYTHON, [join(TESTS, "synth.py"), wav, "30"]);
@@ -108,7 +108,7 @@ reference.vocals(x).astype("<f4").tofile(${JSON.stringify(join(dir, "python.f32"
 // over music as loud as it, the voice stays and the music goes. The limits are
 // this build's numbers less a margin; a change that misses them needs listening.
 test("the separation keeps the voice and removes most of the music", { skip, timeout: 300000 }, async (t) => {
-  const dir = mkdtempSync(join(tmpdir(), "nomusic-quality-"));
+  const dir = mkdtempSync(join(tmpdir(), "musicless-quality-"));
   try {
     const [mixWav, voiceWav, musicWav] = ["mix", "voice", "music"].map((name) => join(dir, `${name}.wav`));
     execFileSync(PYTHON, [join(TESTS, "synth.py"), mixWav, "24", "--music-db", "0", "--voice-only", voiceWav, "--music-only", musicWav]);

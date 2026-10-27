@@ -26,7 +26,7 @@ function handshake(frame, origin, port) {
     return; // the extension was updated or removed under this page
   }
   asked.then((answer) => {
-    if (answer?.token) frame.contentWindow?.postMessage({ type: "nomusic-port", token: answer.token }, origin, [port]);
+    if (answer?.token) frame.contentWindow?.postMessage({ type: "musicless-port", token: answer.token }, origin, [port]);
   }, () => {});
 }
 

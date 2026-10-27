@@ -1,7 +1,7 @@
-nomusic - licenses and notices
+Musicless - licenses and notices
 ==============================
 
-nomusic is released under the MIT License (licenses/nomusic-LICENSE.txt).
+Musicless is released under the MIT License (licenses/musicless-LICENSE.txt).
 It includes the following third-party software and data.
 
 Spleeter 2-stem model (model/spleeter-2stems.onnx)
@@ -10,7 +10,7 @@ Spleeter 2-stem model (model/spleeter-2stems.onnx)
   Hennequin, Khlif, Voituret and Moussallam, "Spleeter: a fast and efficient music
   source separation tool with pre-trained models", Journal of Open Source Software
   5(50), 2154 (2020). https://github.com/deezer/spleeter
-  nomusic uses the ONNX export of these weights published by the sherpa-onnx project
+  Musicless uses the ONNX export of these weights published by the sherpa-onnx project
   (https://github.com/k2-fsa/sherpa-onnx), merges its two networks into one graph and
   stores the weights at half precision (tools/build_model.py).
 

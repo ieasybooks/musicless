@@ -1,6 +1,6 @@
 // Debug recording for the browser tests. Not part of the release: the test
 // harness adds it to its own copy of the extension.
-// Taps the original element audio and nomusic's output on the same clock so
+// Taps the original element audio and Musicless's output on the same clock so
 // the browser tests can measure sync and leakage from what actually played.
 
 export class Recorder {

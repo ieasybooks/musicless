@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to the nomusic extension are documented in this file.
+All notable changes to the Musicless extension are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
@@ -15,13 +15,17 @@ This repository used to contain a different program, a local backend that
 downloaded video. That code remains on branch `backend` at tag `backend-final`.
 It is not a previous version of this extension.
 
+### Changed
+
+- Renamed nomusic to Musicless before its first release, with a new logo, icons and colours.
+
 ### Added
 
 - A Chrome extension (Manifest V3) that removes background music from
   YouTube videos and keeps speech and singing, on the user's computer.
 - English and Arabic, including right-to-left layout.
 - Spleeter 2-stem (Deezer) runs in the browser with ONNX Runtime Web, on one
-  processor thread. Compared with Spleeter's own mask, nomusic removes more
+  processor thread. Compared with Spleeter's own mask, Musicless removes more
   of the music under speech: the model sees every window at the same level,
   and its mask weighs the music estimate more.
 - Works in Chrome, Edge, Brave, and other Chromium browsers, version 111
@@ -44,4 +48,4 @@ It is not a previous version of this extension.
   choice are stored in Chrome extension storage and may sync through
   Chrome Sync.
 
-[1.0.0]: https://github.com/IbraheemTuffaha/nomusic/releases/tag/v1.0.0
+[1.0.0]: https://github.com/IbraheemTuffaha/musicless/releases/tag/v1.0.0

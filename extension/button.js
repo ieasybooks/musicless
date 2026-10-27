@@ -1,15 +1,15 @@
-// What nomusic shows on each video: a view of one Session.
-// - A button that turns nomusic on or off for the current video, in the
+// What Musicless shows on each video: a view of one Session.
+// - A button that turns Musicless on or off for the current video, in the
 //   player's own row of buttons (YouTube's bar, an embed's or a Short's top
 //   row), else in its top corner: a note while the music plays, struck through
-//   while nomusic removes it, as YouTube draws mute; with a small dot while
-//   nomusic waits for the user (before the first run, after a failure).
-// - In the middle of the video, only while nomusic needs the user to wait or to
+//   while Musicless removes it, as YouTube draws mute; with a small dot while
+//   Musicless waits for the user (before the first run, after a failure).
+// - In the middle of the video, only while Musicless needs the user to wait or to
 //   click: YouTube's spinner with two words under it while the first audio is
 //   prepared; a round play button when the browser waits for a click to play
 //   sound.
-// - The recovery dialog when nomusic could not remove the music, or, on a
-//   video that played before nomusic was turned on, to say that a reload will.
+// - The recovery dialog when Musicless could not remove the music, or, on a
+//   video that played before Musicless was turned on, to say that a reload will.
 
 import { setLanguage, t } from "./i18n.js";
 
@@ -39,7 +39,7 @@ const STATES = {
 };
 const WAITS = new Set(["starting", "buffering"]);
 // Failures that no retry and no reload can help: the video's own sound
-// (locked, or in a format nomusic cannot read), or a player whose sound it
+// (locked, or in a format Musicless cannot read), or a player whose sound it
 // cannot reach. The dialog offers only the music.
 const FINAL = new Set(["protected", "codec", "source"]);
 // A hold shorter than this shows nothing (a short one after a stall would only flicker).
@@ -52,9 +52,9 @@ const stillness = matchMedia("(prefers-reduced-motion: reduce)");
 
 // The glyph, on YouTube's 24 px grid and in its 2-unit weight: a note (round
 // head, straight stem, square flag), plain while the music plays; struck through
-// while nomusic removes it, the strike a little above the diagonal so it clears
+// while Musicless removes it, the strike a little above the diagonal so it clears
 // the head, cutting a gap 1.2 units above it and 0.7 below, as Material's "off"
-// icons do; and a dot at the bottom right while nomusic waits for the user.
+// icons do; and a dot at the bottom right while Musicless waits for the user.
 // tools/icons.mjs draws the player's glyphs from the same note. Built with DOM
 // calls: YouTube's pages accept only trusted markup.
 const SVG = "http://www.w3.org/2000/svg";
@@ -82,19 +82,19 @@ function html(tag, properties, ...children) {
 }
 const note = (attributes) => svg("g", { fill: "currentColor", ...attributes }, ...NOTE.map(([tag, a]) => svg(tag, a)));
 function glyph() {
-  const cut = `nomusic-cut-${++glyphs}`;
+  const cut = `musicless-cut-${++glyphs}`;
   return svg("svg", { viewBox: "0 0 24 24", "aria-hidden": "true", focusable: "false" },
     svg("mask", { id: cut, maskUnits: "userSpaceOnUse" },
       svg("rect", { width: 24, height: 24, fill: "#fff" }),
       svg("path", { d: CUT, stroke: "#000", "stroke-width": 3.9, "stroke-linecap": "round" })),
-    note({ class: "nomusic-glyph-plain" }),
-    svg("g", { class: "nomusic-glyph-struck" },
+    note({ class: "musicless-glyph-plain" }),
+    svg("g", { class: "musicless-glyph-struck" },
       note({ mask: `url(#${cut})` }),
       svg("path", { d: STRIKE, stroke: "currentColor", "stroke-width": 2, "stroke-linecap": "round", fill: "none" })),
-    svg("circle", { class: "nomusic-glyph-dot", ...DOT }));
+    svg("circle", { class: "musicless-glyph-dot", ...DOT }));
 }
 
-// Only the user's own clicks operate nomusic, never ones the page dispatches.
+// Only the user's own clicks operate Musicless, never ones the page dispatches.
 const trusted = (handler) => (event) => {
   event.stopPropagation();
   event.preventDefault();
@@ -157,7 +157,7 @@ function childHolding(row, element) {
   return element ?? row.firstElementChild;
 }
 // Does YouTube's spinner really show (it may be hidden some other way than the
-// one nomusic-waiting undoes)?
+// one musicless-waiting undoes)?
 function renders(element) {
   const box = element.getBoundingClientRect();
   return box.width > 0 && box.height > 0 && getComputedStyle(element).visibility !== "hidden";
@@ -182,7 +182,7 @@ export class Button {
     this.marked = null; // [player, class]: YouTube's spinner shown for our wait, or hidden under the play button
     this.unseen = null; // YouTube's spinner, if it did not show when marked: ours is drawn instead
 
-    this.el = setLanguage(html("button", { type: "button", className: "nomusic-btn" }, glyph()));
+    this.el = setLanguage(html("button", { type: "button", className: "musicless-btn" }, glyph()));
     keepPointer(this.el);
     keepKeys(this.el);
     this.el.addEventListener("click", trusted(() => {
@@ -208,7 +208,7 @@ export class Button {
     };
     video.addEventListener("play", this.onPlay);
     // A tooltip in the player's own style, on hover and on keyboard focus.
-    this.tip = setLanguage(html("div", { className: "nomusic-tip", hidden: true }));
+    this.tip = setLanguage(html("div", { className: "musicless-tip", hidden: true }));
     this.tip.setAttribute("aria-hidden", "true");
     this.el.addEventListener("pointerenter", () => this.showTip());
     this.el.addEventListener("pointerleave", () => this.hideTip());
@@ -219,7 +219,7 @@ export class Button {
 
     // Status changes for screen readers: a live region beside the button (one
     // inside a button is unreliable), written only when the status changes.
-    this.live = setLanguage(html("span", { className: "nomusic-sr-only" }));
+    this.live = setLanguage(html("span", { className: "musicless-sr-only" }));
     this.live.setAttribute("role", "status");
 
     this.notice = this.buildNotice();
@@ -234,7 +234,7 @@ export class Button {
     const status = session.status;
     const [state, tip, says] = STATES[status] ?? STATES.off;
     if (this.el.dataset.state !== state) this.el.dataset.state = state;
-    if (this.el.dataset.nomusicStatus !== status) this.el.dataset.nomusicStatus = status;
+    if (this.el.dataset.musiclessStatus !== status) this.el.dataset.musiclessStatus = status;
     // A toggle while it is one (named for what it does, pressed while it does
     // it); setup and a failure open something instead.
     const toggle = status !== "setup" && status !== "failed";
@@ -263,8 +263,8 @@ export class Button {
       this.shownFailure = session.failure;
       if (session.failure) {
         const { reason, message } = session.failure;
-        // A video that played before nomusic was turned on did not fail: the
-        // dialog says that nomusic is on, and that a reload will do.
+        // A video that played before Musicless was turned on did not fail: the
+        // dialog says that Musicless is on, and that a reload will do.
         this.recoveryTitle.textContent = reason === "missed" ? TEXT.ready : TEXT.title;
         // The title already says what happened; a reason without more to say is left out.
         this.recoveryMessage.textContent = reason === "error" ? "" : message;
@@ -274,7 +274,7 @@ export class Button {
         const final = FINAL.has(reason);
         this.retryBtn.hidden = final;
         this.retryBtn.textContent = session.retryReloads ? TEXT.reload : TEXT.retry;
-        this.returnBtn.classList.toggle("nomusic-dialog__action--main", final);
+        this.returnBtn.classList.toggle("musicless-dialog__action--main", final);
         this.openRecovery({ focus: true });
       } else {
         this.closeRecovery();
@@ -290,9 +290,9 @@ export class Button {
   // the button, a round play button in the middle its sign.
   buildNotice() {
     const play = svg("svg", { viewBox: "0 0 24 24", "aria-hidden": "true", focusable: "false" }, svg("path", { d: PLAY, fill: "currentColor" }));
-    this.noticeText = html("span", { className: "nomusic-notice__text" });
-    const notice = setLanguage(html("button", { type: "button", className: "nomusic-notice", hidden: true, tabIndex: -1 },
-      html("span", { className: "nomusic-spinner" }), html("span", { className: "nomusic-notice__disc" }, play), this.noticeText));
+    this.noticeText = html("span", { className: "musicless-notice__text" });
+    const notice = setLanguage(html("button", { type: "button", className: "musicless-notice", hidden: true, tabIndex: -1 },
+      html("span", { className: "musicless-spinner" }), html("span", { className: "musicless-notice__disc" }, play), this.noticeText));
     keepPointer(notice);
     keepKeys(notice);
     notice.addEventListener("click", trusted(() => {
@@ -316,10 +316,10 @@ export class Button {
     // players, and for anyone who asks for less motion (it stands still).
     // While the play button asks for the click, YouTube's stays out.
     const spinner = this.host?.querySelector(".ytp-spinner");
-    const marked = !!spinner && this.marked?.[0] === this.host && this.marked[1] === "nomusic-waiting";
+    const marked = !!spinner && this.marked?.[0] === this.host && this.marked[1] === "musicless-waiting";
     if (marked && renders(this.host) && !renders(spinner)) this.unseen = spinner;
     const theirs = !stillness.matches && !!spinner && spinner !== this.unseen;
-    this.markHost(show ? this.host : null, blocked ? "nomusic-blocked" : theirs ? "nomusic-waiting" : null);
+    this.markHost(show ? this.host : null, blocked ? "musicless-blocked" : theirs ? "musicless-waiting" : null);
     if (!show) return;
     if (this.notice.dataset.theirs !== String(theirs)) this.notice.dataset.theirs = String(theirs);
     if (this.noticeText.textContent !== text) this.noticeText.textContent = text;
@@ -377,19 +377,19 @@ export class Button {
   // ---- the recovery dialog ----------------------------------------------------
 
   buildRecovery() {
-    const id = `nomusic-dialog-${++dialogs}`;
+    const id = `musicless-dialog-${++dialogs}`;
     // Its title and reason are written by render(), before it first shows.
-    this.recoveryTitle = html("p", { className: "nomusic-dialog__title", id: `${id}-title` });
-    this.recoveryMessage = html("p", { className: "nomusic-dialog__message", id: `${id}-message` });
+    this.recoveryTitle = html("p", { className: "musicless-dialog__title", id: `${id}-title` });
+    this.recoveryMessage = html("p", { className: "musicless-dialog__message", id: `${id}-message` });
     this.retryBtn = this.action("retry", () => this.session.retry());
-    this.retryBtn.classList.add("nomusic-dialog__action--main");
+    this.retryBtn.classList.add("musicless-dialog__action--main");
     this.returnBtn = this.action("original", () => this.session.returnToOriginal());
     this.returnBtn.textContent = TEXT.original;
     // The way out first, as a quiet text button; the action that keeps the
     // music off last, where dialogs put their main one, and focused. The
     // dialog itself is focused when its one action is the music (openRecovery).
-    const panel = setLanguage(html("div", { className: "nomusic-dialog", hidden: true, tabIndex: -1 }, this.recoveryTitle,
-      this.recoveryMessage, html("div", { className: "nomusic-dialog__actions" }, this.returnBtn, this.retryBtn)));
+    const panel = setLanguage(html("div", { className: "musicless-dialog", hidden: true, tabIndex: -1 }, this.recoveryTitle,
+      this.recoveryMessage, html("div", { className: "musicless-dialog__actions" }, this.returnBtn, this.retryBtn)));
     panel.setAttribute("role", "alertdialog");
     panel.setAttribute("aria-labelledby", this.recoveryTitle.id);
     keepKeys(panel, { all: true });
@@ -408,7 +408,7 @@ export class Button {
     keepPointer(panel, "click");
     // Over the video around it, a clear layer (below YouTube's own controls): a
     // click there closes the dialog, as Escape does; the video stays paused.
-    this.scrim = html("div", { className: "nomusic-scrim" });
+    this.scrim = html("div", { className: "musicless-scrim" });
     keepPointer(this.scrim);
     this.scrim.addEventListener("click", trusted(() => this.dismiss()));
     return panel;
@@ -423,7 +423,7 @@ export class Button {
   }
 
   action(name, handler) {
-    const button = html("button", { type: "button", className: "nomusic-dialog__action" });
+    const button = html("button", { type: "button", className: "musicless-dialog__action" });
     button.dataset.action = name;
     button.addEventListener("click", trusted(() => {
       if (shown(this.el)) this.el.focus();
@@ -473,7 +473,7 @@ export class Button {
         this.host.append(this.scrim, this.recovery);
         focused?.focus(); // moving it blurs whatever is focused inside
       }
-      this.recovery.classList.remove("nomusic-dialog--floating");
+      this.recovery.classList.remove("musicless-dialog--floating");
       this.recovery.style.left = this.recovery.style.top = "";
       this.follow(false);
       return;
@@ -484,7 +484,7 @@ export class Button {
       layer.appendChild(this.recovery);
       focused?.focus();
     }
-    this.recovery.classList.add("nomusic-dialog--floating");
+    this.recovery.classList.add("musicless-dialog--floating");
     this.follow(true);
     const rect = this.video.getBoundingClientRect();
     const { offsetWidth: width, offsetHeight: height } = this.recovery;
@@ -570,7 +570,7 @@ export class Button {
   }
 }
 
-// Before the first run, the welcome page turns nomusic on (background.js opens
+// Before the first run, the welcome page turns Musicless on (background.js opens
 // or focuses it).
 function openWelcome() {
   try {

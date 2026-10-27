@@ -1,7 +1,7 @@
 // Opens the welcome page: once on install, and when the button on a video asks
-// for it before the first run ("Turn on nomusic"), focusing the page if it is
+// for it before the first run ("Turn on Musicless"), focusing the page if it is
 // already open. The tab that asked is kept for the page's "Back to the video".
-// Tabs that were open before need a reload before nomusic can work in them.
+// Tabs that were open before need a reload before Musicless can work in them.
 async function openWelcome() {
   const url = chrome.runtime.getURL("welcome.html");
   const [tab] = await chrome.tabs.query({ url });

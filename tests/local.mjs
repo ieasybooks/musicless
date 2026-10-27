@@ -158,8 +158,8 @@ for (const variant of VARIANTS) {
     report.record(`${tag} pause and resume`, good(a) && paused.status === "on", { resume_ms: ms, ...a });
   });
 
-  await step(`${tag} pausing while nomusic holds the video is respected`, async () => {
-    // Far back: those chunks were dropped long ago, so nomusic holds the video to redo one.
+  await step(`${tag} pausing while Musicless holds the video is respected`, async () => {
+    // Far back: those chunks were dropped long ago, so Musicless holds the video to redo one.
     await seek(page, 10);
     await waitFor(page, (s) => s.holding, { timeout: 5000, label: "hold" });
     await pause(page); // the user pauses during the hold (no pause event fires)
@@ -169,7 +169,7 @@ for (const variant of VARIANTS) {
     const state = await frameState(page);
     await play(page);
     const { ms } = await timeUntilOn(page, "play after hold");
-    report.record(`${tag} pausing while nomusic holds the video is respected`, after.paused && !state.holding && state.status === "on",
+    report.record(`${tag} pausing while Musicless holds the video is respected`, after.paused && !state.holding && state.status === "on",
       { stayed_paused: after.paused, holding: state.holding, resume_ms: ms });
   });
 
@@ -212,7 +212,7 @@ for (const variant of VARIANTS) {
     await cdp.send("Runtime.evaluate", { expression: "document.querySelector('.player').requestFullscreen()", userGesture: true, awaitPromise: true });
     await sleep(1500);
     const where = await page.evaluate(() => {
-      const button = document.querySelector(".nomusic-btn");
+      const button = document.querySelector(".musicless-btn");
       return { fullscreen: !!document.fullscreenElement, inside: !!document.fullscreenElement?.contains(button), visible: getComputedStyle(button).display !== "none" };
     });
     await page.evaluate(() => document.exitFullscreen().catch(() => {}));
@@ -224,14 +224,14 @@ for (const variant of VARIANTS) {
     await settled(page, "on before the controls hide"); // working states stay visible by design
     // As in YouTube's player while its controls are hidden (".ytp-autohide").
     const hidden = await page.evaluate(async () => {
-      const button = document.querySelector(".nomusic-btn");
+      const button = document.querySelector(".musicless-btn");
       const box = button.getBoundingClientRect();
       const at = () => button.contains(document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2));
       const host = button.parentElement;
       host.classList.add("ytp-autohide");
       await new Promise((resolve) => setTimeout(resolve, 400)); // its fade
       const style = getComputedStyle(button);
-      const result = { status: button.dataset.nomusicStatus, opacity: style.opacity, pointer_events: style.pointerEvents, target_is_button: at() };
+      const result = { status: button.dataset.musiclessStatus, opacity: style.opacity, pointer_events: style.pointerEvents, target_is_button: at() };
       host.classList.remove("ytp-autohide");
       result.target_when_shown = at();
       return result;
@@ -279,15 +279,15 @@ for (const variant of VARIANTS) {
 
   await step(`${tag} forged consent and unsubscribe messages do not stop the playing video`, async () => {
     const { streamId } = await frameState(page);
-    // A page script posts nomusic's own control messages: no consent, and no
+    // A page script posts Musicless's own control messages: no consent, and no
     // subscription. The playing video goes on, and the real answer is restored.
     // (Other forgeries can fail a video closed, by design: see how-it-works.)
     await page.evaluate((streamId) => {
-      for (const message of [{ type: "consent", consented: false }, { type: "unsubscribe", streamId }]) window.postMessage({ nomusic: "control", ...message }, "*");
+      for (const message of [{ type: "consent", consented: false }, { type: "unsubscribe", streamId }]) window.postMessage({ musicless: "control", ...message }, "*");
     }, streamId);
     await sleep(2000);
     const state = await frameState(page);
-    const stream = (await page.evaluate(() => window.__nomusicCaptureDebug())).find((s) => s.id === streamId);
+    const stream = (await page.evaluate(() => window.__musiclessCaptureDebug())).find((s) => s.id === streamId);
     report.record(`${tag} forged consent and unsubscribe messages do not stop the playing video`,
       state.status === "on" && !state.failure && stream?.subscribed === true && stream?.consented === true,
       { status: state.status, failure: state.failure?.reason ?? null, still_subscribed: stream?.subscribed, consent_restored: stream?.consented });
@@ -401,8 +401,8 @@ await step("a video's first wait says why at once", async () => {
   const started = Date.now();
   while (!notice && Date.now() - started < 15000) {
     notice = await page.evaluate(() => {
-      const n = document.querySelector(".nomusic-notice:not([hidden])");
-      return n ? { words: n.dataset.words, ours: n.dataset.theirs === "false", text: n.querySelector(".nomusic-notice__text").textContent } : null;
+      const n = document.querySelector(".musicless-notice:not([hidden])");
+      return n ? { words: n.dataset.words, ours: n.dataset.theirs === "false", text: n.querySelector(".musicless-notice__text").textContent } : null;
     });
     if (!notice) await sleep(50);
   }
@@ -417,7 +417,7 @@ await step("nothing is read before consent; consenting starts the next video", a
     await play(page);
     await sleep(4000);
     const before = await frameState(page);
-    const captured = await page.evaluate(() => window.__nomusicCaptureDebug());
+    const captured = await page.evaluate(() => window.__musiclessCaptureDebug());
     const frames = await engineFrames(page);
     const { paused, time } = await videoState(page);
     // On the first-run page the user first leaves without choosing (there is
@@ -447,11 +447,11 @@ await step("nothing is read before consent; consenting starts the next video", a
     await welcome.close();
     const failed = await waitFor(page, (s) => s.status === "failed", { timeout: 10000, label: "the video that played before" });
     const failMs = Date.now() - started;
-    // Not a failure to the user: nomusic is on, and a reload will do.
+    // Not a failure to the user: Musicless is on, and a reload will do.
     const dialog = await page.evaluate(() => {
-      const panel = document.querySelector(".nomusic-dialog:not([hidden])");
-      const main = panel?.querySelector(".nomusic-dialog__action--main");
-      return { title: panel?.querySelector(".nomusic-dialog__title").textContent, main: main?.textContent, focused: document.activeElement === main };
+      const panel = document.querySelector(".musicless-dialog:not([hidden])");
+      const main = panel?.querySelector(".musicless-dialog__action--main");
+      return { title: panel?.querySelector(".musicless-dialog__title").textContent, main: main?.textContent, focused: document.activeElement === main };
     });
     // The next video in the player is read from its start.
     await page.evaluate((media, v) => window.load(media, v, 200000, 1000), SET, BASE);
@@ -465,7 +465,7 @@ await step("nothing is read before consent; consenting starts the next video", a
       before.status === "setup" && before.originalGain === null && !before.attached && frames === 0 && !paused && time > 2 &&
         media === 0 && captured.some((stream) => stream.missed) && leftOff && turnedOn &&
         failed.failure.reason === "missed" && failMs < 5000 &&
-        dialog.title === "nomusic is on" && dialog.main === "Reload page" && dialog.focused && state.status === "on" && good(a),
+        dialog.title === "Musicless is on" && dialog.main === "Reload page" && dialog.focused && state.status === "on" && good(a),
       { status_before: before.status, routed_before: before.originalGain !== null, engine_frames_before: frames, played_before: !paused,
         audio_kept_before: media, left_without_choosing_kept_it_off: leftOff, turned_on_by_keyboard: turnedOn, missed_ms: failMs,
         dialog, next_video_audio_ms: ms, ...a });
@@ -475,7 +475,7 @@ await step("nothing is read before consent; consenting starts the next video", a
   }
 });
 
-await step("the popup asks before nomusic is on, and its button turns it on", async () => {
+await step("the popup asks before Musicless is on, and its button turns it on", async () => {
   await setSettings(browser, extensionId, { consented: false });
   try {
     const popup = await browser.newPage();
@@ -487,14 +487,14 @@ await step("the popup asks before nomusic is on, and its button turns it on", as
     const shown = await popup.$eval("#settings", (section) => !section.hidden);
     const focus = await popup.evaluate(() => document.activeElement?.id ?? null);
     await popup.close();
-    report.record("the popup asks before nomusic is on, and its button turns it on", asks && shown && focus === "autoStart",
+    report.record("the popup asks before Musicless is on, and its button turns it on", asks && shown && focus === "autoStart",
       { settings_hidden_before: asks, settings_shown_after: shown, focus_after: focus });
   } finally {
     await setSettings(browser, extensionId, { consented: true });
   }
 });
 
-await step("in Arabic the welcome page reads right to left, and turns nomusic on", async () => {
+await step("in Arabic the welcome page reads right to left, and turns Musicless on", async () => {
   const arabic = await launch({ lang: "ar", consented: false });
   try {
     const welcome = await arabic.browser.newPage();
@@ -506,7 +506,7 @@ await step("in Arabic the welcome page reads right to left, and turns nomusic on
     await welcome.focus("#accept");
     await welcome.keyboard.press("Space");
     await welcome.waitForFunction(() => chrome.storage.sync.get("consented").then((stored) => stored.consented === true), { timeout: 5000 });
-    report.record("in Arabic the welcome page reads right to left, and turns nomusic on",
+    report.record("in Arabic the welcome page reads right to left, and turns Musicless on",
       page.lang === "ar" && page.dir === "rtl" && page.accept === ARABIC.consent_accept.message, page);
   } finally {
     await arabic.browser.close();
@@ -556,18 +556,18 @@ await step("the release build has no diagnostics, and a page cannot start its wo
     await page.goto(`http://127.0.0.1:${PORT}/player.html?media=${SET}&variant=${BASE}`);
     await page.waitForFunction("window.playerReady === true", { timeout: 30000 });
     await play(page);
-    await page.waitForFunction('document.querySelector(".nomusic-btn")?.dataset.nomusicStatus === "on"', { timeout: 60000 });
+    await page.waitForFunction('document.querySelector(".musicless-btn")?.dataset.musiclessStatus === "on"', { timeout: 60000 });
     const state = await debugRequest(page, "state");
     const exposed = await page.evaluate(() => ({
-      capture: typeof window.__nomusicCaptureDebug,
-      dataset: [...document.querySelectorAll(".nomusic-btn")].some((button) => "nomusicDebug" in button.dataset),
+      capture: typeof window.__musiclessCaptureDebug,
+      dataset: [...document.querySelectorAll(".musicless-btn")].some((button) => "musiclessDebug" in button.dataset),
     }));
-    // A page script loads nomusic's hidden frame itself and hands it ports.
+    // A page script loads Musicless's hidden frame itself and hands it ports.
     const answered = await page.evaluate((id) => new Promise((resolve) => {
       const frame = document.createElement("iframe");
       frame.src = `chrome-extension://${id}/separator.html`;
       frame.onload = () => {
-        for (const message of [{ type: "nomusic-port" }, { type: "nomusic-port", token: "a guess" }]) {
+        for (const message of [{ type: "musicless-port" }, { type: "musicless-port", token: "a guess" }]) {
           const channel = new MessageChannel();
           channel.port1.onmessage = () => resolve(true);
           frame.contentWindow.postMessage(message, "*", [channel.port2]);
@@ -584,7 +584,7 @@ await step("the release build has no diagnostics, and a page cannot start its wo
   }
 });
 
-// Videos nomusic cannot process stay silent and paused until the user chooses.
+// Videos Musicless cannot process stay silent and paused until the user chooses.
 async function failsClosed(name, query, variant, expectReason) {
   await step(name, async () => {
     const page = await open(variant, query);
@@ -617,11 +617,11 @@ await step("a closed failure dialog comes back on play", async () => {
   await play(page);
   await waitFor(page, (s) => s.status === "failed", { timeout: 20000, label: "failure" });
   await sleep(800);
-  const shown = () => page.evaluate(() => !!document.querySelector(".nomusic-dialog:not([hidden])"));
+  const shown = () => page.evaluate(() => !!document.querySelector(".musicless-dialog:not([hidden])"));
   const glyph = () => page.evaluate(() => {
-    const el = [...document.querySelectorAll(".nomusic-btn")].find((b) => b.style.display !== "none");
+    const el = [...document.querySelectorAll(".musicless-btn")].find((b) => b.style.display !== "none");
     const visible = (selector) => getComputedStyle(el.querySelector(selector)).display !== "none";
-    return { plain: visible(".nomusic-glyph-plain"), struck: visible(".nomusic-glyph-struck"), dot: visible(".nomusic-glyph-dot") };
+    return { plain: visible(".musicless-glyph-plain"), struck: visible(".musicless-glyph-struck"), dot: visible(".musicless-glyph-dot") };
   });
   const opened = await shown();
   await page.evaluate(() => document.body.focus());
@@ -633,7 +633,7 @@ await step("a closed failure dialog comes back on play", async () => {
   await sleep(1000);
   const backAfterPlay = await shown();
   const held = await videoState(page);
-  const beside = await page.evaluate(() => { const r = document.querySelector(".nomusic-scrim").getBoundingClientRect(); return { x: r.left + 12, y: r.top + 12 }; });
+  const beside = await page.evaluate(() => { const r = document.querySelector(".musicless-scrim").getBoundingClientRect(); return { x: r.left + 12, y: r.top + 12 }; });
   await page.mouse.click(beside.x, beside.y); // a real click on the video beside the dialog
   await sleep(300);
   const afterScrim = await shown();
@@ -656,9 +656,9 @@ await step("a failure nothing can help offers only the music, and a stray key do
   await waitFor(page, (s) => s.status === "failed", { timeout: 20000, label: "failure" });
   await sleep(500);
   const dialog = await page.evaluate(() => {
-    const panel = document.querySelector(".nomusic-dialog:not([hidden])");
-    const shown = [...panel.querySelectorAll(".nomusic-dialog__action")].filter((action) => action.getClientRects().length);
-    return { actions: shown.map((action) => action.dataset.action), main: panel.querySelector(".nomusic-dialog__action--main")?.dataset.action,
+    const panel = document.querySelector(".musicless-dialog:not([hidden])");
+    const shown = [...panel.querySelectorAll(".musicless-dialog__action")].filter((action) => action.getClientRects().length);
+    return { actions: shown.map((action) => action.dataset.action), main: panel.querySelector(".musicless-dialog__action--main")?.dataset.action,
       dialog_focused: document.activeElement === panel };
   });
   const before = await videoState(page);
@@ -721,14 +721,14 @@ await step("capture keeps only recent audio (25-minute stream)", async () => {
   const page = await newPage(browser);
   await page.goto(`http://127.0.0.1:${PORT}/player.html?media=long&variant=webm-opus&ahead=120`);
   await page.waitForFunction("window.playerReady === true", { timeout: 30000 });
-  // Watching with nomusic off: jumping through the stream appends ~2 minutes each time.
+  // Watching with Musicless off: jumping through the stream appends ~2 minutes each time.
   for (let t = 60; t <= 1380; t += 120) {
     await seek(page, t);
     await sleep(900);
   }
   await play(page);
   await sleep(2000);
-  const captured = await page.evaluate(() => window.__nomusicCaptureDebug());
+  const captured = await page.evaluate(() => window.__musiclessCaptureDebug());
   const stream = captured.find((s) => s.buffers.length);
   await clickButton(page);
   source = `${MEDIA}/long/webm-opus/audio.webm`;
@@ -804,8 +804,8 @@ await step("page autoplays before any click (the browser's own autoplay policy)"
     const cdp = await page.createCDPSession();
     // Reads state without granting the page user activation (Puppeteer's evaluate would).
     const read = async (expression) => (await cdp.send("Runtime.evaluate", { expression, userGesture: false, returnByValue: true })).result.value;
-    const state = () => read(`(() => { const v = document.querySelector("video"); const b = document.querySelector(".nomusic-btn");
-      const d = b?.dataset.nomusicDebug ? JSON.parse(b.dataset.nomusicDebug) : {};
+    const state = () => read(`(() => { const v = document.querySelector("video"); const b = document.querySelector(".musicless-btn");
+      const d = b?.dataset.musiclessDebug ? JSON.parse(b.dataset.musiclessDebug) : {};
       return { t: v.currentTime, paused: v.paused, context: d.context, attached: d.attached, status: d.status }; })()`);
     source = audioFile(BASE);
     await page.goto(`http://127.0.0.1:${PORT}/player.html?media=${SET}&variant=${BASE}&autoplay=1&muted=1`);
@@ -834,7 +834,7 @@ await step("extension removed while playing: fails closed", async () => {
   await browser.uninstallExtension(extensionId);
   await sleep(2000);
   const held = await videoState(page);
-  const panel = await page.evaluate(() => document.querySelector(".nomusic-dialog:not([hidden]) .nomusic-dialog__message")?.textContent ?? null);
+  const panel = await page.evaluate(() => document.querySelector(".musicless-dialog:not([hidden]) .musicless-dialog__message")?.textContent ?? null);
   await chooseRecovery(page, "original");
   await sleep(1500);
   const resumed = await videoState(page);

@@ -1,6 +1,6 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>nomusic test player</title>
+<title>Musicless test player</title>
 <style>body { margin: 20px; background: #111; color: #ddd; font: 14px system-ui; } .player { width: 854px; height: 480px; } video { width: 100%; height: 100%; background: #000; }</style>
 <div class="player"><video id="video" controls playsinline></video></div>
 <pre id="log"></pre>
@@ -13,7 +13,7 @@
 // a site moving to the next video.
 //
 // Query parameters: media, variant, slice (bytes per append), ahead (seconds
-// of look-ahead), realm=frame (use another frame's MediaSource, which nomusic
+// of look-ahead), realm=frame (use another frame's MediaSource, which Musicless
 // cannot see), worker=1 (Media Source in a dedicated worker, attached through
 // srcObject), muted=1 (muted before the source loads), autoplay=1 (the page
 // starts playback itself, without a user gesture). A player.json with

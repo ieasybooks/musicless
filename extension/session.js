@@ -3,12 +3,12 @@
 // volume or mute; the captured audio goes to the engine; separated chunks are
 // scheduled against the video's clock.
 //
-// When nomusic cannot remove the music it fails closed: the original track
+// When Musicless cannot remove the music it fails closed: the original track
 // stays silent and the video pauses until the user chooses Try again (or
 // Reload page) or Play with music. While a chunk is not ready yet, the video is
 // held (paused) rather than played with music.
 //
-// Until the user turns nomusic on (settings.consented), a session only shows
+// Until the user turns Musicless on (settings.consented), a session only shows
 // "setup": it reads no audio and leaves the video alone.
 
 import { resumeAudio, routeElement } from "./audio.js";
@@ -31,7 +31,7 @@ const AUDIO_START_MS = 3000; // after the user's click, the sound starts well wi
 const FADE_SECONDS = 0.004; // time constant of the fade when playback stops
 const OVERLAP_SECONDS = OVERLAP_SAMPLES / RATE;
 
-// Why nomusic failed closed, in the user's language. Resolved now (see
+// Why Musicless failed closed, in the user's language. Resolved now (see
 // i18n.js): the "updated" message shows after the extension itself is gone.
 const FAILURES = Object.fromEntries(
   ["protected", "codec", "missed", "uncaptured", "source", "slow", "engine", "error", "audio", "updated"]
@@ -42,7 +42,7 @@ const FAILURES = Object.fromEntries(
 // its manifest, which no page can change.
 const DEBUG = (() => {
   try {
-    return chrome.runtime.getManifest().nomusic_test === true;
+    return chrome.runtime.getManifest().musicless_test === true;
   } catch {
     return false;
   }
@@ -52,7 +52,7 @@ export const debugEnabled = () => DEBUG;
 // Failures only a fresh page can help: Retry reloads it. That includes sound
 // that cannot start ("audio"): the video's sound already goes through an audio
 // context that will not run, and only a new page gets a new one. And a video
-// whose audio went by before nomusic was turned on ("missed").
+// whose audio went by before Musicless was turned on ("missed").
 const RELOAD = new Set(["updated", "missed", "uncaptured", "engine", "audio"]);
 
 // Reload the page; a YouTube watch page keeps its position.
@@ -88,7 +88,7 @@ export class Session {
     this.capture = capture;
     this.engine = engine;
     this.onChange = onChange;
-    this.on = false; // nomusic wanted for the current source
+    this.on = false; // Musicless wanted for the current source
     this.failure = null; // { reason, message } while failed closed
     this.status = "off";
     this.graph = null;
@@ -207,7 +207,7 @@ export class Session {
     this.turnOff();
   }
 
-  // The user turned nomusic on, or off again (the welcome page, the popup).
+  // The user turned Musicless on, or off again (the welcome page, the popup).
   consentChanged() {
     this.failure = null;
     if (settings.consented) {
@@ -243,7 +243,7 @@ export class Session {
       this.failure = null; // a failure and the user's choice belonged to the previous source
       this.userChoice = false;
       this.stats.firstAudioMs = null;
-      // Each new video starts on if the user wants nomusic on every video, or
+      // Each new video starts on if the user wants Musicless on every video, or
       // had it on for the previous one in this player.
       if (url) this.on = settings.autoStart || this.on;
       if (this.on && url) this.startSource();
@@ -325,7 +325,7 @@ export class Session {
   onEntries(streamId, entries, replay) {
     if (!this.attached || streamId !== this.streamId) return;
     if (replay?.missed) {
-      // Its audio went by before nomusic was turned on: only a reload can read it.
+      // Its audio went by before Musicless was turned on: only a reload can read it.
       this.fail("missed");
       return;
     }
@@ -672,7 +672,7 @@ export class Session {
       // A video still buffering is left to the site until it could play.
       this.hold();
     }
-    if (blocked) this.holdStarted = performance.now(); // waiting for the user, not for nomusic
+    if (blocked) this.holdStarted = performance.now(); // waiting for the user, not for Musicless
     if (this.intent.held && performance.now() - this.holdStarted > HOLD_LIMIT_MS) {
       this.fail("slow");
       return;

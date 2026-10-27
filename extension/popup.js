@@ -1,4 +1,4 @@
-// Toolbar popup: the disclosure and "Turn on" until the user turns nomusic on,
+// Toolbar popup: the disclosure and "Turn on" until the user turns Musicless on,
 // then the one setting.
 import { localizePage, localizeWithGlyph, t } from "./i18n.js";
 import { DEFAULTS } from "./settings.js";
@@ -22,7 +22,7 @@ function hint() {
   else $("autoStart").removeAttribute("aria-describedby");
 }
 
-// `consented` stays false until the user turns nomusic on, here or on the first-run page.
+// `consented` stays false until the user turns Musicless on, here or on the first-run page.
 chrome.storage.sync.get(DEFAULTS).then((stored) => {
   $("autoStart").checked = stored.autoStart;
   hint();

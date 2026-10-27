@@ -1,5 +1,5 @@
 name: Bug report
-description: nomusic played the wrong audio, got stuck, or broke a YouTube page.
+description: Musicless played the wrong audio, got stuck, or broke a YouTube page.
 title: "[Bug]: "
 labels: ["bug"]
 body:
@@ -13,7 +13,7 @@ body:
       options:
         - label: I searched the existing issues and did not find this report.
           required: true
-        - label: I can see this with nomusic as the only extension, or I have said below which other extensions were on.
+        - label: I can see this with Musicless as the only extension, or I have said below which other extensions were on.
           required: true
   - type: dropdown
     id: browser
@@ -50,7 +50,7 @@ body:
   - type: input
     id: extension-version
     attributes:
-      label: nomusic version
+      label: Musicless version
       description: chrome://extensions (edge://extensions in Edge). Also say whether you installed from the Chrome Web Store or from a GitHub Release zip.
       placeholder: "Example: 1.0.0, from the Chrome Web Store"
     validations:
@@ -68,11 +68,11 @@ body:
     attributes:
       label: What did you hear?
       options:
-        - The original music (nomusic should have removed it)
+        - The original music (Musicless should have removed it)
         - Music still mixed under the voice
         - Silence, and the video stayed paused
         - The voice missing, distorted, or out of sync
-        - The original audio, because I turned nomusic off and that itself failed
+        - The original audio, because I turned Musicless off and that itself failed
         - Something else (describe it below)
     validations:
       required: true
@@ -97,6 +97,6 @@ body:
     id: extra
     attributes:
       label: Anything else
-      description: Other extensions, a screenshot of the button's message, or the words nomusic showed on the player.
+      description: Other extensions, a screenshot of the button's message, or the words Musicless showed on the player.
     validations:
       required: false

@@ -1,4 +1,4 @@
-// Long session: plays the 25-minute stream with nomusic on and samples memory,
+// Long session: plays the 25-minute stream with Musicless on and samples memory,
 // drift, holds and resyncs every minute, then checks sync at the end. Memory
 // must stay flat (bounded capture and worker buffers) and sync must not drift.
 // Usage: node soak.mjs [minutes] [media dir]   (build_media.py long first)
@@ -21,7 +21,7 @@ const samples = [];
 for (let minute = 1; minute <= minutes; minute++) {
   await sleep(60000);
   const s = await frameState(page);
-  const capture = await page.evaluate(() => window.__nomusicCaptureDebug?.().reduce((sum, stream) => sum + stream.bytes, 0) ?? null);
+  const capture = await page.evaluate(() => window.__musiclessCaptureDebug?.().reduce((sum, stream) => sum + stream.bytes, 0) ?? null);
   const drift = s.drift.slice(-40);
   samples.push({
     minute, position_s: Math.round(s.currentTime), status: s.status, holds: s.holds, resyncs: s.resyncs,
@@ -31,10 +31,10 @@ for (let minute = 1; minute <= minutes; minute++) {
   console.log(JSON.stringify(samples.at(-1)));
 }
 const a = analyze(await dump(page, 25), "soak", { source: `${MEDIA}/${SET}/webm-opus/audio.webm` });
-// nomusic's own memory must stay flat: its extension process, the captured copy
+// Musicless's own memory must stay flat: its extension process, the captured copy
 // (16 MiB at most) and the worker's audio (15 minutes behind the playhead at most).
 // The whole browser also grows slowly while playing a long Media Source stream,
-// by about as much without nomusic, so that is reported but not judged.
+// by about as much without Musicless, so that is reported but not judged.
 const first = samples[Math.min(2, samples.length - 1)];
 const last = samples.at(-1);
 const extensionGrowth = last.extension_mb - first.extension_mb;

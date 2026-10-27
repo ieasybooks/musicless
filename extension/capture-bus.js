@@ -4,11 +4,11 @@
 //
 // Anything in the page can post those messages, so they are checked before
 // they reach a session and the worker: shapes, types, finite numbers, sizes.
-// A page can post nomusic's own messages too: the most it can do with them is
+// A page can post Musicless's own messages too: the most it can do with them is
 // make a video fail closed (see docs/how-it-works.md). No message stops a
 // subscription (see capture.js).
 
-const NS = "nomusic";
+const NS = "musicless";
 const MAX_ENTRY_BYTES = 16 * 2 ** 20; // capture.js keeps no more than this per stream
 const MAX_ENTRIES = 20000;
 const MAX_URLS = 256;
@@ -16,7 +16,7 @@ const SEGMENTS = new Set(["init", "media", "part"]);
 
 const isId = (value) => Number.isSafeInteger(value) && value > 0;
 
-// A copy of a captured entry with only what nomusic reads, or null if it is malformed.
+// A copy of a captured entry with only what Musicless reads, or null if it is malformed.
 export function cleanEntry(entry) {
   if (typeof entry !== "object" || entry === null) return null;
   const { kind, bufferId } = entry;
@@ -63,7 +63,7 @@ export class CaptureBus {
     window.postMessage({ [NS]: "control", ...message }, "*");
   }
 
-  // Whether the user turned nomusic on: capture.js keeps audio only then.
+  // Whether the user turned Musicless on: capture.js keeps audio only then.
   consent(consented) {
     this.control({ type: "consent", consented });
   }

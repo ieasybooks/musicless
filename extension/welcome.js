@@ -1,4 +1,4 @@
-// First-run page: the disclosure and the one choice that turns nomusic on,
+// First-run page: the disclosure and the one choice that turns Musicless on,
 // then what to expect, where the control is, and the one thing left to do.
 import { localizePage, localizeWithGlyph } from "./i18n.js";
 
@@ -20,7 +20,7 @@ $("accept").addEventListener("click", async () => {
 
 // Opened from a video's button (background.js keeps its tab): the way back to
 // that video ends the page, reloaded where it was, since its sound went by
-// before nomusic was on. It needs no permission: the tab is known by its id.
+// before Musicless was on. It needs no permission: the tab is known by its id.
 let videoTab = null;
 function offerBack(id) {
   videoTab = Number.isInteger(id) ? id : null;
@@ -42,7 +42,7 @@ $("back").addEventListener("click", async () => {
   try {
     const tab = await chrome.tabs.update(id, { active: true });
     await chrome.windows.update(tab.windowId, { focused: true });
-    // Its own page reloads it where the video was; a page nomusic no longer
+    // Its own page reloads it where the video was; a page Musicless no longer
     // runs in (an update) is reloaded from here.
     await chrome.tabs.sendMessage(id, { type: "reload" }).catch(() => chrome.tabs.reload(id));
   } catch {

@@ -1,22 +1,22 @@
 // Shared browser-test helpers: install the extension into a fresh browser
-// profile, read nomusic's state, record what actually played, and analyze it.
+// profile, read Musicless's state, record what actually played, and analyze it.
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 import puppeteer from "puppeteer-core";
 
 const TESTS = new URL(".", import.meta.url).pathname;
-export const WORK = process.env.NOMUSIC_TEST_DIR ?? join(TESTS, ".work");
-// NOMUSIC_EXTENSION tests another copy, e.g. an unzipped release package.
-const EXTENSION = process.env.NOMUSIC_EXTENSION ?? new URL("../extension/", import.meta.url).pathname;
+export const WORK = process.env.MUSICLESS_TEST_DIR ?? join(TESTS, ".work");
+// MUSICLESS_EXTENSION tests another copy, e.g. an unzipped release package.
+const EXTENSION = process.env.MUSICLESS_EXTENSION ?? new URL("../extension/", import.meta.url).pathname;
 const ANALYZE = join(TESTS, "analyze.py");
-export const PYTHON = process.env.NOMUSIC_PYTHON ?? join(TESTS, ".venv", "bin", "python");
-const NS = "nomusic";
+export const PYTHON = process.env.MUSICLESS_PYTHON ?? join(TESTS, ".venv", "bin", "python");
+const NS = "musicless";
 mkdirSync(WORK, { recursive: true });
 
 // What the page-world capture keeps, for the tests (the release has no way to
 // read it). `media` counts kept audio other than format headers.
-const CAPTURE_DEBUG = `window.__nomusicCaptureDebug = () => [...streams].map(([id, s]) => ({ id, url: s.url,
+const CAPTURE_DEBUG = `window.__musiclessCaptureDebug = () => [...streams].map(([id, s]) => ({ id, url: s.url,
   buffers: [...s.buffers.values()], bytes: s.bytes, stored: s.log.length, subscribed: s.subscribed, dropped: !!s.dropped,
   missed: !!s.missed, media: s.log.reduce((sum, e) => sum + (e.kind === "append" && !e.header ? e.bytes.length : 0), 0), consented }));\n`;
 
@@ -33,19 +33,19 @@ Session.prototype.startSource = function () {
   });
 };
 window.addEventListener("message", (event) => {
-  if (event.source !== window || event.data?.nomusic !== "debug") return;
+  if (event.source !== window || event.data?.musicless !== "debug") return;
   const sessions = [...controllers.values()].map((controller) => controller.session);
   const session = sessions.find((s) => s.attached) ?? sessions.find((s) => s.on) ?? sessions[0];
   let reply = null;
   if (event.data.type === "dump") reply = session?.recorder?.dump(event.data.seconds ?? 20) ?? null;
   else if (event.data.type === "state") reply = session ? session.snapshot() : null;
   else if (event.data.type === "sessions") reply = sessions.map((s) => s.snapshot());
-  window.postMessage({ nomusic: "debug-reply", id: event.data.id, reply }, "*");
+  window.postMessage({ musicless: "debug-reply", id: event.data.id, reply }, "*");
 });
 `;
 
 // The shipped manifest only matches YouTube; tests also allow the local server.
-// The test copy also turns on nomusic's diagnostics (state and recordings, which
+// The test copy also turns on Musicless's diagnostics (state and recordings, which
 // the release cannot do): its manifest is marked, main.js answers requests for
 // state and recordings, the recorder is made loadable, and the capture's state
 // is readable from the page. `diagnostics: false` leaves them out, as in the release.
@@ -68,7 +68,7 @@ function testExtension({ diagnostics = true } = {}) {
       throw new Error("main.js no longer imports Session or declares `const controllers = new Map();`: update the harness");
     }
     writeFileSync(join(dir, "main.js"), main + MAIN_DEBUG);
-    manifest.nomusic_test = true;
+    manifest.musicless_test = true;
     manifest.web_accessible_resources[0].resources.push("recorder.js");
   }
   for (const entry of [...manifest.content_scripts, ...manifest.web_accessible_resources]) {
@@ -88,8 +88,8 @@ export function chromePath() {
 }
 
 // `autoplay: false` keeps the browser's real autoplay policy (sound needs a user gesture).
-// The user has turned nomusic on (`consented`) unless a test says otherwise.
-// `lang` is the browser's language, which picks nomusic's catalog.
+// The user has turned Musicless on (`consented`) unless a test says otherwise.
+// `lang` is the browser's language, which picks Musicless's catalog.
 export async function launch({ headless = true, autoStart = true, autoplay = true, consented = true, diagnostics = true, lang = "en-US" } = {}) {
   const profile = mkdtempSync(join(WORK, "profile-"));
   const executablePath = chromePath();
@@ -107,7 +107,7 @@ export async function launch({ headless = true, autoStart = true, autoplay = tru
       "--window-size=1280,900",
       `--lang=${lang}`,
       // Portable browser copies (and CI containers) cannot set up the sandbox.
-      ...(process.env.NOMUSIC_NO_SANDBOX === "1" ? ["--no-sandbox"] : []),
+      ...(process.env.MUSICLESS_NO_SANDBOX === "1" ? ["--no-sandbox"] : []),
     ],
     defaultViewport: { width: 1280, height: 900 },
   });
@@ -160,7 +160,7 @@ export async function newPage(browser) {
 
 export const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// Ask the page's nomusic content script (diagnostics are on in the test copy) for something.
+// Ask the page's Musicless content script (diagnostics are on in the test copy) for something.
 export function debugRequest(frame, type, extra = {}) {
   return frame.evaluate(({ NS, type, extra }) => new Promise((resolve) => {
     const id = Math.random().toString(36).slice(2);
@@ -182,12 +182,12 @@ export async function frameState(frame) {
   const state = await debugRequest(frame, "state");
   if (!state) return null;
   const button = await frame.evaluate(() => {
-    const el = [...document.querySelectorAll(".nomusic-btn")].find((b) => b.style.display !== "none");
-    const panel = document.querySelector(".nomusic-dialog:not([hidden])");
+    const el = [...document.querySelectorAll(".musicless-btn")].find((b) => b.style.display !== "none");
+    const panel = document.querySelector(".musicless-dialog:not([hidden])");
     return {
       label: el?.getAttribute("aria-label") ?? null,
       buttonState: el?.dataset.state ?? null,
-      panel: panel ? panel.querySelector(".nomusic-dialog__message")?.textContent : null,
+      panel: panel ? panel.querySelector(".musicless-dialog__message")?.textContent : null,
     };
   });
   return { ...state, ...button };
@@ -204,16 +204,16 @@ export async function waitFor(frame, predicate, { timeout = 60000, label = "cond
   throw new Error(`timed out waiting for ${label}; last state ${JSON.stringify(state)?.slice(0, 600)}`);
 }
 
-// A real click on the visible nomusic button; if something on the page covers
+// A real click on the visible Musicless button; if something on the page covers
 // it (a site dialog), report what, then click it directly so the test goes on.
 export async function clickButton(frame) {
-  await frame.waitForSelector(".nomusic-btn", { visible: true, timeout: 30000 });
+  await frame.waitForSelector(".musicless-btn", { visible: true, timeout: 30000 });
   const button = await frame.evaluateHandle(() =>
-    [...document.querySelectorAll(".nomusic-btn")].find((b) => b.style.display !== "none"));
-  const before = await button.evaluate((el) => el.dataset.nomusicStatus);
+    [...document.querySelectorAll(".musicless-btn")].find((b) => b.style.display !== "none"));
+  const before = await button.evaluate((el) => el.dataset.musiclessStatus);
   await button.asElement().click();
   await sleep(800);
-  const after = await button.evaluate((el) => el.dataset.nomusicStatus);
+  const after = await button.evaluate((el) => el.dataset.musiclessStatus);
   if (after !== before) return null;
   const covered = await button.evaluate((el) => {
     const r = el.getBoundingClientRect();
@@ -228,7 +228,7 @@ export async function clickButton(frame) {
 // "original"), with a real click: the dialog ignores synthetic ones.
 export async function chooseRecovery(frame, action) {
   const item = await frame.evaluateHandle((action) =>
-    document.querySelector(`.nomusic-dialog:not([hidden]) .nomusic-dialog__action[data-action="${action}"]`), action);
+    document.querySelector(`.musicless-dialog:not([hidden]) .musicless-dialog__action[data-action="${action}"]`), action);
   if (!item.asElement()) throw new Error(`no "${action}" action in the recovery dialog`);
   await item.asElement().click();
 }

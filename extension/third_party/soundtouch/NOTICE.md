@@ -1,6 +1,6 @@
 # SoundTouchJS (vendored)
 
-WSOLA time-stretch library used by nomusic to keep audio at the correct pitch
+WSOLA time-stretch library used by Musicless to keep audio at the correct pitch
 when the video is played at non-1x speed.
 
 - **Upstream:** <https://github.com/cutterbl/SoundTouchJS>

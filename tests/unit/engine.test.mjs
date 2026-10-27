@@ -24,13 +24,13 @@ function separator() {
 
 test("the hidden frame starts a worker only for the content script's token, once", async () => {
   const frame = separator();
-  await frame.post({ type: "nomusic-port" });
-  await frame.post({ type: "nomusic-port", token: "guess" });
-  await frame.post({ type: "nomusic-port", token: "secret" }, []);
+  await frame.post({ type: "musicless-port" });
+  await frame.post({ type: "musicless-port", token: "guess" });
+  await frame.post({ type: "musicless-port", token: "secret" }, []);
   assert.equal(frame.workers(), 0, "no token, a wrong one, or no port: nothing starts");
-  await frame.post({ type: "nomusic-port", token: "secret" });
+  await frame.post({ type: "musicless-port", token: "secret" });
   assert.equal(frame.workers(), 1);
-  await frame.post({ type: "nomusic-port", token: "secret" });
+  await frame.post({ type: "musicless-port", token: "secret" });
   assert.equal(frame.workers(), 1, "one connection per frame");
 });
 
@@ -106,7 +106,7 @@ test("the engine hands its port to the frame with the token, asked for when the 
   env.frames[0].load();
   await flush();
   assert.deepEqual(env.asked, ["engine-token"]);
-  assert.deepEqual(plain(env.frames[0].contentWindow.posted.map((p) => p.message)), [{ type: "nomusic-port", token: "secret" }]);
+  assert.deepEqual(plain(env.frames[0].contentWindow.posted.map((p) => p.message)), [{ type: "musicless-port", token: "secret" }]);
   // Given up and started again: the token is asked for again, not kept.
   env.token = "another";
   engine.destroy();

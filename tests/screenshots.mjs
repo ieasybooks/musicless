@@ -10,7 +10,7 @@
 // Usage (from tests/): node screenshots.mjs [en] [ar] [--reframe]
 // --reframe redoes only the frames and captions from the last captures (kept
 // in the work folder), without opening YouTube again.
-// CHROME, NOMUSIC_NO_SANDBOX and NOMUSIC_TEST_DIR work as in the other suites.
+// CHROME, MUSICLESS_NO_SANDBOX and MUSICLESS_TEST_DIR work as in the other suites.
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import puppeteer from "puppeteer-core";
@@ -53,8 +53,8 @@ const temp = mkdtempSync(join(WORK, "screenshots-"));
 process.once("exit", () => rmSync(temp, { recursive: true, force: true }));
 
 // A throwaway copy of the extension. `failing` patches it so that the first
-// separated chunk ends in nomusic's generic failure, which opens the recovery
-// panel on a video nomusic could otherwise handle.
+// separated chunk ends in Musicless's generic failure, which opens the recovery
+// panel on a video Musicless could otherwise handle.
 function extensionCopy({ failing = false } = {}) {
   const dir = mkdtempSync(join(temp, "extension-"));
   cpSync(EXTENSION, dir, { recursive: true, dereference: true }); // worktrees may link the built model and runtime
@@ -85,7 +85,7 @@ async function open(language, extension) {
       "--window-size=1280,900",
       `--lang=${language.lang}`,
       "--disable-lcd-text", // grey antialiasing, as the store shows text
-      ...(process.env.NOMUSIC_NO_SANDBOX === "1" ? ["--no-sandbox"] : []),
+      ...(process.env.MUSICLESS_NO_SANDBOX === "1" ? ["--no-sandbox"] : []),
     ],
     defaultViewport: { width: 1280, height: 900 },
   });
@@ -117,7 +117,7 @@ async function openWatch(browser, language) {
 
 // Wait until the button on the main video has said `status` for `steady` ms
 // and no ad is showing (YouTube may switch streams just after the start, which
-// makes nomusic wait for the new one).
+// makes Musicless wait for the new one).
 async function waitForButton(page, status, { timeout = 90000, steady = 0 } = {}) {
   const started = Date.now();
   let last = null;
@@ -125,10 +125,10 @@ async function waitForButton(page, status, { timeout = 90000, steady = 0 } = {})
   while (Date.now() - started < timeout) {
     last = await page.evaluate(() => {
       const video = document.querySelector("#movie_player video");
-      if (video?.paused) video.play().catch(() => {}); // a nudge; a hold by nomusic keeps the video paused
+      if (video?.paused) video.play().catch(() => {}); // a nudge; a hold by Musicless keeps the video paused
       document.querySelector(".ytp-skip-ad-button, .ytp-ad-skip-button, .ytp-ad-skip-button-modern")?.click();
-      const button = [...document.querySelectorAll(".nomusic-btn")].find((b) => b.style.display !== "none");
-      return { status: button?.dataset.nomusicStatus ?? null, t: video?.currentTime ?? 0, ad: !!document.querySelector(".ad-showing") };
+      const button = [...document.querySelectorAll(".musicless-btn")].find((b) => b.style.display !== "none");
+      return { status: button?.dataset.musiclessStatus ?? null, t: video?.currentTime ?? 0, ad: !!document.querySelector(".ad-showing") };
     });
     const ok = last.status === status && !last.ad && last.t > 1;
     since = ok ? since ?? Date.now() : null;
@@ -139,7 +139,7 @@ async function waitForButton(page, status, { timeout = 90000, steady = 0 } = {})
 }
 
 // The player alone, with YouTube's controls showing (they hide a few seconds
-// after the pointer rests); `hover` rests the pointer on nomusic's button, so
+// after the pointer rests); `hover` rests the pointer on Musicless's button, so
 // its tooltip shows.
 async function shootPlayer(page, file, { hover = false } = {}) {
   const clip = await page.evaluate(() => {
@@ -151,7 +151,7 @@ async function shootPlayer(page, file, { hover = false } = {}) {
   await page.mouse.move(clip.x + clip.width / 2 + 24, clip.y + clip.height / 2 + 12, { steps: 4 });
   if (hover) {
     const button = await page.evaluate(() => {
-      const r = document.querySelector("#movie_player .nomusic-btn").getBoundingClientRect();
+      const r = document.querySelector("#movie_player .musicless-btn").getBoundingClientRect();
       return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
     });
     await page.mouse.move(button.x, button.y, { steps: 4 });
@@ -197,9 +197,8 @@ async function shootPopup(browser, extensionId, file) {
 
 const pngWidth = (file) => readFileSync(file).readUInt32BE(16);
 
-// A capture under its caption on a quiet canvas (a warm grey, beside the
-// mark's amber), at 1280x800. The caption
-// must stay readable when the store scales the image to 640x400. The popup is
+// A capture under its caption on paper, with ink captions, at 1280x800.
+// The caption must stay readable when the store scales the image to 640x400. The popup is
 // shown at its captured size (twice its CSS size); the rest fills the space
 // left.
 async function showcase(browser, language, name, caption, image, { width } = {}) {
@@ -207,8 +206,8 @@ async function showcase(browser, language, name, caption, image, { width } = {})
   await page.setViewport({ width: 1280, height: 800, deviceScaleFactor: 1 });
   const data = readFileSync(image).toString("base64");
   const font = language.dir === "rtl" ? `'Segoe UI', 'SF Arabic', 'Noto Sans Arabic', system-ui, sans-serif` : `-apple-system, 'Segoe UI', Roboto, system-ui, sans-serif`;
-  await page.setContent(`<!doctype html><html lang="${language.lang}" dir="${language.dir}"><body style="margin:0;box-sizing:border-box;width:1280px;height:800px;padding:44px 64px;background:#f3f0ea;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:32px;font:500 40px/1.3 ${font};color:#1f1f1f;text-align:center">
+  await page.setContent(`<!doctype html><html lang="${language.lang}" dir="${language.dir}"><body style="margin:0;box-sizing:border-box;width:1280px;height:800px;padding:44px 64px;background:#f4ede0;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:32px;font:500 40px/1.3 ${font};color:#1f1d1a;text-align:center">
     <div style="flex:0 0 auto">${caption}</div>
     <div style="flex:0 1 auto;min-height:0;display:flex;align-items:center;justify-content:center;width:100%">
       <img src="data:image/png;base64,${data}" style="${width ? `width:${width}px;` : "max-width:100%;"}max-height:100%;border-radius:12px;box-shadow:0 2px 12px rgba(31,42,36,.18)">

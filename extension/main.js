@@ -46,7 +46,7 @@ function render(controller) {
   if (!controller.button && session.failure) anchor(controller);
   if (!controller.button) return;
   controller.button.render();
-  if (debugEnabled()) controller.button.el.dataset.nomusicDebug = JSON.stringify(session.snapshot());
+  if (debugEnabled()) controller.button.el.dataset.musiclessDebug = JSON.stringify(session.snapshot());
 }
 
 // Does the video show at all? (A torn-down player or a hidden preview does not.)
@@ -179,12 +179,12 @@ onSettingsChanged(() => {
   }
 });
 
-// "Back to the video" on the first-run page (only nomusic's own pages can send
-// this): a video whose sound went by before nomusic was turned on is reloaded
+// "Back to the video" on the first-run page (only Musicless's own pages can send
+// this): a video whose sound went by before Musicless was turned on is reloaded
 // where it was, as its dialog's "Reload page" does.
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message?.type !== "reload") return;
-  // The answer first (this page is nomusic's: no reload from outside), then
+  // The answer first (this page is Musicless's: no reload from outside), then
   // the reload, which would cut the answer off.
   sendResponse(true);
   const missed = [...controllers.values()].find(({ session }) => session.failure?.reason === "missed");

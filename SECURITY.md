@@ -4,7 +4,7 @@
 
 Report security issues privately:
 
-https://github.com/IbraheemTuffaha/nomusic/security/advisories/new
+https://github.com/IbraheemTuffaha/musicless/security/advisories/new
 
 That form works once private vulnerability reporting is enabled for this
 repository. Please do not open a public issue, and do not post a proof of
@@ -29,13 +29,13 @@ that shows a signed-in account you do not want to share.
   that run on YouTube (`capture.js`, `intent.js`).
 - The build and packaging (`setup.sh`, `scripts/package.sh`, the release
   workflow) if a published zip does not match the attested release.
-- Unexpected network requests. nomusic is not supposed to make any.
+- Unexpected network requests. Musicless is not supposed to make any.
 
 ## Out of scope
 
-- Separation quality: leftover music, dull voices, or a video nomusic
+- Separation quality: leftover music, dull voices, or a video Musicless
   refuses. Those are bugs. Use the bug report form.
 - YouTube itself, browser bugs, and vulnerabilities in a dependency that
-  nomusic does not ship. If ONNX Runtime or the Spleeter weights have
+  Musicless does not ship. If ONNX Runtime or the Spleeter weights have
   their own advisory, you can still tell us if the published extension is
   affected.

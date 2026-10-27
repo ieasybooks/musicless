@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Package the extension for release: dist/nomusic-<version>.zip, the archive
+# Package the extension for release: dist/musicless-<version>.zip, the archive
 # to upload to a browser's add-on store or to share for "Load unpacked".
 # Run ./setup.sh first: the model and the runtime are built, not committed.
 # The zip holds the files git tracks in extension/ plus the four built ones,
@@ -23,8 +23,8 @@ files = [name for name in files if name != "recorder.js"]
 
 # Only the tested build goes out: the model setup.sh builds, and no test key.
 manifest = json.load(open("extension/manifest.json"))
-if "nomusic_test" in manifest:
-    sys.exit("extension/manifest.json has the test harness's nomusic_test key.")
+if "musicless_test" in manifest:
+    sys.exit("extension/manifest.json has the test harness's musicless_test key.")
 expected = re.search(r"^MODEL_SHA256=(\w+)$", open("setup.sh").read(), re.M).group(1)
 model = hashlib.sha256(open("extension/model/spleeter-2stems.onnx", "rb").read()).hexdigest()
 if model != expected:
@@ -32,7 +32,7 @@ if model != expected:
 
 version = manifest["version"]
 os.makedirs("dist", exist_ok=True)
-out = f"dist/nomusic-{version}.zip"
+out = f"dist/musicless-{version}.zip"
 with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
     for name in files:
         info = zipfile.ZipInfo(name, date_time=(1980, 1, 1, 0, 0, 0))

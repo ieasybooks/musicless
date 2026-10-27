@@ -12,10 +12,10 @@ named below.
 
 ## Listing
 
-**Name** (same in both locales; 7 of 75 characters):
+**Name** (same in both locales; 9 of 75 characters):
 
 ```text
-nomusic
+Musicless
 ```
 
 **Summary** (113 of 132 characters; it is the manifest `description`, from
@@ -36,19 +36,19 @@ category. This is a recommendation, not a category Google requires by name.
 **Detailed description:**
 
 ```text
-nomusic reduces background music while keeping the voices: speech and singing. Compatible with YouTube™. It is made for people who want to avoid music for religious or personal reasons, and anyone who prefers voices with less background music.
+Musicless reduces background music while keeping the voices: speech and singing. Compatible with YouTube™. It is made for people who want to avoid music for religious or personal reasons, and anyone who prefers voices with less background music.
 
 How it works
 • Audio separation runs on your computer using a bundled, open-source model. No account or backend service is needed.
 • After you choose Turn on, automatic removal is on by default. Turn it off in the toolbar if you prefer to choose videos one by one.
 • Each video waits a few seconds as it starts, while the music is removed: YouTube's spinner shows in the middle of the video, with Removing music under it. A seek can wait again.
-• nomusic's button sits in the player's control bar, left of captions (on Shorts, with the Short's own buttons): a music note, struck through while the music is removed. Click it to play the video with its music, and again to remove the music.
+• Musicless's button sits in the player's control bar, left of captions (on Shorts, with the Short's own buttons): a music note, struck through while the music is removed. Click it to play the video with its music, and again to remove the music.
 
 Playback controls
-Volume, mute, seeking, fullscreen, and speed changes are supported. nomusic also works with supported Shorts, live streams, and embedded players on computers.
+Volume, mute, seeking, fullscreen, and speed changes are supported. Musicless also works with supported Shorts, live streams, and embedded players on computers.
 
 Privacy
-nomusic reads audio that the site's own player has already loaded and processes it in browser memory only for music removal. Audio is never uploaded, shared, or saved as a file. It does not offer media downloads, recording, or audio export. The developer receives no audio, browsing history, or usage analytics. The automatic-removal setting, and whether you have turned nomusic on, are stored with Chrome's extension storage and may sync between your devices through Chrome Sync. A random token that lets nomusic's processing frame accept only nomusic itself stays on this computer.
+Musicless reads audio that the site's own player has already loaded and processes it in browser memory only for music removal. Audio is never uploaded, shared, or saved as a file. It does not offer media downloads, recording, or audio export. The developer receives no audio, browsing history, or usage analytics. The automatic-removal setting, and whether you have turned Musicless on, are stored with Chrome's extension storage and may sync between your devices through Chrome Sync. A random token that lets Musicless's processing frame accept only Musicless itself stays on this computer.
 
 Limits to know
 • Some music may remain, especially quiet background music under speech. Voices can sound less bright. This is not a guarantee of music-free playback.
@@ -57,10 +57,10 @@ Limits to know
 • A live stream watched right at its live point keeps pausing. Watching a little behind it reduces the pauses.
 • This extension supports the listed site's desktop players, not phone browsers or other video services.
 
-Free and open source. Code and help: https://github.com/IbraheemTuffaha/nomusic
-Privacy policy: https://github.com/IbraheemTuffaha/nomusic/blob/main/docs/privacy.md
+Free and open source. Code and help: https://github.com/IbraheemTuffaha/musicless
+Privacy policy: https://github.com/IbraheemTuffaha/musicless/blob/main/docs/privacy.md
 
-nomusic is an independent project and is not affiliated with or endorsed by YouTube or Google. YouTube is a trademark of Google LLC. Use of this trademark is subject to Google Permissions.
+Musicless is an independent project and is not affiliated with or endorsed by YouTube or Google. YouTube is a trademark of Google LLC. Use of this trademark is subject to Google Permissions.
 ```
 
 The player's words in that text are: Remove music and Stop removing music
@@ -72,10 +72,10 @@ Play with music (its choices).
 
 | Field | Value |
 | --- | --- |
-| Homepage | `https://github.com/IbraheemTuffaha/nomusic` after `main` is this extension |
-| Support | `https://github.com/IbraheemTuffaha/nomusic/issues` |
+| Homepage | `https://github.com/IbraheemTuffaha/musicless` after `main` is this extension |
+| Support | `https://github.com/IbraheemTuffaha/musicless/issues` |
 | Official / verified site | Leave empty unless you verify a domain you control. Do not verify `github.com`. |
-| Privacy policy | `https://github.com/IbraheemTuffaha/nomusic/blob/main/docs/privacy.md` only after that URL shows this policy while signed out |
+| Privacy policy | `https://github.com/IbraheemTuffaha/musicless/blob/main/docs/privacy.md` only after that URL shows this policy while signed out |
 | Price | Free. No in-app purchases. |
 | Visibility | Public |
 | Regions | All regions, unless you have a restriction |
@@ -99,7 +99,7 @@ Reduce background music during YouTube video playback while preserving voices, b
 **`storage`:**
 
 ```text
-Stores the automatic music-removal preference and whether the user has acknowledged the first-run local-audio disclosure (Turn on) in chrome.storage.sync, so nomusic starts consistently and does not repeat the disclosure; both may sync between the user's own devices through Chrome Sync. Also stores a random token in chrome.storage.local that the extension's own hidden processing frame checks, so that web pages cannot connect to it. No audio, video, browsing-history log, or analytics is stored in extension storage.
+Stores the automatic music-removal preference and whether the user has acknowledged the first-run local-audio disclosure (Turn on) in chrome.storage.sync, so Musicless starts consistently and does not repeat the disclosure; both may sync between the user's own devices through Chrome Sync. Also stores a random token in chrome.storage.local that the extension's own hidden processing frame checks, so that web pages cannot connect to it. No audio, video, browsing-history log, or analytics is stored in extension storage.
 ```
 
 Re-read this against the keys the extension actually writes. If the
@@ -109,7 +109,7 @@ acknowledgement is not synced, say where it is stored.
 `content_scripts.matches`. There is no `host_permissions` array.
 
 ```text
-Static content scripts run only on https://www.youtube.com/*, https://m.youtube.com/*, and https://www.youtube-nocookie.com/*. They access the encoded audio that the page's existing player supplies to MediaSource/SourceBuffer, pass it to packaged extension workers for local separation, silence the original track while enabled, play the separated voices in sync, and display the nomusic control and recovery messages. document_start is needed to observe audio supplied when the player starts. Matching frames are included for embedded players. No access to unrelated sites or the embedding parent page is requested. No video/audio download, upload, or export is provided.
+Static content scripts run only on https://www.youtube.com/*, https://m.youtube.com/*, and https://www.youtube-nocookie.com/*. They access the encoded audio that the page's existing player supplies to MediaSource/SourceBuffer, pass it to packaged extension workers for local separation, silence the original track while enabled, play the separated voices in sync, and display the Musicless control and recovery messages. document_start is needed to observe audio supplied when the player starts. Matching frames are included for embedded players. No access to unrelated sites or the embedding parent page is requested. No video/audio download, upload, or export is provided.
 ```
 
 If the dashboard has one box per host:
@@ -127,9 +127,9 @@ to match a guessed form.
 **Remote code:** No, I am not using remote code.
 
 ```text
-All executable code and model files are included in the submitted package. nomusic bundles ONNX Runtime Web 1.30.0: vendor/ort.wasm.min.mjs, vendor/ort-wasm-simd-threaded.mjs, and vendor/ort-wasm-simd-threaded.wasm (14,239,897 bytes). It also bundles model/spleeter-2stems.onnx (39,364,042 bytes), an offline Spleeter 2-stem graph with fp16 weight storage.
+All executable code and model files are included in the submitted package. Musicless bundles ONNX Runtime Web 1.30.0: vendor/ort.wasm.min.mjs, vendor/ort-wasm-simd-threaded.mjs, and vendor/ort-wasm-simd-threaded.wasm (14,239,897 bytes). It also bundles model/spleeter-2stems.onnx (39,364,042 bytes), an offline Spleeter 2-stem graph with fp16 weight storage.
 
-model.js imports the packaged ORT module, sets ort.env.wasm.wasmPaths to the packaged vendor directory, sets numThreads = 1 and proxy = false, and loads the model from the extension's own URL. The word "threaded" in the upstream WASM filename does not mean that nomusic enables multiple inference threads.
+model.js imports the packaged ORT module, sets ort.env.wasm.wasmPaths to the packaged vendor directory, sets numThreads = 1 and proxy = false, and loads the model from the extension's own URL. The word "threaded" in the upstream WASM filename does not mean that Musicless enables multiple inference threads.
 
 The extension_pages CSP allows 'wasm-unsafe-eval' solely to compile and instantiate this bundled WebAssembly runtime. It does not allow JavaScript 'unsafe-eval' or remote script origins. There is no CDN import, fetched executable code, remote model/configuration interpreter, or backend inference service.
 
@@ -163,16 +163,16 @@ Read each live tooltip before you certify.
 may stay in English. Describe only behavior the zip actually has.
 
 ```text
-Purpose: local background-music reduction during playback, keeping speech and singing. No nomusic account, payment, backend, microphone permission, media downloads, or export is needed.
+Purpose: local background-music reduction during playback, keeping speech and singing. No Musicless account, payment, backend, microphone permission, media downloads, or export is needed.
 
-1. Install the submitted package on a desktop Chrome version supported by the manifest. A first-run page opens; nomusic does not process audio until you choose Turn on there (or Turn on in the toolbar popup, under the same disclosure). Before that, the player button shows a music note with a small dot; its tooltip says Turn on nomusic and it opens that page, which then offers Back to the video (it reloads that video where it was). A video that was already playing when nomusic was turned on shows "nomusic is on" and Reload page. Reload website tabs that were open before installation.
+1. Install the submitted package on a desktop Chrome version supported by the manifest. A first-run page opens; Musicless does not process audio until you choose Turn on there (or Turn on in the toolbar popup, under the same disclosure). Before that, the player button shows a music note with a small dot; its tooltip says Turn on Musicless and it opens that page, which then offers Back to the video (it reloads that video where it was). A video that was already playing when Musicless was turned on shows "Musicless is on" and Reload page. Reload website tabs that were open before installation.
 2. Open a normal, non-copy-protected YouTube video with speech over background music. A public video works; no YouTube login is required for ordinary public playback. Leave the video unmuted. The first audio may take a few seconds to prepare; the video waits during preparation, with YouTube's spinner in the middle of the video and "Removing music" under it.
-3. nomusic's button sits in the player's control bar, left of captions: a struck-through music note while separation is on. Listen for reduced instruments with retained speech and singing. Some music leakage is expected and is disclosed. Click the button (tooltip: Stop removing music) to hear the original, then click it again (tooltip: Remove music) to turn removal back on.
+3. Musicless's button sits in the player's control bar, left of captions: a struck-through music note while separation is on. Listen for reduced instruments with retained speech and singing. Some music leakage is expected and is disclosed. Click the button (tooltip: Stop removing music) to hear the original, then click it again (tooltip: Remove music) to turn removal back on.
 4. Try volume, mute, a seek, and a speed change. Check an embedded player as well (the button sits in its top row of buttons) and a Short (the button sits with the Short's own buttons at its top). In the toolbar popup, turn automatic removal off, open another supported video, and click the button on its player.
 5. If processing fails or the content is copy-protected, the video remains paused and the original track stays silent, and a dialog ("Couldn’t remove the music") offers Try again or Play with music. Some failures show Reload page instead of Try again; copy-protected videos offer only Play with music. This is deliberate fail-closed behavior. DRM is not bypassed. A live stream at the live edge can pause repeatedly; test slightly behind the edge.
 6. Choose an Arabic browser UI locale and verify the localized controls, first-run page, and right-to-left layout. English and Arabic have identical features and privacy behavior.
 
-Media handling: nomusic does not issue requests to fetch media from YouTube or a third-party service. The normal website player makes its own streaming requests. The extension copies audio bytes that the player supplies to MediaSource/SourceBuffer, uses them temporarily in RAM for separation, and replaces the sound heard during the same player session with the separated voices. It does not save, download, export, redistribute, or provide later offline access to that media. Ads continue through the site's player; nomusic is not an ad blocker.
+Media handling: Musicless does not issue requests to fetch media from YouTube or a third-party service. The normal website player makes its own streaming requests. The extension copies audio bytes that the player supplies to MediaSource/SourceBuffer, uses them temporarily in RAM for separation, and replaces the sound heard during the same player session with the separated voices. It does not save, download, export, redistribute, or provide later offline access to that media. Ads continue through the site's player; Musicless is not an ad blocker.
 
 Runtime: the package includes ONNX Runtime Web 1.30.0, its approximately 14 MB WASM binary, and an approximately 37.5 MiB ONNX model. All inference runs locally on one CPU thread. The extension-origin frame and workers need the documented wasm-unsafe-eval CSP to instantiate the packaged WASM. No remote executable code is loaded. The source, pinned setup, and third-party license notices explain the included vendor files.
 
@@ -197,11 +197,11 @@ There is no "100% music-free" claim.
 
 | File | What it shows | Caption |
 | --- | --- | --- |
-| `en-1-music-removed.png` | nomusic's struck note in YouTube's control bar, its tooltip "Stop removing music" | Removes most of the music. Keeps the voices. |
+| `en-1-music-removed.png` | Musicless's struck note in YouTube's control bar, its tooltip "Stop removing music" | Removes most of the music. Keeps the voices. |
 | `en-2-turn-on-once.png` | The first-run page: the disclosure and Turn on | Turn it on once. Then it works by itself. |
 | `en-3-you-choose.png` | The recovery dialog: Couldn’t remove the music, Play with music, Try again | If the music can’t be removed, the video waits for you. |
 | `en-4-one-setting.png` | The toolbar popup: the one setting and Help | One setting. Everything runs on your computer. |
-| `promo-tile-440x280.png` | The mark, a white closing speech mark, over the name "nomusic" on the mark's brass; no other text (a tile cannot be localized, and the name is the same in every language) | none |
+| `promo-tile-440x280.png` | The paper logo (the snapped note and the name musicless) on ink | none |
 | `store-icon-128.png` | The store icon: the artwork near 96×96 on a transparent 128×128 canvas | none |
 
 The Arabic files have the same numbers and names (`ar-1-music-removed.png`
@@ -209,9 +209,9 @@ and so on); their captions are in [store-listing.ar.md](store-listing.ar.md).
 Screenshots are 1280×800 PNG without transparency, one to five per locale.
 The promo tile and the store icon are global.
 
-## What nomusic does not do
+## What Musicless does not do
 
-nomusic processes audio already loaded by the site's own player in memory and
+Musicless processes audio already loaded by the site's own player in memory and
 plays separated voices during the same video session. It does not download or
 save media, provide audio export or offline access, or bypass copy protection.
 "On your computer" means the separation needs no backend. YouTube still

@@ -19,9 +19,9 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     env:
-      NOMUSIC_TEST_DIR: ${{ github.workspace }}/tests/.work
+      MUSICLESS_TEST_DIR: ${{ github.workspace }}/tests/.work
       # The runner's AppArmor profile blocks Chrome's sandbox.
-      NOMUSIC_NO_SANDBOX: '1'
+      MUSICLESS_NO_SANDBOX: '1'
       CHROME: /usr/bin/google-chrome
     steps:
       - uses: actions/checkout@v7
@@ -42,13 +42,13 @@ jobs:
         run: npm run unit
       - name: Build synthetic test media (nothing copyrighted)
         run: |
-          tests/.venv/bin/python tests/build_media.py synthetic "$NOMUSIC_TEST_DIR/media/synth" 240
-          tests/.venv/bin/python tests/build_media.py long "$NOMUSIC_TEST_DIR/media/long" 25
+          tests/.venv/bin/python tests/build_media.py synthetic "$MUSICLESS_TEST_DIR/media/synth" 240
+          tests/.venv/bin/python tests/build_media.py long "$MUSICLESS_TEST_DIR/media/long" 25
       - name: Package
         run: |
           ./scripts/package.sh
-          unzip -q dist/nomusic-*.zip -d "$RUNNER_TEMP/nomusic"
+          unzip -q dist/musicless-*.zip -d "$RUNNER_TEMP/musicless"
       - name: Browser tests of the package on local Media Source pages
         working-directory: tests
-        run: NOMUSIC_EXTENSION="$RUNNER_TEMP/nomusic" MEDIA_SET=synth QUICK=1 node local.mjs
+        run: MUSICLESS_EXTENSION="$RUNNER_TEMP/musicless" MEDIA_SET=synth QUICK=1 node local.mjs
       # Evidence stays in the run log: profiles, recordings and media are not uploaded.
