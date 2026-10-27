@@ -31,7 +31,7 @@ Those directories are not in git. Do not commit them.
 Load the `extension` folder at `chrome://extensions` with Developer mode
 on, then choose Load unpacked. Reload any YouTube tab that was already open.
 
-The first time, choose **Turn on Musicless** on the welcome page. Until you
+The first time, choose **Turn on** on the welcome page. Until you
 do, Musicless does not remove music.
 
 ## Tests

@@ -164,7 +164,7 @@ pending for more than three weeks, contact developer support. Use deferred
 publishing if the release must wait for a chosen launch time.
 
 When you publish, install from the store in a clean profile, choose **Turn
-on Musicless**, and play one video. Put the store URL in the README's install
+on**, and play one video. Put the store URL in the README's install
 section, and in the repository homepage, only after the listing is live.
 
 ## 6. Edge Add-ons
