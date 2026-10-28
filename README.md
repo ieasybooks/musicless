@@ -5,13 +5,13 @@
   </picture>
 </h1>
 
-Musicless removes the background music from YouTube videos and keeps the voices:
-speech and singing. It is a browser extension. Separation runs on your
-computer. It is made for people who want to avoid music for religious or
-personal reasons, and for anyone who wants speech with less music.
+Musicless is a free browser extension that removes most of the background
+music from YouTube videos while keeping speech and singing. Turn it on once,
+then watch as usual.
 
-Some music can remain, most often quiet music under speech. Musicless uses
-Spleeter, an open-source separation model by Deezer.
+It’s for anyone who wants to watch with less music, whether for religious
+reasons or personal preference. Some music can remain, especially quiet
+background music behind speech. Everything runs on your computer.
 
 Musicless was called nomusic before its first release.
 
@@ -48,45 +48,45 @@ is no listing URL yet. This page will gain one after the listing is live.
 
 ## Using Musicless
 
-- **Turn it on once.** Choose **Turn on** on the page that opens after you
-  install it, or in the toolbar popup. Reload YouTube tabs that were already
-  open.
-- **Then just play videos.** Musicless removes the music by itself. Each video
-  waits a few seconds as it starts (about 2 to 4 on a typical laptop), with
-  YouTube's spinner and **Removing music** under it. A jump to a part that has
-  not loaded yet can wait again.
-- **One video with its music.** Use Musicless's button in the player's control
-  bar, left of captions (in embedded players, in the top row): a music note,
-  struck through while the music is removed. Its tooltip says what a click
-  does. Click it again to remove the music again.
-- **Choosing videos yourself.** In the toolbar popup, turn off **Remove music
-  from every video**. Then use the player button on the videos you choose.
-- **On Shorts**, the button sits with the Short's own buttons, at its top.
-- **A play button in the middle** of the video means the browser needs a
-  click before it plays sound. Click it.
-- **When the music can't be removed**, the video stays paused and silent, and
-  a dialog says why: choose **Try again** (or **Reload page**), or **Play with
-  music**. Copy-protected videos, such as rented movies, can only play with
-  their music. A video that was already playing when you turned Musicless on
-  needs a reload.
+- **Start watching.** Choose **Turn on** after installation, then open YouTube.
+  If YouTube was already open, reload that page. You can also turn Musicless
+  on from its icon in the browser toolbar.
+- **Give it a few seconds.** Musicless removes music automatically. A video
+  usually takes 2 to 4 seconds to start on a typical laptop. You’ll see the
+  loading spinner and **Removing music** while you wait. Jumping ahead in a
+  video may cause another short pause.
+- **Bring the music back.** Click the crossed-out music note in the video.
+  Its tooltip says **Bring back music**. Click it again to **Remove music**.
+  The button is next to captions on a regular YouTube video, and among the
+  top buttons on Shorts and supported embedded videos.
+- **Choose videos yourself.** Open Musicless from the browser toolbar and
+  turn off **Remove music automatically**. Then click the music note on any
+  video where you want to remove the music.
+- **If a play button appears in the middle**, click it to start the sound.
+- **If music removal fails**, the video pauses and stays silent. Choose
+  **Try again** or **Reload page** when offered, or choose **Play with music**
+  to continue with the music. Copy-protected videos, such as rentals, can
+  only play with their music.
 
-Volume, mute, speed changes (the voice keeps its pitch), seeking, fullscreen,
-live streams, ads and embedded YouTube players work.
+Volume, mute, fullscreen and playback speed work as usual. You can jump to
+another part of the video, watch Shorts or live streams, and use supported
+YouTube videos on other websites. Musicless does not block ads.
 
 Something not working? [Report a problem](https://github.com/IbraheemTuffaha/musicless/issues/new?template=bug.yml).
 Help in Arabic: [استخدام Musicless](docs/help.ar.md).
 
 ## What to expect
 
-- **Quality.** Voices are kept and instrument sounds removed, but some music
-  can remain. The voice loses some brightness, because sound above 11 kHz is
-  dropped. This is not a guarantee of music-free playback.
-- **Speed.** Each 12 seconds of audio takes about 2.5 seconds of one processor
-  core on a mid-range laptop, so Musicless stays ahead of playback.
-- **Memory.** About 400 MB while it is working, shared by all tabs. It is
-  released a few minutes after the last video is paused or closed.
-- **Limits.** YouTube only, on computers. A live stream watched right at its
-  live point keeps pausing. Watching a little behind it reduces the pauses.
+- **Some music may remain.** Quiet background music behind speech is
+  particularly difficult to remove. Voices can also sound a little duller.
+  Musicless cannot guarantee completely music-free playback.
+- **It uses your computer.** Music removal uses your processor and about
+  400 MB of memory, shared across tabs. Slower computers may need more time.
+  The memory is freed a few minutes after the last video is paused or closed.
+- **Live streams may pause.** Watching a little behind the live broadcast
+  reduces the pauses.
+- **YouTube on a computer only.** Phone browsers and other video services
+  are not supported.
 
 ## Privacy
 

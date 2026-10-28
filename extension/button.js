@@ -190,7 +190,7 @@ export class Button {
       if (status === "setup") openWelcome();
       else if (this.session.failure) this.openRecovery({ focus: true });
       else if (status === "blocked") {
-        // What the tooltip says, "Stop removing music"; the click also lets
+        // What the tooltip says, "Bring back music"; the click also lets
         // the page play sound, so the music is heard. The play button in the
         // middle is the way to start the sound with the music removed.
         this.session.toggle();

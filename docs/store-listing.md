@@ -36,26 +36,25 @@ category. This is a recommendation, not a category Google requires by name.
 **Detailed description:**
 
 ```text
-Musicless reduces background music while keeping the voices: speech and singing. Compatible with YouTube™. It is made for people who want to avoid music for religious or personal reasons, and anyone who prefers voices with less background music.
+Watch YouTube™ with less background music, while keeping speech and singing. Musicless is for anyone who wants to avoid music for religious or personal reasons, or simply prefers to hear the voices.
 
-How it works
-• Audio separation runs on your computer using a bundled, open-source model. No account or backend service is needed.
-• After you choose Turn on, automatic removal is on by default. Turn it off in the toolbar if you prefer to choose videos one by one.
-• Each video waits a few seconds as it starts, while the music is removed: YouTube's spinner shows in the middle of the video, with Removing music under it. A seek can wait again.
-• Musicless's button sits in the player's control bar, left of captions (on Shorts, with the Short's own buttons): a music note, struck through while the music is removed. Click it to play the video with its music, and again to remove the music.
+Turn it on and watch
+• Choose Turn on after installation. Musicless then removes music automatically. If YouTube was already open, reload that page.
+• Give it a few seconds at the start of each video. You’ll see Removing music while you wait. Jumping ahead may cause another short pause.
+• Click the crossed-out music note in the video to Bring back music. Click it again to Remove music.
+• To choose videos yourself, open Musicless from the browser toolbar and turn off Remove music automatically. Then use the music note on the videos you choose.
 
-Playback controls
-Volume, mute, seeking, fullscreen, and speed changes are supported. Musicless also works with supported Shorts, live streams, and embedded players on computers.
+Your usual controls still work: volume, mute, fullscreen and playback speed. You can jump to another part of the video, watch Shorts or live streams, and use supported YouTube videos on other websites. Musicless works on computers, not phone browsers or other video services.
 
-Privacy
-Musicless reads audio that the site's own player has already loaded and processes it in browser memory only for music removal. Audio is never uploaded, shared, or saved as a file. It does not offer media downloads, recording, or audio export. The developer receives no audio, browsing history, or usage analytics. The automatic-removal setting, and whether you have turned Musicless on, are stored with Chrome's extension storage and may sync between your devices through Chrome Sync. A random token that lets Musicless's processing frame accept only Musicless itself stays on this computer.
+What to expect
+• Some music may remain, especially quiet background music behind speech. Voices can sound a little duller. Musicless cannot guarantee completely music-free playback.
+• Music removal uses your computer’s processor and about 400 MB of memory. Performance varies by computer and video.
+• If removal fails, the video pauses and stays silent. Choose Try again or Reload page when offered, or Play with music to continue with the music. Copy-protected videos, such as rentals, can only play with their music.
+• If a play button appears in the middle of the video, click it to start the sound.
+• If a live stream keeps pausing, try watching a little behind the live broadcast.
 
-Limits to know
-• Some music may remain, especially quiet background music under speech. Voices can sound less bright. This is not a guarantee of music-free playback.
-• Processing uses one CPU thread and about 400 MB of memory; performance varies by computer and video.
-• When removal fails, the video pauses and stays silent, and a dialog ("Couldn’t remove the music") offers Try again (or Reload page) and Play with music. Copy-protected videos cannot be processed: they can only play with their music. If the browser is waiting for a click before it plays sound, a play button shows in the middle of the video.
-• A live stream watched right at its live point keeps pausing. Watching a little behind it reduces the pauses.
-• This extension supports the listed site's desktop players, not phone browsers or other video services.
+Your audio stays on your computer
+Musicless uses the audio already loaded by YouTube to remove music during playback. It never uploads, shares or saves that audio. It does not offer recording, media downloads or audio export. No account is needed, and the developer receives no audio, browsing history or usage analytics. Your automatic-removal choice and whether you have turned Musicless on may sync between your devices through Chrome Sync. YouTube still loads the video through its own service.
 
 Free and open source. Code and help: https://github.com/IbraheemTuffaha/musicless
 Privacy policy: https://github.com/IbraheemTuffaha/musicless/blob/main/docs/privacy.md
@@ -63,7 +62,7 @@ Privacy policy: https://github.com/IbraheemTuffaha/musicless/blob/main/docs/priv
 Musicless is an independent project and is not affiliated with or endorsed by YouTube or Google. YouTube is a trademark of Google LLC. Use of this trademark is subject to Google Permissions.
 ```
 
-The player's words in that text are: Remove music and Stop removing music
+The player's words in that text are: Remove music and Bring back music
 (the button's tooltips), Removing music (under the spinner while a video
 starts), Couldn’t remove the music (the dialog), Try again (or Reload page) and
 Play with music (its choices).
@@ -167,7 +166,7 @@ Purpose: local background-music reduction during playback, keeping speech and si
 
 1. Install the submitted package on a desktop Chrome version supported by the manifest. A first-run page opens; Musicless does not process audio until you choose Turn on there (or Turn on in the toolbar popup, under the same disclosure). Before that, the player button shows a music note with a small dot; its tooltip says Turn on Musicless and it opens that page, which then offers Back to the video (it reloads that video where it was). A video that was already playing when Musicless was turned on shows "Musicless is on" and Reload page. Reload website tabs that were open before installation.
 2. Open a normal, non-copy-protected YouTube video with speech over background music. A public video works; no YouTube login is required for ordinary public playback. Leave the video unmuted. The first audio may take a few seconds to prepare; the video waits during preparation, with YouTube's spinner in the middle of the video and "Removing music" under it.
-3. Musicless's button sits in the player's control bar, left of captions: a struck-through music note while separation is on. Listen for reduced instruments with retained speech and singing. Some music leakage is expected and is disclosed. Click the button (tooltip: Stop removing music) to hear the original, then click it again (tooltip: Remove music) to turn removal back on.
+3. Musicless's button sits in the player's control bar, left of captions: a struck-through music note while separation is on. Listen for reduced instruments with retained speech and singing. Some music leakage is expected and is disclosed. Click the button (tooltip: Bring back music) to hear the original, then click it again (tooltip: Remove music) to turn removal back on.
 4. Try volume, mute, a seek, and a speed change. Check an embedded player as well (the button sits in its top row of buttons) and a Short (the button sits with the Short's own buttons at its top). In the toolbar popup, turn automatic removal off, open another supported video, and click the button on its player.
 5. If processing fails or the content is copy-protected, the video remains paused and the original track stays silent, and a dialog ("Couldn’t remove the music") offers Try again or Play with music. Some failures show Reload page instead of Try again; copy-protected videos offer only Play with music. This is deliberate fail-closed behavior. DRM is not bypassed. A live stream at the live edge can pause repeatedly; test slightly behind the edge.
 6. Choose an Arabic browser UI locale and verify the localized controls, first-run page, and right-to-left layout. English and Arabic have identical features and privacy behavior.
@@ -197,7 +196,7 @@ There is no "100% music-free" claim.
 
 | File | What it shows | Caption |
 | --- | --- | --- |
-| `en-1-music-removed.png` | Musicless's struck note in YouTube's control bar, its tooltip "Stop removing music" | Removes most of the music. Keeps the voices. |
+| `en-1-music-removed.png` | Musicless's struck note in YouTube's control bar, its tooltip "Bring back music" | Removes most of the music. Keeps the voices. |
 | `en-2-turn-on-once.png` | The first-run page: the disclosure and Turn on | Turn it on once. Then it works by itself. |
 | `en-3-you-choose.png` | The recovery dialog: Couldn’t remove the music, Play with music, Try again | If the music can’t be removed, the video waits for you. |
 | `en-4-one-setting.png` | The toolbar popup: the one setting and Help | One setting. Everything runs on your computer. |
