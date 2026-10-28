@@ -183,7 +183,7 @@ After `main` is the extension, and before you announce it:
 1. **Description.** "Removes the background music from YouTube videos and keeps the voices. A Chrome extension; everything runs on your computer."
 2. **Topics.** `browser-extension`, `chrome-extension`, `chromium`, `webextension`, `youtube`, `privacy`, `onnx`, `webassembly`.
 3. **Homepage.** Empty until the Chrome Web Store listing is live, then that listing URL.
-4. **Social preview.** A PNG, JPG, or GIF under 1 MB, ideally 1280×640. The store tile is 440×280, so use a different image. A workable line is "YouTube, without the music".
+4. **Social preview.** Upload [store/github-social-1280x640.png](store/github-social-1280x640.png), the supplied 1280×640 Musicless image.
 5. **License.** Confirm the About box says MIT.
 6. **Private vulnerability reporting.** Turn it on. [SECURITY.md](../SECURITY.md) points at that form.
 7. **Dependabot.** Turn on alerts and security updates. `.github/dependabot.yml` covers Actions version updates only.
