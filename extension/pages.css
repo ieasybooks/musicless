@@ -160,7 +160,8 @@ h1:focus-visible {
   cursor: pointer;
 }
 .popup .hint { color: var(--muted); text-wrap: pretty; }
-.popup #settings .hint { margin: -4px 0 0; padding: 0 16px 12px; }
+/* Keep helper text below the setting row, outside its hover background. */
+.popup #settings .hint { margin: 0; padding: 0 16px 12px; }
 .popup .hint .glyph { background: var(--muted); }
 /* Help: a second row under a hairline, its sign where the switch is. */
 .popup .row {
