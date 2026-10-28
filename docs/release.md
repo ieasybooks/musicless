@@ -14,8 +14,9 @@ On Linux, before the tag:
    They reject a version they have already accepted. For this first package
    that version is `1.0.0`, and the tag is `v1.0.0`.
 2. **Dates.** If you tag on a later day, set the `## [1.0.0]` date in
-   `CHANGELOG.md` and **Last updated** in `docs/privacy.md` (English and
-   Arabic) to that day.
+   `CHANGELOG.md` and **Last updated** in `docs/privacy.md` and
+   `extension/privacy.html` (English and Arabic) to that day. Keep the policy
+   text in those two files in sync.
 3. **Build.** `./setup.sh --dev`. It checks every download and the built
    model against the pinned SHA-256.
 4. **Unit tests.** `cd tests && npm run unit`.
@@ -41,6 +42,9 @@ On Linux, before the tag:
    has no debug recorder and no audio-export path. Confirm the unzipped tree
    before you tag. The workflow builds the zip you will actually upload. This
    local zip is only for the listen pass.
+   Open **Privacy policy** from both the welcome page and the popup while
+   offline: the bundled page must open in a new tab without turning Musicless
+   on. Check both languages and light/dark appearance.
 
 On macOS and on Windows, with the same unzipped release, before you publish
 the store item:
