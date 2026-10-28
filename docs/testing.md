@@ -60,8 +60,8 @@ hold), speed changes, volume, fullscreen, the button, the next video in the
 same player, three minutes of continuous play, preparing before play, muted
 videos, the setting, the words of a video's first wait, consent through the
 real controls (the first-run page by keyboard, the popup's button, the Arabic
-page, and Back to the video from a video's button), every failure path (Try
-again or Reload page, and Play with music; only Play with music where nothing
+page, and Back to the video from a video's button), failure recovery (Reload
+page and Play with music; only Play with music where nothing
 can help; a closed dialog coming back on play), two tabs sharing one model,
 capture memory on a long stream, a paused video releasing the model, the
 browser's real autoplay policy, and the extension being removed while a video
@@ -112,6 +112,21 @@ bar when YouTube wraps its captions button, on Shorts it joins the
 Short's own buttons, and in an embedded player it joins the top row of
 buttons. Run it after YouTube changes its player. (The local test page has no
 YouTube controls, so `local.mjs` covers the corner button instead.)
+
+```sh
+MEDIA_SET=synth node interface.mjs /path/to/test-media
+```
+
+Focused checks in real Chrome, using local media and no live YouTube: returning
+from setup while the video is muted, leaving replacement documents alone
+(including after Back/Forward-cache restoration), reloading only the requesting
+frame of an embedded player,
+recovery-dialog keyboard focus, tooltip dismissal, stable Shorts button
+placement and the inline glyph in forced-colors mode. The player UI checks
+use the real Button module with a fixture Session; the return checks install
+the extension and play synthetic media. The Session unit tests also cover
+retrying a failure in place. `PORT` can select a local port; this suite chooses
+a free one by default.
 
 ## Store images
 

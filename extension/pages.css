@@ -163,6 +163,9 @@ h1:focus-visible {
 /* Keep helper text below the setting row, outside its hover background. */
 .popup #settings .hint { margin: 0; padding: 0 16px 12px; }
 .popup .hint .glyph { background: var(--muted); }
+@media (forced-colors: active) {
+  .glyph, .popup .hint .glyph { forced-color-adjust: none; background: CanvasText; }
+}
 /* Help: a second row under a hairline, its sign where the switch is. */
 .popup .row {
   display: flex;

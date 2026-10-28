@@ -7,7 +7,7 @@
 import { Button } from "./button.js";
 import { CaptureBus } from "./capture-bus.js";
 import { Engine } from "./engine.js";
-import { debugEnabled, Session } from "./session.js";
+import { debugEnabled, reloadPage, Session } from "./session.js";
 import { loadSettings, onSettingsChanged, settings } from "./settings.js";
 
 const capture = new CaptureBus();
@@ -179,16 +179,14 @@ onSettingsChanged(() => {
   }
 });
 
-// "Back to the video" on the first-run page (only Musicless's own pages can send
-// this): a video whose sound went by before Musicless was turned on is reloaded
-// where it was, as its dialog's "Reload page" does.
+// "Back to the video" targets the document that opened setup. Reload its visible
+// video where it is now, even if muted audio has not reported a missed capture.
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message?.type !== "reload") return;
-  // The answer first (this page is Musicless's: no reload from outside), then
-  // the reload, which would cut the answer off.
-  sendResponse(true);
-  const missed = [...controllers.values()].find(({ session }) => session.failure?.reason === "missed");
-  if (missed) setTimeout(() => missed.session.retry());
+  const current = [...controllers.values()].find(({ video }) => hasBox(video));
+  // Queue the reload so its acknowledgment arrives before navigation cuts it off.
+  if (current) setTimeout(() => reloadPage(current.video.currentTime));
+  sendResponse(!!current);
 });
 
 loadSettings().finally(() => {

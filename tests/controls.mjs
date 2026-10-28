@@ -226,6 +226,9 @@ await step("on Shorts the button joins the Short's own buttons, and shows and hi
   await sleep(1500);
   const clicked = await look();
   await shorts.mouse.move(2, 400, { steps: 3 });
+  // YouTube keeps a focused control row visible. Move focus out as well as
+  // the pointer before checking its fade; repositioning must not blur it.
+  await shorts.mouse.click(2, 400);
   await sleep(3000);
   const hiddenWithRow = await look();
   report.record("on Shorts the button joins the Short's own buttons, and shows and hides with them",

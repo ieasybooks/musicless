@@ -196,7 +196,6 @@ export class Button {
         this.session.toggle();
         this.session.returnToOriginal();
       } else this.session.toggle();
-      this.showTip();
     }));
     // A play attempt while a failure waits for the user's choice (the dialog
     // was closed) brings the choice back. Our own hold re-pauses the video, so
@@ -393,11 +392,11 @@ export class Button {
     panel.setAttribute("role", "alertdialog");
     panel.setAttribute("aria-labelledby", this.recoveryTitle.id);
     keepKeys(panel, { all: true });
-    // While it is open, wherever focus is: Escape closes it, Tab moves between
-    // its two actions.
+    // Escape closes it; Tab cycles its actions only while focus is inside.
     this.onKeys = (event) => {
       const escape = event.key === "Escape" && !typing();
-      if (this.recovery.hidden || !(escape || event.key === "Tab")) return;
+      const tab = event.key === "Tab" && this.recovery.contains(document.activeElement);
+      if (this.recovery.hidden || !(escape || tab)) return;
       event.preventDefault();
       event.stopPropagation();
       if (escape) return this.dismiss();
@@ -505,7 +504,9 @@ export class Button {
     const row = controlRow(host);
     let inRow = !!row;
     try {
-      if (row && (this.el.parentElement !== row.row || this.el.nextElementSibling !== row.before)) row.row.insertBefore(this.el, row.before);
+      if (row && row.before !== this.el && (this.el.parentElement !== row.row || this.el.nextElementSibling !== row.before)) {
+        row.row.insertBefore(this.el, row.before);
+      }
     } catch {
       inRow = false; // whatever YouTube changed in its row, the corner still works
     }

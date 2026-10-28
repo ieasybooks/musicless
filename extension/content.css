@@ -273,7 +273,7 @@
 .ytp-big-mode .musicless-notice__text { top: calc(50% + 88px); height: 34px; padding: 0 12px; border-radius: 10px; font-size: 18px; line-height: 34px; }
 .ytp-big-mode .musicless-notice[data-kind="action"] .musicless-notice__disc { width: 144px; height: 144px; margin: -72px 0 0 -72px; }
 .ytp-big-mode .musicless-notice__disc svg { width: 90px; height: 90px; }
-.ytp-big-mode .musicless-dialog { width: min(440px, calc(100% - 24px)); }
+.ytp-big-mode .musicless-dialog { width: 440px; max-width: calc(100% - 24px); }
 .ytp-big-mode .musicless-dialog__title { font-size: 20px; line-height: 28px; }
 .ytp-big-mode .musicless-dialog__message,
 .ytp-big-mode .musicless-dialog__action { font-size: 17px; line-height: 24px; }

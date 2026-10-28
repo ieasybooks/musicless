@@ -22,16 +22,20 @@ not offer recording, media downloads, or audio export.
 
 ## Preferences
 
-Musicless stores three values with Chrome's extension storage: the
+Musicless stores the following with Chrome's extension storage: the
 automatic-removal setting; whether you have acknowledged the local-audio
 disclosure, by choosing **Turn on** on the first-run page or in the toolbar
 popup (both show the same disclosure); and a random token
 that lets Musicless's hidden processing frame accept connections only from
 Musicless itself. Chrome may sync the first two between your own devices when
-you enable Chrome Sync; the token stays on this device. The developer does not
-receive any of them. You can change the automatic-removal setting in the
-extension's toolbar popup. Removing Musicless removes its local extension storage. Any
-synced copy is managed by your browser's sync settings.
+you enable Chrome Sync; the token stays on this device. Opening setup from a
+video also stores the tab, frame and document identifiers temporarily, so
+**Back to the video** returns to that page. These identifiers are not synced
+and are cleared when you choose that button or the browser session ends.
+The developer does not receive any of these values. You can change the
+automatic-removal setting in the extension's toolbar popup. Removing Musicless
+removes its local extension storage. Any synced copy is managed by your
+browser's sync settings.
 
 ## Other services
 
@@ -53,7 +57,7 @@ For privacy questions, use the contact email displayed on the Chrome Web Store
 listing or <https://github.com/IbraheemTuffaha/musicless/issues>. Do not post
 sensitive information in public issues.
 
-Last updated: 26 October 2026.
+Last updated: 28 October 2026.
 
 ## العربية
 
@@ -82,13 +86,16 @@ before the store submission. The Latin name Musicless is the product name.
 
 ### التفضيلات
 
-يخزّن Musicless ثلاث قيم في مساحة تخزين إضافات Chrome: إعداد الإزالة التلقائية؛
+يخزّن Musicless القيم التالية في مساحة تخزين إضافات Chrome: إعداد الإزالة التلقائية؛
 وما إذا كنت قد أقررت بالاطلاع على الإفصاح بشأن معالجة الصوت على الحاسوب،
 باختيار **تفعيل** في صفحة التشغيل الأول أو في نافذة الإضافة المنبثقة في شريط
 الأدوات (وكلتاهما تعرض الإفصاح نفسه)؛ ورمزًا عشوائيًا يجعل إطار
 المعالجة المخفي في Musicless لا يقبل الاتصال إلا من Musicless نفسه. قد يزامن Chrome
 القيمتين الأوليين بين أجهزتك عندما تفعّل Chrome Sync، أما الرمز فيبقى على هذا
-الجهاز. ولا يتلقى المطوّر أيًّا منها. يمكنك تغيير إعداد الإزالة التلقائية من
+الجهاز. وعند فتح صفحة التشغيل الأول من أحد الفيديوهات، يحتفظ Musicless مؤقتًا
+بمعرّفات علامة التبويب والإطار والصفحة للعودة إليها عبر زر **العودة إلى الفيديو**.
+لا تتم مزامنة هذه المعرّفات، وتُحذف عند اختيار هذا الزر أو انتهاء جلسة المتصفح.
+ولا يتلقى المطوّر أيًّا من هذه القيم. يمكنك تغيير إعداد الإزالة التلقائية من
 نافذة الإضافة المنبثقة في شريط الأدوات. تؤدي إزالة إضافة Musicless إلى حذف
 بياناتها من مساحة التخزين المحلية للإضافة. وتُدار أي نسخة متزامنة من خلال
 إعدادات المزامنة في متصفحك.
@@ -114,4 +121,4 @@ before the store submission. The Latin name Musicless is the product name.
 <https://github.com/IbraheemTuffaha/musicless/issues>. لا تنشر معلومات حساسة في
 طلبات الدعم العلنية.
 
-آخر تحديث: 26 أكتوبر 2026.
+آخر تحديث: 28 أكتوبر 2026.

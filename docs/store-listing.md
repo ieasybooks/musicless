@@ -98,7 +98,7 @@ Reduce background music during YouTube video playback while preserving voices, b
 **`storage`:**
 
 ```text
-Stores the automatic music-removal preference and whether the user has acknowledged the first-run local-audio disclosure (Turn on) in chrome.storage.sync, so Musicless starts consistently and does not repeat the disclosure; both may sync between the user's own devices through Chrome Sync. Also stores a random token in chrome.storage.local that the extension's own hidden processing frame checks, so that web pages cannot connect to it. No audio, video, browsing-history log, or analytics is stored in extension storage.
+Stores the automatic music-removal preference and whether the user has acknowledged the first-run local-audio disclosure (Turn on) in chrome.storage.sync, so Musicless starts consistently and does not repeat the disclosure; both may sync between the user's own devices through Chrome Sync. Also stores a random token in chrome.storage.local that the extension's own hidden processing frame checks, so that web pages cannot connect to it. Opening setup from a video temporarily stores its tab, frame and document identifiers in chrome.storage.session for Back to the video; these are not synced and are cleared on return or when the browser session ends. No audio, video, browsing-history log, or analytics is stored in extension storage.
 ```
 
 Re-read this against the keys the extension actually writes. If the

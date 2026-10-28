@@ -18,18 +18,17 @@ $("accept").addEventListener("click", async () => {
   $("doneHeading").focus();
 });
 
-// Opened from a video's button (background.js keeps its tab): the way back to
-// that video ends the page, reloaded where it was, since its sound went by
-// before Musicless was on. It needs no permission: the tab is known by its id.
+// Opened from a video's button: return to its tab and ask that same document
+// to reload where it was. A different page later in the tab must be left alone.
 let videoTab = null;
-function offerBack(id) {
-  videoTab = Number.isInteger(id) ? id : null;
+function offerBack(tab) {
+  videoTab = Number.isInteger(tab?.id) && Number.isInteger(tab.frameId) && typeof tab.documentId === "string" ? tab : null;
   $("back").hidden = videoTab === null;
   $("open").hidden = videoTab !== null;
   $("doneText").hidden = videoTab !== null; // the one tab that matters is reloaded by the button
 }
-chrome.storage.session.get("videoTab").then(({ videoTab: id }) => {
-  if (Number.isInteger(id)) chrome.tabs.get(id).then(() => offerBack(id), () => offerBack(null));
+chrome.storage.session.get("videoTab").then(({ videoTab: tab }) => {
+  if (Number.isInteger(tab?.id)) chrome.tabs.get(tab.id).then(() => offerBack(tab), () => offerBack(null));
 });
 // Turned on in the popup meanwhile; or another video's button asked.
 chrome.storage.onChanged.addListener((changes, area) => {
@@ -37,14 +36,16 @@ chrome.storage.onChanged.addListener((changes, area) => {
   if (area === "session" && "videoTab" in changes) offerBack(changes.videoTab.newValue);
 });
 $("back").addEventListener("click", async () => {
-  const id = videoTab;
+  const target = videoTab;
   chrome.storage.session.remove("videoTab");
   try {
-    const tab = await chrome.tabs.update(id, { active: true });
+    const tab = await chrome.tabs.update(target.id, { active: true });
     await chrome.windows.update(tab.windowId, { focused: true });
-    // Its own page reloads it where the video was; a page Musicless no longer
-    // runs in (an update) is reloaded from here.
-    await chrome.tabs.sendMessage(id, { type: "reload" }).catch(() => chrome.tabs.reload(id));
+    // Both IDs matter: a document alone can still be in the Back/Forward cache.
+    // Ask only if it is still the active document in the original frame.
+    await chrome.tabs.sendMessage(target.id, { type: "reload" }, {
+      frameId: target.frameId, documentId: target.documentId,
+    }).catch(() => {});
   } catch {
     location.href = $("open").href; // the tab is gone: YouTube, here
     return;

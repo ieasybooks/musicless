@@ -56,7 +56,7 @@ export const debugEnabled = () => DEBUG;
 const RELOAD = new Set(["updated", "missed", "uncaptured", "engine", "audio"]);
 
 // Reload the page; a YouTube watch page keeps its position.
-function reloadPage(time) {
+export function reloadPage(time) {
   if (/^(www|m)\.youtube\.com$/.test(location.hostname) && location.pathname === "/watch" && time >= 1) {
     const url = new URL(location.href);
     url.searchParams.set("t", `${Math.floor(time)}s`);

@@ -221,7 +221,7 @@ for (const variant of VARIANTS) {
   });
 
   await step(`${tag} the auto-hidden button lets clicks through to the video`, async () => {
-    await settled(page, "on before the controls hide"); // working states stay visible by design
+    await settled(page, "on before the controls hide");
     // As in YouTube's player while its controls are hidden (".ytp-autohide").
     const hidden = await page.evaluate(async () => {
       const button = document.querySelector(".musicless-btn");

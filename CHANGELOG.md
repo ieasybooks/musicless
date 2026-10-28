@@ -31,12 +31,12 @@ It is not a previous version of this extension.
 - Works in Chrome, Edge, Brave, and other Chromium browsers, version 111
   or newer, on a computer.
 - A first-run choice, **Turn on**, on a one-screen first-run page (or the
-  popup's one switch), before a video is processed. After that, removal starts on its own.
+  popup's Turn on button), before a video is processed. After that, removal starts on its own.
   One toolbar setting turns that off.
 - A button in YouTube's own control bar (the top row in embedded players): a
   note while the music plays, the note struck through while it is removed.
   While the first audio is prepared, YouTube's spinner shows in the middle of
-  the video, and "Removing music" at the top when the wait lasts.
+  the video, with "Removing music" beneath it.
 - When the music cannot be removed, the video stays paused and silent until
   you choose Try again or Play with music. Some cases ask you to reload the
   page. While the browser does not let sound play yet, the video waits for a

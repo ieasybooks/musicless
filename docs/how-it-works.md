@@ -31,7 +31,7 @@ video plays, and plays them in place of the original track.
 | `model-worker.js`, `model.js` | One copy of the model for every tab (a shared worker; WebCodecs is not available there, which is why decoding stays per tab). A priority queue puts the chunk a playing video needs first. |
 | `grid.js` | The model's numbers and the fixed window grid, shared by both sides (`tests/reference.py` mirrors them). |
 | `stretch.js`, `third_party/soundtouch` | Pitch-preserving time-stretch for speeds other than 1x. |
-| `popup.*`, `welcome.*`, `background.js`, `settings.js` | The toolbar popup, the first-run page, and the stored values: the automatic-removal setting and whether the user chose **Turn on** (`chrome.storage.sync`), and the frame's token (`chrome.storage.local`). |
+| `popup.*`, `welcome.*`, `background.js`, `settings.js` | The toolbar popup, the first-run page, and the stored values: the automatic-removal setting and whether the user chose **Turn on** (`chrome.storage.sync`), the frame's token (`chrome.storage.local`), and the tab/frame/document identifiers for **Back to the video**, cleared on return or browser-session end (`chrome.storage.session`). |
 
 ## Separation
 
@@ -90,15 +90,18 @@ chunk a playing video needs comes before look-ahead work in any tab.
 
 ## Before Musicless is turned on
 
-On install, the first-run page says in two sentences what Musicless does with
+On install, the first-run page explains what Musicless does with
 audio and asks the user to choose **Turn on** (the toolbar popup shows the
 same words and the same button). Until then Musicless reads no audio: capture
 keeps only format headers, no session routes or separates anything, and the
 button on the player ("Turn on Musicless", the note with a small dot) opens the
 first-run page. Opened that way, the page ends with **Back to the video**: the
-background script kept the tab that asked, and the page focuses it and has it
-reload where the video was (`tabs.update` and a message to that tab need no
-permission). A video whose audio went by before Musicless was turned on is not
+background script kept the tab, frame and document that asked. The page focuses
+that tab and reloads where the video is, including when muted, only if the
+original document is still active in that frame. If the tab has navigated
+elsewhere, the new page is left alone.
+Neither focusing the tab nor messaging that document needs an extra permission.
+A video whose audio went by before Musicless was turned on is not
 shown as a failure: its dialog says "Musicless is on" and offers **Reload page**.
 
 ## Failing closed
@@ -161,6 +164,7 @@ audio per video.
 | `capture.js` → content script | `window.postMessage`, `musicless: "capture"` | `stream` (an id and its `blob:` URL), `closed`, `replay` (the audio kept so far, and whether some went by unkept), `event` (one new entry) | `capture-bus.js`: shapes, types, finite numbers, sizes |
 | `intent.js` → content script | a `musicless:playback-intent` event on the `<video>` | the page's own `play()` or `pause()` | `playback-intent.js`: a boolean, nothing else |
 | Content script → service worker | `chrome.runtime.sendMessage` | `engine-token`, `open-welcome` | Only the extension's own scripts can send these |
+| First-run page → originating document | `chrome.tabs.sendMessage`, scoped by frame and document IDs | `reload` | The content script queues a position-preserving reload for its visible video and acknowledges whether it was scheduled; a missing receiver never triggers a tab-wide reload |
 | Content script → hidden frame | `postMessage` to the extension's origin, with a port | `musicless-port` (the token) | `separator.js`: the token, one connection |
 | Hidden frame → tab worker | `Worker.postMessage` | `port` (the content script's port and one to the model), `shared-model-failed` | — |
 | Content script ⇄ tab worker | the handed-over port | to the worker: `stream`, `drop`, `entries`, `replayed`, `want`, `stats`, `ping`; from it: `connected`, `model`, `chunk`, `checked`, `changed`, `unsupported`, `error`, `stats`, `pong` | Nothing more: only the content script holds this port |
