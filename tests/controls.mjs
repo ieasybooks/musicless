@@ -112,16 +112,59 @@ await step("a click turns it off for this video, another turns it back on", asyn
     { off: { status: off.status, pressed: off.pressed, plain: off.plain, original_gain: off.originalGain }, on: { status: on.status, struck: b.struck } });
 });
 
-await step("it hides with YouTube's controls", async () => {
-  await page.mouse.move(2, 2);
-  let b = null;
-  const started = Date.now();
-  while (Date.now() - started < 12000) {
-    b = await button(page);
-    if (b.autohide && b.barOpacity === "0") break;
-    await sleep(250);
+await step("the tooltip hides with fullscreen controls while the pointer stays on the button", async () => {
+  const tipState = () => page.evaluate(() => {
+    const host = document.querySelector("#movie_player");
+    const tip = host.querySelector(".musicless-tip");
+    const video = host.querySelector("video");
+    const r = host.getBoundingClientRect();
+    return {
+      tipShown: !!tip && !tip.hidden && getComputedStyle(tip).display !== "none" && getComputedStyle(tip).visibility !== "hidden",
+      hovered: host.querySelector(".musicless-btn").matches(":hover"),
+      fullscreen: !!document.fullscreenElement && r.width >= innerWidth - 2 && r.height >= innerHeight - 2,
+      paused: video.paused, time: video.currentTime,
+    };
+  });
+  try {
+    // Finish the initial buffering cycle before YouTube changes its layout.
+    await page.waitForFunction(() => {
+      const video = document.querySelector("#movie_player video");
+      return !video.paused && video.currentTime > 23;
+    }, { timeout: 60000 });
+    await sleep(2000);
+    await showControls();
+    await page.click("#movie_player .ytp-fullscreen-button");
+    await page.waitForFunction(() => {
+      const r = document.querySelector("#movie_player").getBoundingClientRect();
+      return !!document.fullscreenElement && r.width >= innerWidth - 2 && r.height >= innerHeight - 2;
+    }, { timeout: 10000 });
+    await sleep(700); // fullscreen changes the control layout and may switch streams
+    await waitFor(page, (s) => s.status === "on" && !s.holding, { timeout: 60000, label: "fullscreen playback" });
+    await page.hover("#movie_player .musicless-btn");
+    await page.waitForFunction(() => document.querySelector("#movie_player .musicless-btn")?.matches(":hover") &&
+      document.querySelector("#movie_player .musicless-tip:not([hidden])"));
+    const before = await tipState();
+    // Do not move the pointer: opacity alone does not send pointerleave.
+    await page.waitForFunction(() => {
+      const host = document.querySelector("#movie_player");
+      return host.classList.contains("ytp-autohide") && getComputedStyle(host.querySelector(".ytp-chrome-bottom")).opacity === "0";
+    }, { timeout: 12000 });
+    const hidden = { ...(await button(page)), ...(await tipState()) };
+    const box = await page.$eval("#movie_player .musicless-btn", (el) => {
+      const r = el.getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    });
+    await page.mouse.move(box.x + 2, box.y + 1);
+    await sleep(500);
+    const returned = { ...(await button(page)), ...(await tipState()) };
+    report.record("the tooltip hides with fullscreen controls while the pointer stays on the button",
+      before.fullscreen && before.hovered && before.tipShown && hidden.fullscreen && hidden.hovered &&
+        !hidden.tipShown && !hidden.paused && hidden.time > before.time + 1 &&
+        !returned.autohide && returned.tipShown,
+      { before, hidden, returned });
+  } finally {
+    await page.evaluate(() => document.fullscreenElement ? document.exitFullscreen() : undefined);
+    await sleep(500);
   }
-  report.record("it hides with YouTube's controls", b.autohide && b.barOpacity === "0", b);
 });
 
 // YouTube changes this markup often: a captions button wrapped in a container

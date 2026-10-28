@@ -116,6 +116,11 @@
 .musicless-tip[lang="ar"],
 .musicless-notice[lang="ar"] .musicless-notice__text { font-size: 14px; }
 .musicless-tip { z-index: 2147483602; max-width: 260px; pointer-events: none; }
+/* The tooltip sits outside the fading bottom bar. Follow its hidden state
+   even when the pointer stays over the invisible button. */
+.ytp-autohide:has(.musicless-btn[data-place="ytp"]) .musicless-tip {
+  visibility: hidden;
+}
 
 /* One layer over the video while Musicless needs a wait or a click, below
    YouTube's controls (they stay usable). The wait: YouTube's own spinner
