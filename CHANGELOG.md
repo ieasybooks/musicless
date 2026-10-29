@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.0.0] - 2026-10-25
+## [1.0.0] - 2026-10-29
 
 First release of the extension. The interface is in English and Arabic.
 

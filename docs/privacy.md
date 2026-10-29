@@ -57,7 +57,7 @@ For privacy questions, use the contact email displayed on the Chrome Web Store
 listing or <https://github.com/IbraheemTuffaha/musicless/issues>. Do not post
 sensitive information in public issues.
 
-Last updated: 28 October 2026.
+Last updated: 29 October 2026.
 
 ## العربية
 
@@ -121,4 +121,4 @@ before the store submission. The Latin name Musicless is the product name.
 <https://github.com/IbraheemTuffaha/musicless/issues>. لا تنشر معلومات حساسة في
 طلبات الدعم العلنية.
 
-آخر تحديث: 28 أكتوبر 2026.
+آخر تحديث: 29 أكتوبر 2026.
