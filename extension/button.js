@@ -35,7 +35,7 @@ const STATES = {
   buffering: ["working", TEXT.restore, TEXT.working],
   on: ["active", TEXT.restore, ""],
   blocked: ["attention", TEXT.restore, t("notice_blocked")],
-  failed: ["error", t("control_failed"), ""],
+  failed: ["error", TEXT.remove, ""],
 };
 const WAITS = new Set(["starting", "buffering"]);
 // Failures that no retry and no reload can help: the video's own sound

@@ -20,7 +20,8 @@ Conventions
   video. The player toggle says what its click does: إزالة الموسيقى / إعادة الموسيقى.
   Instructions address the reader directly (اضغط، انتظر، جرّب), in plain Modern Standard
   Arabic rather than a dialect. Progress is جارٍ إزالة الموسيقى. Failure and enabled
-  states remain explicit: لم تُزَل الموسيقى and تم تفعيل Musicless.
+  states remain explicit: تعذّرت إزالة الموسيقى and تم تفعيل Musicless. The player
+  button keeps the action label إزالة الموسيقى after a failure; the dialog explains it.
 - Prefer a clear next step to an implementation detail. Keep the actual reason when it
   affects the choice, such as copy protection. Do not imply that a reload always works.
   Privacy copy must still explain audio access, local processing, no audio saving or
@@ -37,10 +38,9 @@ Conventions
 | `locale_dir` | ltr | <div dir="rtl">rtl</div> | Not translated: the catalog's writing direction. Pages and the in-player UI take their direction from it. |
 | `extension_name` | Musicless | <div dir="rtl">Musicless</div> | Brand; never translated or transliterated. |
 | `extension_description` | Removes most of the background music from YouTube™ videos and keeps the voices. Everything runs on your computer. | <div dir="rtl">يزيل معظم موسيقى الخلفية من فيديوهات YouTube™‎ ويُبقي الأصوات البشرية. يعمل كل شيء على حاسوبك.</div> | The store summary and the extensions-page description (132 characters at most). "Voices" = الأصوات البشرية, kept apart from "sound" (الصوت). In Arabic a left-to-right mark (U+200E) follows ™, so that it stays on YouTube's right in right-to-left text. |
-| `control_name` | Remove music | <div dir="rtl">إزالة الموسيقى</div> | Name of the player button (a toggle: screen readers add pressed or not) and its tooltip while the music plays. Like YouTube's own "Mute", it says what a click does. |
+| `control_name` | Remove music | <div dir="rtl">إزالة الموسيقى</div> | Name and tooltip of the player button. A click removes music, or opens recovery choices after a failure; the failure explanation stays in the dialog. |
 | `control_on` | Bring back music | <div dir="rtl">إعادة الموسيقى</div> | Restores this video’s music without implying that a paused video will start. The recovery choice remains Play with music / تشغيل مع الموسيقى. |
 | `control_setup` | Turn on Musicless | <div dir="rtl">تفعيل Musicless</div> | Tooltip and name of the player button before the first run, when it shows the note with a small dot; it opens the first-run page. On YouTube's page the brand names what will be turned on; تفعيل as on the first-run button. |
-| `control_failed` | Music not removed | <div dir="rtl">لم تُزَل الموسيقى</div> | Tooltip and name of the player button after a failure (the note with a small dot); a click opens the choice again. Failure state: لم تُزَل. |
 | `notice_working` | Removing music | <div dir="rtl">جارٍ إزالة الموسيقى</div> | Progress beneath the spinner. جارٍ إزالة الموسيقى is a familiar Arabic progress label, replacing the passive تُزال الموسيقى. |
 | `notice_done` | Music removal is on | <div dir="rtl">إزالة الموسيقى مفعّلة</div> | Not shown: screen readers hear it once when a wait ends and the video plays without its music. |
 | `notice_blocked` | Click to play | <div dir="rtl">انقر للتشغيل</div> | The name of the round play button in the middle of the video when the browser needs a click before it plays sound (read by screen readers; the button shows only the play sign). |

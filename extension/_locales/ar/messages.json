@@ -7,7 +7,6 @@
   "control_name": { "message": "إزالة الموسيقى" },
   "control_on": {"message": "إعادة الموسيقى"},
   "control_setup": { "message": "تفعيل Musicless" },
-  "control_failed": { "message": "لم تُزَل الموسيقى" },
   "notice_working": {"message": "جارٍ إزالة الموسيقى"},
   "notice_done": { "message": "إزالة الموسيقى مفعّلة" },
   "notice_blocked": { "message": "انقر للتشغيل" },

@@ -4,10 +4,9 @@
   "extension_name": { "message": "Musicless", "description": "The brand. Keep it in Latin letters in every language." },
   "extension_description": { "message": "Removes most of the background music from YouTube™ videos and keeps the voices. Everything runs on your computer.", "description": "Store summary and extensions-page description. 132 characters at most." },
 
-  "control_name": { "message": "Remove music", "description": "Name and tooltip of the player button while the music plays; a click removes it. Like YouTube's \"Mute\", it says what a click does." },
+  "control_name": { "message": "Remove music", "description": "Name and tooltip of the player button while removal is off or has failed. A click removes music, or opens recovery choices after a failure." },
   "control_on": {"message": "Bring back music", "description": "Name and tooltip while music removal is on. A click restores this video’s music; it does not imply starting a paused video."},
   "control_setup": { "message": "Turn on Musicless", "description": "Tooltip and name of the player button before the first run (the note with a small dot); it opens the page that turns Musicless on." },
-  "control_failed": { "message": "Music not removed", "description": "Tooltip and name of the player button after a failure (the note with a small dot); a click reopens the choice." },
   "notice_working": { "message": "Removing music", "description": "Under the spinner in the middle of the video while it waits a moment for the first audio without music (at the start, or after a jump)." },
   "notice_done": { "message": "Music removal is on", "description": "Said once by screen readers when a wait ends and the video plays without its music." },
   "notice_blocked": { "message": "Click to play", "description": "Name, read by screen readers, of the round play button in the middle of the video when the browser needs a click before it plays sound." },

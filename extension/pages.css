@@ -165,6 +165,8 @@ h1:focus-visible {
 .popup .hint .glyph { background: var(--muted); }
 @media (forced-colors: active) {
   .glyph, .popup .hint .glyph { forced-color-adjust: none; background: CanvasText; }
+  /* System colors remove the fill; keep primary actions visibly button-shaped. */
+  button.primary, a.button { border: 1px solid currentColor; }
 }
 /* Help: a second row under a hairline, its sign where the switch is. */
 .popup .row {
