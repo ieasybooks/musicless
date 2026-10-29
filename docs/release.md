@@ -13,10 +13,12 @@ On Linux, before the tag:
 1. **Version.** `extension/manifest.json` `version` is what the stores see.
    They reject a version they have already accepted. For this first package
    that version is `1.0.0`, and the tag is `v1.0.0`.
-2. **Dates.** If you tag on a later day, set the `## [1.0.0]` date in
+2. **Dates.** On the day you plan to tag, set the `## [1.0.0]` date in
    `CHANGELOG.md` and **Last updated** in `docs/privacy.md` and
    `extension/privacy.html` (English and Arabic) to that day. Keep the policy
-   text in those two files in sync.
+   text in those two files in sync, and commit the date changes before
+   building and testing the package. Leave the dates alone during review;
+   they are finalized for the actual release day.
 3. **Build.** `./setup.sh --dev`. It checks every download and the built
    model against the pinned SHA-256.
 4. **Unit tests.** `cd tests && npm run unit`.
@@ -56,28 +58,45 @@ the store item:
 - Switch the browser language to Arabic and check right-to-left layout.
 - The extension stays usable at about 400 MB of extra memory while it runs.
 
-## 2. Keep the old backend, then move main
+## 2. Keep the old backend, then prepare main
 
-This is already prepared in the local repository: branch `backend` and the
-annotated tag `backend-final` point at the last backend commit on GitHub
-(`89006dce37924c3674c2d3d26caa25379dc163c4`), and `main` (the same commit as
-`release/v1`) has been rebased on top of it, so moving GitHub's `main` is a
-fast-forward. The backend files are removed in the commit "Make the offline
-extension the project".
+Branch `backend` and the annotated tag `backend-final` preserve the last
+backend commit on GitHub (`89006dce37924c3674c2d3d26caa25379dc163c4`). The backend
+files are removed in the commit "Make the offline extension the project".
 
-First check that nothing new landed on GitHub's `main` since then:
+The release candidate is `brand/musicless`. The older `release/v1` branch
+does not contain the redesign or rebrand. Finish reviewing and testing the
+candidate, including the release-day dates from step 1, before moving `main`.
+Review the history being published as well as the final files: deleting a
+file in a later commit does not remove its earlier versions.
+
+Start in a clean worktree and check the remote:
 
 ```sh
+git switch brand/musicless
+git status --short                # must be empty
 git fetch origin
 git rev-parse origin/main          # must print 89006dce37924c3674c2d3d26caa25379dc163c4
-git merge-base --is-ancestor origin/main main && echo "fast-forward: ok"
+git merge-base --is-ancestor origin/main brand/musicless
 ```
 
-If `origin/main` moved, stop: rebase `release/v1` onto it again
-(`git rebase --rebase-merges origin/main`), run the tests, point `main` at it,
-and move `backend` and `backend-final` to the new backend commit.
+If the remote changed or the ancestry check fails, stop and reconcile those
+changes with the reviewed Musicless candidate, then repeat the checks.
+Update the backend backup only if new backend commits need preserving.
 
-These commands push. Run them yourself:
+Advance local `main` to the candidate using a fast-forward:
+
+```sh
+git switch main
+git merge --ff-only brand/musicless
+git rev-parse main brand/musicless # both lines must show the same commit
+```
+
+If either command fails or the two commits differ, resolve that before
+pushing. This check must be repeated after any further candidate commits.
+
+These commands push only the intended branches and tag. Run them yourself
+after the checks above pass:
 
 ```sh
 git push origin refs/heads/backend refs/tags/backend-final
@@ -93,9 +112,11 @@ you put in the store.
 
 ## 3. Tag
 
-Tag the commit you just pushed. It contains `.github/workflows/release.yml`,
-and `manifest.json` says `1.0.0`. If you tag on a later day than the date in
-`CHANGELOG.md` and the privacy policy, update those dates first.
+Tag the tested commit you just pushed. It contains
+`.github/workflows/release.yml`, and `manifest.json` says `1.0.0`. If the
+tagging day changed, return to step 1: update and commit the dates on
+`brand/musicless`, rebuild and test, then repeat step 2 to advance and push
+`main` before tagging.
 
 ```sh
 git tag -a v1.0.0 main -m "Musicless 1.0.0"
