@@ -24,7 +24,7 @@ not offer recording, media downloads, or audio export.
 
 Musicless stores the following with Chrome's extension storage: the
 automatic-removal setting; whether you have acknowledged the local-audio
-disclosure, by choosing **Turn on** on the first-run page or in the toolbar
+disclosure, by choosing **Enable Musicless** on the first-run page or in the toolbar
 popup (both show the same disclosure); and a random token
 that lets Musicless's hidden processing frame accept connections only from
 Musicless itself. Chrome may sync the first two between your own devices when
@@ -88,7 +88,7 @@ before the store submission. The Latin name Musicless is the product name.
 
 يخزّن Musicless القيم التالية في مساحة تخزين إضافات Chrome: إعداد الإزالة التلقائية؛
 وما إذا كنت قد أقررت بالاطلاع على الإفصاح بشأن معالجة الصوت على الحاسوب،
-باختيار **تفعيل** في صفحة التشغيل الأول أو في نافذة الإضافة المنبثقة في شريط
+باختيار **تفعيل Musicless** في صفحة التشغيل الأول أو في نافذة الإضافة المنبثقة في شريط
 الأدوات (وكلتاهما تعرض الإفصاح نفسه)؛ ورمزًا عشوائيًا يجعل إطار
 المعالجة المخفي في Musicless لا يقبل الاتصال إلا من Musicless نفسه. قد يزامن Chrome
 القيمتين الأوليين بين أجهزتك عندما تفعّل Chrome Sync، أما الرمز فيبقى على هذا

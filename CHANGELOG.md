@@ -30,15 +30,18 @@ It is not a previous version of this extension.
   and its mask weighs the music estimate more.
 - Works in Chrome, Edge, Brave, and other Chromium browsers, version 111
   or newer, on a computer.
-- A first-run choice, **Turn on**, on a one-screen first-run page (or the
-  popup's Turn on button), before a video is processed. After that, removal starts on its own.
+- **Remove music by default** applies to new videos without changing the
+  current video. Player choices last for one video; the popup explains both
+  defaults. Restoring the unprocessed audio is labelled **Restore original sound**.
+- A first-run choice, **Enable Musicless**, on a one-screen first-run page (or the
+  popup's Enable Musicless button), before a video is processed. After that, removal starts on its own.
   One toolbar setting turns that off.
 - A button in YouTube's own control bar (the top row in embedded players): a
   note while the music plays, the note struck through while it is removed.
   While the first audio is prepared, YouTube's spinner shows in the middle of
   the video, with "Removing music" beneath it.
 - When the music cannot be removed, the video stays paused and silent until
-  you choose Try again or Play with music. Some cases ask you to reload the
+  you choose Try again or Play original sound. Some cases ask you to reload the
   page. While the browser does not let sound play yet, the video waits for a
   click instead of playing silently.
 - Speed changes keep the voice's pitch. Seeking, volume, mute, fullscreen,

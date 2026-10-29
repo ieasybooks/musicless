@@ -4,14 +4,19 @@ import { localizePage, localizeWithGlyph } from "./i18n.js";
 
 const $ = (id) => document.getElementById(id);
 localizePage();
-localizeWithGlyph($("doneControl"), "done_control", { on: true });
+function hint(on) {
+  localizeWithGlyph($("doneControl"), on ? "popup_default_on" : "popup_one_video", { on });
+}
 
 function show(consented) {
   $("setup").classList.toggle("off", consented);
   $("done").classList.toggle("off", !consented);
 }
 
-chrome.storage.sync.get({ consented: false }).then(({ consented }) => show(consented));
+chrome.storage.sync.get({ consented: false, autoStart: true }).then(({ consented, autoStart }) => {
+  show(consented);
+  hint(autoStart);
+});
 $("accept").addEventListener("click", async () => {
   await chrome.storage.sync.set({ consented: true });
   show(true);
@@ -33,6 +38,7 @@ chrome.storage.session.get("videoTab").then(({ videoTab: tab }) => {
 // Turned on in the popup meanwhile; or another video's button asked.
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area === "sync" && "consented" in changes) show(changes.consented.newValue === true);
+  if (area === "sync" && "autoStart" in changes) hint(changes.autoStart.newValue !== false);
   if (area === "session" && "videoTab" in changes) offerBack(changes.videoTab.newValue);
 });
 $("back").addEventListener("click", async () => {

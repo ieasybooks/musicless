@@ -140,15 +140,14 @@ h1:focus-visible {
 @media (prefers-color-scheme: dark) {
   .popup { --bg: #28292c; } /* a popup floats a step above the page */
 }
-/* Before the first run: the disclosure and "Turn on", as on the first-run page. */
+/* Before the first run: the disclosure and "Enable Musicless", as on the first-run page. */
 .popup #consent { padding: 16px; }
 .popup h1 { margin: 0 0 4px; font-size: 16px; line-height: 24px; font-weight: 500; }
 [lang="ar"] .popup h1 { font-size: 17px; line-height: 28px; }
 .popup .actions { display: flex; justify-content: flex-end; margin-top: 16px; }
 .popup .actions button.primary { min-height: 32px; padding: 0 16px; border-radius: 16px; font-size: 13px; }
 [lang="ar"] .popup .actions button.primary { font-size: 14px; }
-/* Then the setting: one row, all of it the switch, as in Chrome's settings;
-   under it, a line only while it is needed. */
+/* Then the default: one switch row, with a helper explaining the player choice. */
 .popup .setting {
   display: grid;
   grid-template-columns: 1fr auto;

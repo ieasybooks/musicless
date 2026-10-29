@@ -5,7 +5,7 @@
   "extension_description": { "message": "يزيل معظم موسيقى الخلفية من فيديوهات YouTube™\u200e ويُبقي الأصوات البشرية. يعمل كل شيء على حاسوبك." },
 
   "control_name": { "message": "إزالة الموسيقى" },
-  "control_on": {"message": "إعادة الموسيقى"},
+  "control_on": { "message": "استعادة الصوت الأصلي" },
   "control_setup": { "message": "تفعيل Musicless" },
   "notice_working": {"message": "جارٍ إزالة الموسيقى"},
   "notice_done": { "message": "إزالة الموسيقى مفعّلة" },
@@ -14,7 +14,7 @@
   "panel_title": { "message": "تعذّرت إزالة الموسيقى" },
   "panel_retry": { "message": "إعادة المحاولة" },
   "panel_reload": { "message": "إعادة تحميل الصفحة" },
-  "panel_original": { "message": "تشغيل مع الموسيقى" },
+  "panel_original": { "message": "تشغيل الصوت الأصلي" },
 
   "failure_protected": { "message": "هذا الفيديو محمي من النسخ." },
   "failure_codec": {"message": "لا يدعم Musicless الصوت في هذا الفيديو."},
@@ -29,16 +29,16 @@
 
   "setup_heading": { "message": "شاهد YouTube بدون موسيقى" },
   "consent_text": {"message": "يستخدم Musicless صوت فيديوهات YouTube التي تشاهدها لإزالة معظم الموسيقى، على حاسوبك فقط. لا يحفظ الصوت ولا يرسله إلى أي مكان. قد تتزامن إعداداتك عبر Chrome Sync."},
-  "consent_accept": { "message": "تفعيل" },
+  "consent_accept": { "message": "تفعيل Musicless" },
   "done_heading": { "message": "تم تفعيل Musicless" },
-  "done_wait": {"message": "انتظر بضع ثوانٍ في بداية كل فيديو حتى يزيل Musicless الموسيقى."},
-  "done_control": {"message": "اضغط على {icon} في الفيديو لإعادة الموسيقى."},
+  "done_wait": { "message": "انتظر بضع ثوانٍ لإزالة الموسيقى عند بدء الفيديو." },
   "done_text": {"message": "إذا كان YouTube مفتوحًا قبل التفعيل، فأعد تحميل صفحته."},
   "done_open": { "message": "فتح YouTube" },
   "done_back": { "message": "العودة إلى الفيديو" },
 
-  "popup_autostart_label": {"message": "إزالة الموسيقى تلقائيًا"},
-  "popup_one_video": {"message": "اضغط على {icon} في الفيديو لإزالة الموسيقى."},
+  "popup_autostart_label": { "message": "إزالة الموسيقى افتراضيًا" },
+  "popup_default_on": { "message": "تُزال الموسيقى تلقائيًا من الفيديوهات الجديدة. اضغط على {icon} في المشغّل لاستعادة الصوت الأصلي لهذا الفيديو فقط." },
+  "popup_one_video": { "message": "تُشغَّل الفيديوهات الجديدة بصوتها الأصلي. اضغط على {icon} في المشغّل لإزالة الموسيقى من هذا الفيديو فقط." },
   "link_help": { "message": "مساعدة" },
   "link_help_url": { "message": "https://github.com/IbraheemTuffaha/musicless/blob/main/docs/help.ar.md" },
   "link_privacy": { "message": "سياسة الخصوصية" }

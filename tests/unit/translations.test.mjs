@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 const read = (path) => readFileSync(new URL(path, import.meta.url), "utf8");
 const en = JSON.parse(read("../../extension/_locales/en/messages.json"));
 const ar = JSON.parse(read("../../extension/_locales/ar/messages.json"));
-const placeholders = (text) => (text.match(/\$[A-Z_]+\$/g) ?? []).sort();
+const placeholders = (text) => (text.match(/\$[A-Z_]+\$|\{icon\}/g) ?? []).sort();
 
 test("the Arabic catalog has exactly the English keys, in the same order, with the same placeholders", () => {
   assert.deepEqual(Object.keys(ar), Object.keys(en));

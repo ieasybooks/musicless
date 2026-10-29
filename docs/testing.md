@@ -61,7 +61,7 @@ same player, three minutes of continuous play, preparing before play, muted
 videos, the setting, the words of a video's first wait, consent through the
 real controls (the first-run page by keyboard, the popup's button, the Arabic
 page, and Back to the video from a video's button), failure recovery (Reload
-page and Play with music; only Play with music where nothing
+page and Play original sound; only Play original sound where nothing
 can help; a closed dialog coming back on play), two tabs sharing one model,
 capture memory on a long stream, a paused video releasing the model, the
 browser's real autoplay policy, and the extension being removed while a video

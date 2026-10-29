@@ -42,30 +42,32 @@ is no listing URL yet. This page will gain one after the listing is live.
    on **Developer mode**, click **Load unpacked**, and choose the unzipped
    folder.
 4. Reload any YouTube tabs that were already open.
-5. The first time, choose **Turn on** on the page that opens (or in the
+5. The first time, choose **Enable Musicless** on the page that opens (or in the
    toolbar popup, under the same words). Until you do, Musicless does not remove
    music; its button on the player opens that page.
 
 ## Using Musicless
 
-- **Start watching.** Choose **Turn on** after installation, then open YouTube.
+- **Start watching.** Choose **Enable Musicless** after installation, then open YouTube.
   If YouTube was already open, reload that page. You can also turn Musicless
   on from its icon in the browser toolbar.
 - **Give it a few seconds.** Musicless removes music automatically. A video
   usually takes 2 to 4 seconds to start on a typical laptop. You’ll see the
   loading spinner and **Removing music** while you wait. Jumping ahead in a
   video may cause another short pause.
-- **Bring the music back.** Click the crossed-out music note in the video.
-  Its tooltip says **Bring back music**. Click it again to **Remove music**.
+- **Restore original sound.** Click the crossed-out music note in the video.
+  Its tooltip says **Restore original sound**. Click it again to **Remove music**.
   The button is next to captions on a regular YouTube video, and among the
   top buttons on Shorts and supported embedded videos.
 - **Choose videos yourself.** Open Musicless from the browser toolbar and
-  turn off **Remove music automatically**. Then click the music note on any
-  video where you want to remove the music.
+  turn off **Remove music by default**. Then click the music note on any
+  video where you want to remove the music. The default applies to new videos;
+  changing it leaves the current video alone. Player-button choices last only
+  for that video.
 - **If a play button appears in the middle**, click it to start the sound.
 - **If music removal fails**, the video pauses and stays silent. Choose
-  **Try again** or **Reload page** when offered, or choose **Play with music**
-  to continue with the music. Copy-protected videos, such as rentals, can
+  **Try again** or **Reload page** when offered, or choose **Play original sound**
+  to continue with the unprocessed audio, including any music. Copy-protected videos, such as rentals, can
   only play with their music.
 
 Volume, mute, fullscreen and playback speed work as usual. You can jump to
@@ -95,7 +97,7 @@ computer. Audio is used only to remove background music during playback. It
 is not uploaded, shared, or saved as an audio file. The developer receives no
 audio, browsing history, identifiers, or usage analytics. There is no account.
 
-The automatic-removal setting, and whether you have chosen **Turn on**, are
+The automatic-removal setting, and whether you have chosen **Enable Musicless**, are
 stored in Chrome's extension storage and may sync between your devices if
 Chrome Sync is enabled. See the [privacy policy](docs/privacy.md).
 

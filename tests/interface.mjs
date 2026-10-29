@@ -223,6 +223,90 @@ try {
       return { differentPixels };
     } finally { await cdp.send("Emulation.setEmulatedMedia", { features: [] }); await cdp.detach(); }
   });
+  await step("player overrides reset on the next source and defaults leave the current video alone", async () => {
+    await setSettings(browser, extensionId, { consented: true, autoStart: false });
+    const videoPage = await newPage(browser);
+    const next = async () => {
+      await videoPage.evaluate(() => window.load("synth", "webm-opus", 200000, 1000));
+      await videoPage.waitForFunction(() => window.playerReady === true);
+    };
+    try {
+      await videoPage.goto(playerURL);
+      await videoPage.waitForFunction(() => window.playerReady === true);
+      await waitFor(videoPage, s => s.status === "off", { label: "default off" });
+      await videoPage.click(".musicless-btn");
+      await waitFor(videoPage, s => s.on, { label: "manual on" });
+      await next();
+      await waitFor(videoPage, s => s.status === "off", { label: "manual on resets" });
+      await setSettings(browser, extensionId, { autoStart: true });
+      await sleep(700);
+      assert.equal((await frameState(videoPage)).status, "off");
+      await next();
+      await waitFor(videoPage, s => s.on, { label: "new default on" });
+      await videoPage.click(".musicless-btn");
+      await waitFor(videoPage, s => s.status === "off", { label: "manual off" });
+      await next();
+      await waitFor(videoPage, s => s.on, { label: "manual off resets" });
+      await setSettings(browser, extensionId, { autoStart: false });
+      await sleep(700);
+      assert.equal((await frameState(videoPage)).on, true);
+      await next();
+      const state = await waitFor(videoPage, s => s.status === "off", { label: "new default off" });
+      assert(!state.holding && !state.attached);
+      return { manualOnReset: true, manualOffReset: true, currentVideoPreserved: true, nextVideoUsesDefault: true };
+    } finally {
+      await videoPage.close();
+      await setSettings(browser, extensionId, { autoStart: true });
+    }
+  });
+
+  for (const lang of ["en-US", "ar"]) {
+    await step(`${lang} popup explains both defaults and the per-video choice`, async () => {
+      const localized = await launch({ lang, consented: false, diagnostics: false });
+      try {
+        const popup = await localized.browser.newPage();
+        await popup.setViewport({ width: 320, height: 600, deviceScaleFactor: 2 });
+        await popup.goto(`chrome-extension://${localized.extensionId}/popup.html`);
+        await popup.waitForSelector("#accept", { visible: true });
+        const expectedAccept = await popup.evaluate(() => chrome.i18n.getMessage("consent_accept"));
+        assert.equal(await popup.$eval("#accept", el => el.textContent), expectedAccept);
+        await popup.click("#accept");
+        await popup.waitForSelector("#settings:not([hidden])");
+        for (const on of [true, false]) {
+          if (!on) await popup.click("#autoStart");
+          await popup.waitForFunction(on => chrome.storage.sync.get("autoStart").then(s => s.autoStart === on), {}, on);
+          const state = await popup.evaluate(on => {
+            const hint = document.getElementById("oneVideo"), glyph = hint.querySelector(".glyph");
+            const iconName = chrome.i18n.getMessage(on ? "control_on" : "control_name");
+            const expected = chrome.i18n.getMessage(on ? "popup_default_on" : "popup_one_video").replace("{icon}", "");
+            return { visible: !hint.hidden, text: hint.textContent, expected, icon: glyph?.getAttribute("aria-label"), iconName,
+              crossed: glyph?.classList.contains("glyph-on"), described: document.getElementById("autoStart").getAttribute("aria-describedby"),
+              overflow: document.documentElement.scrollWidth > innerWidth };
+          }, on);
+          assert(state.visible && !state.overflow);
+          assert.equal(state.text, state.expected); assert.equal(state.icon, state.iconName);
+          assert.equal(state.crossed, on); assert.equal(state.described, "oneVideo");
+          for (const scheme of ["light", "dark"]) {
+            await popup.emulateMediaFeatures([{ name: "prefers-color-scheme", value: scheme }]);
+            await popup.screenshot({ path: join(WORK, `${lang}-popup-${on ? "on" : "off"}-${scheme}.png`) });
+          }
+        }
+        const welcome = await localized.browser.newPage();
+        await welcome.setViewport({ width: 900, height: 750, deviceScaleFactor: 1 });
+        await welcome.goto(`chrome-extension://${localized.extensionId}/welcome.html`);
+        await welcome.waitForSelector("#done:not(.off)");
+        const instruction = await welcome.$eval("#doneControl", el => el.textContent);
+        const expectedInstruction = await welcome.evaluate(() => chrome.i18n.getMessage("popup_one_video").replace("{icon}", ""));
+        assert.equal(instruction, expectedInstruction, "setup must also reflect a changed default");
+        for (const scheme of ["light", "dark"]) {
+          await welcome.emulateMediaFeatures([{ name: "prefers-color-scheme", value: scheme }]);
+          await welcome.screenshot({ path: join(WORK, `${lang}-welcome-${scheme}.png`) });
+        }
+        return { lang, defaultsExplained: true, perVideoGlyphs: true, consentRequired: true };
+      } finally { await localized.browser.close(); }
+    });
+  }
+
 } finally {
   report.save();
   await browser.close();

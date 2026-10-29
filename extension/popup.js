@@ -1,11 +1,9 @@
-// Toolbar popup: the disclosure and "Turn on" until the user turns Musicless on,
-// then the one setting.
+// Toolbar popup: one-time consent, then the default for new videos.
 import { localizePage, localizeWithGlyph, t } from "./i18n.js";
 import { DEFAULTS } from "./settings.js";
 
 const $ = (id) => document.getElementById(id);
 localizePage();
-localizeWithGlyph($("oneVideo"), "popup_one_video");
 $("help").href = t("link_help_url");
 
 function show(consented) {
@@ -13,13 +11,11 @@ function show(consented) {
   $("settings").hidden = !consented;
 }
 
-// While removal is not automatic, one line says how to remove the music from
-// one video; the switch is described by it only while it shows.
+// The switch sets the default for new videos. The player button changes one video.
 function hint() {
-  const off = !$("autoStart").checked;
-  $("oneVideo").hidden = !off;
-  if (off) $("autoStart").setAttribute("aria-describedby", "oneVideo");
-  else $("autoStart").removeAttribute("aria-describedby");
+  const on = $("autoStart").checked;
+  localizeWithGlyph($("oneVideo"), on ? "popup_default_on" : "popup_one_video", { on });
+  $("autoStart").setAttribute("aria-describedby", "oneVideo");
 }
 
 // `consented` stays false until the user turns Musicless on, here or on the first-run page.

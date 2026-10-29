@@ -1,5 +1,5 @@
 // Opens the welcome page: once on install, and when the button on a video asks
-// for it before the first run ("Turn on Musicless"), focusing the page if it is
+// for it before the first run ("Enable Musicless"), focusing the page if it is
 // already open. The tab and document that asked are kept for "Back to the video".
 // Tabs that were open before need a reload before Musicless can work in them.
 async function openWelcome() {

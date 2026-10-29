@@ -378,18 +378,32 @@ await step("with automatic removal off, the button starts it", async () => {
   await page.close();
 });
 
-await step("turning automatic removal on applies to the open video", async () => {
-  source = audioFile(BASE);
+await step("changing the default leaves the current video alone and applies to the next", async () => {
   await setAutoStart(browser, extensionId, false);
   const page = await open(BASE);
-  await play(page);
-  await sleep(2000);
-  const before = (await frameState(page)).status;
-  await setAutoStart(browser, extensionId, true);
-  const { ms, state } = await timeUntilOn(page, "auto-start switched on");
-  report.record("turning automatic removal on applies to the open video", before === "off" && state.status === "on",
-    { status_before: before, setting_to_audio_ms: ms });
-  await page.close();
+  try {
+    await play(page);
+    await setAutoStart(browser, extensionId, true);
+    await sleep(1000);
+    const currentOff = (await frameState(page)).status === "off";
+    await page.evaluate((media, v) => window.load(media, v, 200000, 1000), SET, BASE);
+    await page.waitForFunction("window.playerReady === true");
+    await play(page);
+    const { state } = await timeUntilOn(page, "new default on");
+    await setAutoStart(browser, extensionId, false);
+    await sleep(1000);
+    const currentOn = (await frameState(page)).status === "on";
+    await page.evaluate((media, v) => window.load(media, v, 200000, 1000), SET, BASE);
+    await page.waitForFunction("window.playerReady === true");
+    await play(page);
+    const nextOff = await waitFor(page, s => s.status === "off", { label: "new default off" });
+    report.record("changing the default leaves the current video alone and applies to the next",
+      currentOff && state.status === "on" && currentOn && nextOff.status === "off",
+      { currentOff, nextOn: state.status, currentOn, nextOff: nextOff.status });
+  } finally {
+    await page.close();
+    await setAutoStart(browser, extensionId, true);
+  }
 });
 
 // A video's first wait says why at once, under the spinner (later waits, after
@@ -465,7 +479,7 @@ await step("nothing is read before consent; consenting starts the next video", a
       before.status === "setup" && before.originalGain === null && !before.attached && frames === 0 && !paused && time > 2 &&
         media === 0 && captured.some((stream) => stream.missed) && leftOff && turnedOn &&
         failed.failure.reason === "missed" && failMs < 5000 &&
-        dialog.title === "Musicless is on" && dialog.main === "Reload page" && dialog.focused && state.status === "on" && good(a),
+        dialog.title === "Musicless is enabled" && dialog.main === "Reload page" && dialog.focused && state.status === "on" && good(a),
       { status_before: before.status, routed_before: before.originalGain !== null, engine_frames_before: frames, played_before: !paused,
         audio_kept_before: media, left_without_choosing_kept_it_off: leftOff, turned_on_by_keyboard: turnedOn, missed_ms: failMs,
         dialog, next_video_audio_ms: ms, ...a });
@@ -650,7 +664,7 @@ await step("a closed failure dialog comes back on play", async () => {
 });
 
 // Trying again in place (a slow computer, an error) is covered by the unit tests.
-await step("a failure nothing can help offers only the music, and a stray key does not start it", async () => {
+await step("a failure nothing can help offers only original playback, and a stray key does not start it", async () => {
   const page = await open("drm");
   await play(page);
   await waitFor(page, (s) => s.status === "failed", { timeout: 20000, label: "failure" });
@@ -667,7 +681,7 @@ await step("a failure nothing can help offers only the music, and a stray key do
   await sleep(1000);
   const after = await videoState(page);
   const state = await frameState(page);
-  report.record("a failure nothing can help offers only the music, and a stray key does not start it",
+  report.record("a failure nothing can help offers only original playback, and a stray key does not start it",
     dialog.actions.join() === "original" && dialog.main === "original" && dialog.dialog_focused &&
       after.paused && after.time === before.time && state.status === "failed",
     { ...dialog, paused_after_keys: after.paused, moved_s: after.time - before.time, status: state.status });

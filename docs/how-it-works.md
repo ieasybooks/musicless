@@ -31,7 +31,7 @@ video plays, and plays them in place of the original track.
 | `model-worker.js`, `model.js` | One copy of the model for every tab (a shared worker; WebCodecs is not available there, which is why decoding stays per tab). A priority queue puts the chunk a playing video needs first. |
 | `grid.js` | The model's numbers and the fixed window grid, shared by both sides (`tests/reference.py` mirrors them). |
 | `stretch.js`, `third_party/soundtouch` | Pitch-preserving time-stretch for speeds other than 1x. |
-| `popup.*`, `welcome.*`, `background.js`, `settings.js` | The toolbar popup, the first-run page, and the stored values: the automatic-removal setting and whether the user chose **Turn on** (`chrome.storage.sync`), the frame's token (`chrome.storage.local`), and the tab/frame/document identifiers for **Back to the video**, cleared on return or browser-session end (`chrome.storage.session`). |
+| `popup.*`, `welcome.*`, `background.js`, `settings.js` | The toolbar popup, the first-run page, and the stored values: the automatic-removal setting and whether the user chose **Enable Musicless** (`chrome.storage.sync`), the frame's token (`chrome.storage.local`), and the tab/frame/document identifiers for **Back to the video**, cleared on return or browser-session end (`chrome.storage.session`). |
 
 ## Separation
 
@@ -91,10 +91,10 @@ chunk a playing video needs comes before look-ahead work in any tab.
 ## Before Musicless is turned on
 
 On install, the first-run page explains what Musicless does with
-audio and asks the user to choose **Turn on** (the toolbar popup shows the
+audio and asks the user to choose **Enable Musicless** (the toolbar popup shows the
 same words and the same button). Until then Musicless reads no audio: capture
 keeps only format headers, no session routes or separates anything, and the
-button on the player ("Turn on Musicless", the note with a small dot) opens the
+button on the player ("Enable Musicless", the note with a small dot) opens the
 first-run page. Opened that way, the page ends with **Back to the video**: the
 background script kept the tab, frame and document that asked. The page focuses
 that tab and reloads where the video is, including when muted, only if the
@@ -102,7 +102,12 @@ original document is still active in that frame. If the tab has navigated
 elsewhere, the new page is left alone.
 Neither focusing the tab nor messaging that document needs an extra permission.
 A video whose audio went by before Musicless was turned on is not
-shown as a failure: its dialog says "Musicless is on" and offers **Reload page**.
+shown as a failure: its dialog says "Musicless is enabled" and offers **Reload page**.
+
+After consent, **Remove music by default** is on. The setting applies when a
+new video source loads, including in the same player. Changing it leaves the
+current video alone. The player button changes only that video, and the next
+one starts with the saved default.
 
 ## Failing closed
 
@@ -111,12 +116,12 @@ remove the music (copy-protected audio, audio it cannot capture, a codec the
 browser cannot decode, a chunk stuck for 30 s, sound that still cannot start
 after a click, or the extension being updated under an open page), the
 original stays silent, the video pauses, and a dialog in the middle of the
-player offers **Try again** or **Play with music**. When only a reload can help
+player offers **Try again** or **Play original sound**. When only a reload can help
 (the extension was updated, the audio went by before it could be captured, the
 engine could not start again, or the sound cannot start), it offers **Reload
 page** instead; on a watch page the reload keeps the position. When nothing can
 help (copy-protected audio, a format Musicless cannot read, a player whose sound
-it cannot reach), it offers only **Play with music**, and the dialog itself
+it cannot reach), it offers only **Play original sound**, and the dialog itself
 takes focus so that a stray Space does not start the music. Escape or a click
 beside the dialog closes it; the next play attempt brings it back.
 

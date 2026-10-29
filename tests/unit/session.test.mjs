@@ -442,12 +442,31 @@ test("if the sound still cannot start shortly after a click, the session fails c
   assert.equal(started.session.status, "on");
 });
 
-test("the user's own choice does not carry over to the next video", () => {
-  const { session, video, capture } = sessionSandbox();
-  session.toggle(); // off for this video
-  assert.equal(session.userChoice, true);
-  capture.urls.set("blob:b", 3);
-  video.currentSrc = video.src = "blob:b";
-  session.checkSource();
-  assert.equal(session.userChoice, false);
-});
+for (const autoStart of [true, false]) {
+  test(`a player override resets to default ${autoStart} for the next video`, () => {
+    const { session, video, capture, graph } = sessionSandbox({ settings: { autoStart } });
+    assert.equal(session.on, autoStart);
+    session.toggle();
+    assert.equal(session.on, !autoStart);
+    capture.urls.set("blob:b", 3);
+    video.currentSrc = video.src = "blob:b";
+    session.checkSource();
+    assert.equal(session.on, autoStart);
+    assert.equal(graph.original.gain.value, autoStart ? 0 : 1);
+    if (!autoStart) {
+      assert.equal(session.intent.held, false, "the previous video's processing hold is released");
+      assert.equal(session.attached, false);
+    }
+  });
+
+  test(`changing default to ${!autoStart} leaves this video alone and applies to the next`, () => {
+    const { session, video, capture, env } = sessionSandbox({ settings: { autoStart } });
+    env.settings.autoStart = !autoStart;
+    session.tick();
+    assert.equal(session.on, autoStart);
+    capture.urls.set("blob:b", 3);
+    video.currentSrc = video.src = "blob:b";
+    session.checkSource();
+    assert.equal(session.on, !autoStart);
+  });
+}

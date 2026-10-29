@@ -5,7 +5,7 @@
 //
 // When Musicless cannot remove the music it fails closed: the original track
 // stays silent and the video pauses until the user chooses Try again (or
-// Reload page) or Play with music. While a chunk is not ready yet, the video is
+// Reload page) or Play original sound. While a chunk is not ready yet, the video is
 // held (paused) rather than played with music.
 //
 // Until the user turns Musicless on (settings.consented), a session only shows
@@ -159,7 +159,6 @@ export class Session {
 
   toggle() {
     if (!settings.consented) return; // the button opens the welcome page instead
-    this.userChoice = true;
     if (this.status === "blocked") {
       resumeAudio(); // the click itself lets the page play sound again
       this.blockedClick ??= performance.now();
@@ -203,7 +202,6 @@ export class Session {
   }
 
   returnToOriginal() {
-    this.userChoice = true;
     this.turnOff();
   }
 
@@ -240,12 +238,10 @@ export class Session {
     if (url !== this.sourceUrl) {
       this.stopProcessing();
       this.sourceUrl = url;
-      this.failure = null; // a failure and the user's choice belonged to the previous source
-      this.userChoice = false;
+      this.failure = null; // a failure belonged to the previous source
       this.stats.firstAudioMs = null;
-      // Each new video starts on if the user wants Musicless on every video, or
-      // had it on for the previous one in this player.
-      if (url) this.on = settings.autoStart || this.on;
+      // Player choices belong to one video; each new source uses the default.
+      if (url) this.on = settings.autoStart;
       if (this.on && url) this.startSource();
       else if (this.graph && !this.on) this.graph.original.gain.value = 1;
     } else if (this.on && !this.failure && !this.streamId && url) {
