@@ -1,7 +1,7 @@
 /* All injected UI is namespaced under .musicless-* so it never collides with the
    page's styles. button.js sets lang and dir from the extension's language,
-   and the corners from the player's. Text over the picture is white on a dark
-   ground that keeps it above 4.5:1 even over a white video. */
+   and the corners from the player's. Text over the picture follows YouTube's
+   tooltip and dialog surfaces. */
 
 .musicless-btn,
 .musicless-tip,
@@ -14,7 +14,6 @@
 /* Arabic: YouTube's Latin face first, so the Latin words in Arabic text
    (YouTube, Musicless) look as they do everywhere else, then the systems' Arabic
    faces. */
-.musicless-tip[lang="ar"],
 .musicless-notice[lang="ar"],
 .musicless-dialog[lang="ar"] {
   font-family: "YouTube Noto", Roboto, "Segoe UI", "SF Arabic", "Geeza Pro", "Noto Sans Arabic", "Noto Naskh Arabic UI", Tahoma, sans-serif;
@@ -113,9 +112,27 @@
   line-height: 25px;
   white-space: nowrap;
 }
-.musicless-tip[lang="ar"],
 .musicless-notice[lang="ar"] .musicless-notice__text { font-size: 14px; }
-.musicless-tip { z-index: 2147483602; max-width: 260px; pointer-events: none; }
+/* Match the player's own tooltip typography, including its Arabic face and
+   fullscreen scaling. The modern player uses a translucent glass surface. */
+.musicless-tip {
+  z-index: 2147483602;
+  max-width: 260px;
+  height: auto;
+  padding: 5px 9px;
+  border-radius: 2px;
+  font-family: inherit;
+  font-size: 118%;
+  line-height: 15px;
+  pointer-events: none;
+}
+.ytp-delhi-modern .musicless-tip {
+  border-radius: 8px;
+  background: var(--yt-sys-color-baseline--overlay-background-medium-light, rgba(0, 0, 0, 0.3));
+  backdrop-filter: var(--yt-frosted-glass-backdrop-filter-override, blur(16px));
+  text-shadow: 0 0 2px #000;
+}
+.ytp-big-mode .musicless-tip { line-height: 22px; }
 /* The tooltip sits outside the fading bottom bar. Follow its hidden state
    even when the pointer stays over the invisible button. */
 .ytp-autohide:has(.musicless-btn[data-place="ytp"]) .musicless-tip {
