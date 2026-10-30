@@ -2,17 +2,20 @@
 # Package the extension for release: dist/musicless-<version>.zip, the archive
 # to upload to a browser's add-on store or to share for "Load unpacked".
 # Run ./setup.sh first: the model and the runtime are built, not committed.
-# The zip holds the files git tracks in extension/ plus the four built ones,
+# The zip holds the files git tracks in extension/ plus the built files,
 # so nothing else in the folder can slip in; the test-only recorder
 # (recorder.js) is left out. It is reproducible: sorted entries with fixed
 # timestamps.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+# Always rebuild: source changes cannot leave a stale content script in the ZIP.
+npm run build
+
 python3 - <<'PY'
 import hashlib, json, os, re, subprocess, sys, zipfile
 
-BUILT = ["model/spleeter-2stems.onnx", "vendor/ort.wasm.min.mjs",
+BUILT = ["content.bundle.js", "model/spleeter-2stems.onnx", "vendor/ort.wasm.min.mjs",
          "vendor/ort-wasm-simd-threaded.mjs", "vendor/ort-wasm-simd-threaded.wasm"]
 for name in BUILT:
     if not os.path.isfile(os.path.join("extension", name)):

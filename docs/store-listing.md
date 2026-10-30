@@ -132,7 +132,7 @@ model.js imports the packaged ORT module, sets ort.env.wasm.wasmPaths to the pac
 
 The extension_pages CSP allows 'wasm-unsafe-eval' solely to compile and instantiate this bundled WebAssembly runtime. It does not allow JavaScript 'unsafe-eval' or remote script origins. There is no CDN import, fetched executable code, remote model/configuration interpreter, or backend inference service.
 
-The vendor JavaScript is the normal upstream minified distribution, not an obfuscated application payload. Our application logic is supplied as readable modules. Dependency versions, pinned download checksums, model conversion steps, and license notices are documented in the project and package. Build-time downloads happen before packaging, not on the user's machine at runtime.
+The vendor JavaScript is the normal upstream minified distribution, not an obfuscated application payload. Our application logic is supplied as readable modules and a readable, unminified content-script bundle built with pinned esbuild. Dependency versions, pinned download checksums, model conversion steps, and license notices are documented in the project and package. Build-time downloads happen before packaging, not on the user's machine at runtime.
 ```
 
 If "No" disables the explanation box, put that text in the reviewer notes.
@@ -175,7 +175,7 @@ Media handling: Musicless does not issue requests to fetch media from YouTube or
 
 Runtime: the package includes ONNX Runtime Web 1.30.0, its approximately 14 MB WASM binary, and an approximately 37.5 MiB ONNX model. All inference runs locally on one CPU thread. The extension-origin frame and workers need the documented wasm-unsafe-eval CSP to instantiate the packaged WASM. No remote executable code is loaded. The source, pinned setup, and third-party license notices explain the included vendor files.
 
-web_accessible_resources exposes the packaged content-script module dependencies and separator.html only to the same three supported website origins. The model and runtime are loaded from the extension origin, not from a CDN.
+web_accessible_resources exposes separator.html only to the same three supported website origins. The content script is bundled and loaded directly by Chrome. The model and runtime are loaded from the extension origin, not from a CDN.
 ```
 
 Add a stable public video URL you have permission to use, and one alternate,

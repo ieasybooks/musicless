@@ -36,7 +36,7 @@
     },
     {
       "matches": ["https://www.youtube.com/*", "https://m.youtube.com/*", "https://www.youtube-nocookie.com/*"],
-      "js": ["content.js"],
+      "js": ["content.bundle.js"],
       "css": ["content.css"],
       "run_at": "document_start",
       "all_frames": true
@@ -45,18 +45,6 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "main.js",
-        "audio.js",
-        "button.js",
-        "capture-bus.js",
-        "engine.js",
-        "grid.js",
-        "i18n.js",
-        "playback-intent.js",
-        "session.js",
-        "settings.js",
-        "stretch.js",
-        "third_party/soundtouch/*.js",
         "separator.html"
       ],
       "matches": ["https://www.youtube.com/*", "https://m.youtube.com/*", "https://www.youtube-nocookie.com/*"]

@@ -1,0 +1,11 @@
+{
+  "name": "musicless-build",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node tools/build-content.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12"
+  }
+}

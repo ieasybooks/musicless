@@ -66,7 +66,7 @@ function sessionSandbox({ video: props, settings = {}, streams = { "blob:a": 1 }
     importStretch: async () => ({ stretch }),
   };
   const { Session } = load("session.js", env, {
-    rewrite: (source) => source.replace('import(chrome.runtime.getURL("stretch.js"))', "importStretch()"),
+    rewrite: (source) => source.replace('import("./stretch.js")', "importStretch()"),
   });
   const capture = {
     urls: new Map(Object.entries(streams)),

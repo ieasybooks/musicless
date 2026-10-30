@@ -1,6 +1,7 @@
 # Built or downloaded by setup.sh
 extension/model/*.onnx
 extension/vendor/
+extension/content.bundle.js
 node_modules/
 tests/.venv/
 tests/.work/

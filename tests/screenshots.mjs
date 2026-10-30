@@ -15,6 +15,7 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, write
 import { join } from "node:path";
 import puppeteer from "puppeteer-core";
 import { chromePath, setSettings, sleep, WORK } from "./harness.mjs";
+import { buildContent } from "../tools/build-content.mjs";
 
 const OUT = new URL("../docs/store/", import.meta.url).pathname;
 const EXTENSION = new URL("../extension/", import.meta.url).pathname;
@@ -65,6 +66,7 @@ function extensionCopy({ failing = false } = {}) {
       '$1onEngine(message) {\n$1  if (message.type === "chunk") return this.fail("error");\n');
     if (patched === source) throw new Error("session.js no longer declares onEngine(message): update the failure patch");
     writeFileSync(file, patched);
+    buildContent(dir);
   }
   return dir;
 }

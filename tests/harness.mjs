@@ -4,6 +4,7 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, write
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 import puppeteer from "puppeteer-core";
+import { buildContent } from "../tools/build-content.mjs";
 
 const TESTS = new URL(".", import.meta.url).pathname;
 export const WORK = process.env.MUSICLESS_TEST_DIR ?? join(TESTS, ".work");
@@ -28,7 +29,7 @@ const startSourceForTests = Session.prototype.startSource;
 Session.prototype.startSource = function () {
   startSourceForTests.call(this);
   if (!this.graph || this.recorder) return;
-  import(chrome.runtime.getURL("recorder.js")).then(({ Recorder }) => {
+  import("./recorder.js").then(({ Recorder }) => {
     if (!this.recorder && !this.disposed) this.recorder = new Recorder(this.graph.ctx, this.graph.element, this.graph.output, this.video);
   });
 };
@@ -47,7 +48,7 @@ window.addEventListener("message", (event) => {
 // The shipped manifest only matches YouTube; tests also allow the local server.
 // The test copy also turns on Musicless's diagnostics (state and recordings, which
 // the release cannot do): its manifest is marked, main.js answers requests for
-// state and recordings, the recorder is made loadable, and the capture's state
+// state and recordings, the recorder is bundled in, and the capture's state
 // is readable from the page. `diagnostics: false` leaves them out, as in the release.
 // Each launch gets its own copy, so parallel runs never see each other's edits.
 function testExtension({ diagnostics = true } = {}) {
@@ -69,7 +70,7 @@ function testExtension({ diagnostics = true } = {}) {
     }
     writeFileSync(join(dir, "main.js"), main + MAIN_DEBUG);
     manifest.musicless_test = true;
-    manifest.web_accessible_resources[0].resources.push("recorder.js");
+    buildContent(dir);
   }
   for (const entry of [...manifest.content_scripts, ...manifest.web_accessible_resources]) {
     entry.matches.push("http://127.0.0.1/*");

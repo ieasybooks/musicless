@@ -1,7 +1,11 @@
 # Testing
 
 Set up once with `./setup.sh --dev`: it builds the model and the runtime and
-installs the test tools (`tests/node_modules`, `tests/.venv`). The browser
+bundles the content script with pinned build-only esbuild (`node_modules`) and
+installs the test tools (`tests/node_modules`, `tests/.venv`). After editing the
+extension sources, `npm run build` rebuilds `extension/content.bundle.js`;
+packaging always rebuilds it too. Instrumented browser-test copies are rebuilt
+after their test hooks are added. The browser
 tests also need `ffmpeg` and a Chromium browser (Google Chrome by default).
 
 ## Unit tests
@@ -83,6 +87,17 @@ stream, by about as much without Musicless: 61 MB with Musicless off against 80 
 with it on over the same 12 minutes.)
 
 ## YouTube
+
+```sh
+node loader.mjs
+```
+
+The uninstrumented package on a real YouTube page, before and after Developer
+Mode reload and disable/re-enable: no extension-origin loader errors, actual
+processed playback with the original muted, trusted button toggles, and
+pitch-preserving 1.5x playback. DevTools reads Session snapshots from the
+unminified bundle without adding production test hooks. This live check needs
+working YouTube playback; it is separate from the deterministic CI suite.
 
 ```sh
 node youtube.mjs

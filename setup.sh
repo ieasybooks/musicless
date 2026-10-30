@@ -4,7 +4,8 @@
 #   extension/model/spleeter-2stems.onnx  Spleeter 2-stem (Deezer, MIT), built from
 #                                         sherpa-onnx's ONNX export by tools/build_model.py
 #   extension/vendor/                     ONNX Runtime Web 1.30.0 (Microsoft, MIT), WebAssembly build
-# Needs curl, tar and python3 (a throwaway venv gets onnx and numpy).
+# Also bundles the content script with pinned build-only esbuild.
+# Needs Node.js/npm, curl, tar and python3 (a throwaway venv gets onnx and numpy).
 #
 # ./setup.sh --dev also installs the test tools: tests/node_modules (puppeteer-core)
 # with npm, and tests/.venv (numpy, onnxruntime) for the analysis.
@@ -13,6 +14,9 @@ cd "$(dirname "$0")"
 
 DEV=0
 [[ "${1:-}" == "--dev" ]] && DEV=1
+
+npm ci --no-audit --no-fund
+npm run build
 
 SPLEETER_URL=https://github.com/k2-fsa/sherpa-onnx/releases/download/source-separation-models/sherpa-onnx-spleeter-2stems.tar.bz2
 SPLEETER_SHA256=e26401d9c1801f43c0229731d78d32c2e80085e3aceedeb25f29d2de5fa68ca2

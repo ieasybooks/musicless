@@ -18,6 +18,8 @@ It is not a previous version of this extension.
 ### Changed
 
 - Renamed nomusic to Musicless before its first release, with a new logo, icons and colours.
+- Bundled the content script so reloading the unpacked extension no longer
+  produces extension-module origin errors on YouTube.
 
 ### Added
 

@@ -80,7 +80,7 @@ function sourceOf(video) {
 // Pitch-preserving time-stretch for playback rates other than 1 (SoundTouch
 // WSOLA), loaded on first use and shared by every session on the page.
 let stretcher = null;
-const loadStretcher = () => (stretcher ??= import(chrome.runtime.getURL("stretch.js")).then((module) => module.stretch));
+const loadStretcher = () => (stretcher ??= import("./stretch.js").then((module) => module.stretch));
 
 export class Session {
   constructor(video, { capture, engine, onChange = () => {} }) {

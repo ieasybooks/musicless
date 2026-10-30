@@ -106,13 +106,16 @@ YouTube still loads the video through its own service.
 ## Development
 
 ```sh
-./setup.sh          # builds the model and the runtime (needs curl, tar, python3)
+./setup.sh          # builds the content script, model and runtime (Node.js/npm, curl, tar, python3)
 ./setup.sh --dev    # also installs the test tools (npm, a Python venv)
 ```
 
 Then load the `extension` folder as an unpacked extension. The model and the
 runtime are built from pinned, checksum-verified downloads and are not
 committed. Do not commit `extension/model/` or `extension/vendor/`.
+
+After editing the content-script modules, run `npm run build` before reloading
+the extension. Packaging rebuilds the content script automatically.
 
 - [Testing](docs/testing.md)
 - [Releasing](docs/release.md) and the [store listing](docs/store-listing.md)
