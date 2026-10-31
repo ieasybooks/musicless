@@ -5,6 +5,8 @@
   </picture>
 </h1>
 
+<p align="center"><b>Removes most of the music. Keeps the voices.</b></p>
+
 Musicless is a free browser extension that removes most of the background
 music from YouTube videos while keeping speech and singing. Turn it on once,
 then watch as usual.
