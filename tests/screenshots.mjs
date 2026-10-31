@@ -25,19 +25,19 @@ const LANGUAGES = {
   en: {
     lang: "en-US", dir: "ltr", query: "",
     captions: [
-      "Removes most of the music. Keeps the voices.",
-      "Turn it on once. Then it works by itself.",
-      "If the music can’t be removed, the video waits for you.",
-      "One setting. Everything runs on your computer.",
+      ["Removes most of the music.", "Keeps the voices."],
+      ["Turn it on once.", "Then it works by itself."],
+      ["If the music can’t be removed,", "the video waits for you."],
+      ["One setting.", "Everything runs on your computer."],
     ],
   },
   ar: {
     lang: "ar", dir: "rtl", query: "&hl=ar&persist_hl=1", // YouTube follows hl, not the browser language
     captions: [
-      "يزيل معظم الموسيقى. ويُبقي الأصوات البشرية.",
-      "فعّله مرة واحدة. بعد ذلك يعمل تلقائيًا.",
-      "إذا تعذّرت إزالة الموسيقى، ينتظرك الفيديو.",
-      "إعداد واحد. ويعمل كل شيء على حاسوبك.",
+      ["يزيل معظم الموسيقى.", "ويُبقي الأصوات البشرية."],
+      ["فعّله مرة واحدة.", "بعد ذلك يعمل تلقائيًا."],
+      ["إذا تعذّرت إزالة الموسيقى،", "ينتظرك الفيديو."],
+      ["إعداد واحد.", "ويعمل كل شيء على حاسوبك."],
     ],
   },
 };
@@ -199,18 +199,18 @@ async function shootPopup(browser, extensionId, file) {
 
 const pngWidth = (file) => readFileSync(file).readUInt32BE(16);
 
-// A capture under its caption on paper, with ink captions, at 1280x800.
+// A capture under its two-tone caption on paper, at 1280x800.
 // The caption must stay readable when the store scales the image to 640x400. The popup is
 // shown at its captured size (twice its CSS size); the rest fills the space
 // left.
-async function showcase(browser, language, name, caption, image, { width } = {}) {
+async function showcase(browser, language, name, [lead, detail], image, { width } = {}) {
   const page = await browser.newPage();
   await page.setViewport({ width: 1280, height: 800, deviceScaleFactor: 1 });
   const data = readFileSync(image).toString("base64");
   const font = language.dir === "rtl" ? `'Segoe UI', 'SF Arabic', 'Noto Sans Arabic', system-ui, sans-serif` : `-apple-system, 'Segoe UI', Roboto, system-ui, sans-serif`;
   await page.setContent(`<!doctype html><html lang="${language.lang}" dir="${language.dir}"><body style="margin:0;box-sizing:border-box;width:1280px;height:800px;padding:44px 64px;background:#f4ede0;
     display:flex;flex-direction:column;align-items:center;justify-content:center;gap:32px;font:500 40px/1.3 ${font};color:#1f1d1a;text-align:center">
-    <div style="flex:0 0 auto">${caption}</div>
+    <div style="flex:0 0 auto"><span style="font-weight:600">${lead}</span> <span style="color:#6e675c;font-weight:500">${detail}</span></div>
     <div style="flex:0 1 auto;min-height:0;display:flex;align-items:center;justify-content:center;width:100%">
       <img src="data:image/png;base64,${data}" style="${width ? `width:${width}px;` : "max-width:100%;"}max-height:100%;border-radius:12px;box-shadow:0 2px 12px rgba(31,42,36,.18)">
     </div></body></html>`);
