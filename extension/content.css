@@ -284,6 +284,10 @@
 .musicless-dialog__action:hover { background: rgba(255, 255, 255, 0.2); }
 .musicless-dialog__action--main { background: #f1f1f1; color: #0f0f0f; }
 .musicless-dialog__action--main:hover { background: #d9d9d9; }
+@media (prefers-reduced-motion: no-preference) {
+  .musicless-dialog__action { transition: transform 150ms ease-out, background-color 150ms ease-out; }
+  .musicless-dialog__action:active { transform: scale(0.97); }
+}
 
 /* Fullscreen on a large screen: YouTube scales its controls up too. */
 .ytp-big-mode .musicless-spinner { width: 128px; height: 128px; margin: -64px 0 0 -64px; border-width: 12px; }
