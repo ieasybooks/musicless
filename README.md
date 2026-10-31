@@ -61,7 +61,7 @@ is no listing URL yet. This page will gain one after the listing is live.
   top buttons on Shorts and supported embedded videos.
 - **Choose videos yourself.** Open Musicless from the browser toolbar and
   turn off **Remove music by default**. Then click the music note on any
-  video where you want to remove the music. The default applies to new videos;
+  video where you want to remove the music. The default applies to every video you open;
   changing it leaves the current video alone. Player-button choices last only
   for that video.
 - **If a play button appears in the middle**, click it to start the sound.

@@ -36,9 +36,9 @@
   "done_open": { "message": "Open YouTube", "description": "Button: opens youtube.com in this tab." },
   "done_back": { "message": "Back to the video", "description": "Button instead of “Open YouTube” when the page was opened from a video’s button: goes back to that tab and reloads it where the video was, so its music can be removed." },
 
-  "popup_autostart_label": { "message": "Remove music by default", "description": "The default for new videos; changing it does not change the current video." },
-  "popup_default_on": { "message": "New videos start with music removal on. Click {icon} in the player to restore original sound for that video only.", "description": "Helper when the default is on. Preserve {icon}; it becomes the crossed-out note." },
-  "popup_one_video": { "message": "New videos play their original sound. Click {icon} in the player to remove music for that video only.", "description": "Helper when the default is off. Preserve {icon}; it becomes the plain note." },
+  "popup_autostart_label": {"message": "Remove music by default", "description": "The default for every video the user opens; changing it doesn't change the video already playing."},
+  "popup_default_on": {"message": "Music is removed from every video you open. Click {icon} in a video to restore its original sound.", "description": "Helper when the default is on. Preserve {icon}; it becomes the crossed-out note."},
+  "popup_one_video": {"message": "Every video you open keeps its original sound. Click {icon} in a video to remove its music.", "description": "Helper when the default is off. Preserve {icon}; it becomes the plain note."},
   "link_help": { "message": "Help", "description": "Link to the help: how Musicless works and what to do; reporting a problem is one link further." },
   "link_help_url": { "message": "https://github.com/IbraheemTuffaha/musicless#using-musicless", "description": "Not translated: the address of the help in this language (README's \"Using Musicless\"; docs/help.ar.md for Arabic)." },
   "link_privacy": { "message": "Privacy policy" }

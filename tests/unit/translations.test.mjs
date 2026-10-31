@@ -42,3 +42,10 @@ test("activation labels clearly name the action and the resulting state", () => 
   assert.equal(ar.control_setup.message, "تفعيل Musicless");
   assert.equal(ar.done_heading.message, "تم تفعيل Musicless");
 });
+
+test("popup helpers explain every video opened and preserve original-sound wording", () => {
+  assert.equal(en.popup_default_on.message, "Music is removed from every video you open. Click {icon} in a video to restore its original sound.");
+  assert.equal(en.popup_one_video.message, "Every video you open keeps its original sound. Click {icon} in a video to remove its music.");
+  assert.equal(ar.popup_default_on.message, "تُزال الموسيقى من كل فيديو تفتحه. اضغط على {icon} في أي فيديو لاستعادة صوته الأصلي.");
+  assert.equal(ar.popup_one_video.message, "كل فيديو تفتحه يحتفظ بصوته الأصلي. اضغط على {icon} في أي فيديو لإزالة موسيقاه.");
+});

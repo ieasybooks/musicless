@@ -285,7 +285,9 @@ try {
               overflow: document.documentElement.scrollWidth > innerWidth };
           }, on);
           assert(state.visible && !state.overflow);
-          assert.equal(state.text, state.expected); assert.equal(state.icon, state.iconName);
+          assert.equal(state.text, state.expected);
+          assert(state.text.toLowerCase().includes(lang === "ar" ? "كل فيديو تفتحه" : "every video you open"));
+          assert.equal(state.icon, state.iconName);
           assert.equal(state.crossed, on); assert.equal(state.described, "oneVideo");
           for (const scheme of ["light", "dark"]) {
             await popup.emulateMediaFeatures([{ name: "prefers-color-scheme", value: scheme }]);

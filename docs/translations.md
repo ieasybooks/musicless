@@ -8,6 +8,8 @@ is for review by a native speaker; the Arabic is Modern Standard Arabic, plain a
 
 Arabic activation labels (`control_setup`, `consent_accept`, `done_heading`) remain drafts awaiting native review.
 
+The revised default-setting passages in the Arabic store listing and help also await native review.
+
 Conventions
 - Keep Musicless, YouTube (YouTube™ where the English has it), Chrome Sync, Chrome, Edge, Brave,
   Chromium, GitHub and Google in Latin script, in running text and in labels alike. Never
@@ -68,9 +70,9 @@ Conventions
 | `done_text` | If YouTube was already open, reload that page. | <div dir="rtl">إذا كان YouTube مفتوحًا قبل التفعيل، فأعد تحميل صفحته.</div> | If YouTube was open before activation, reload that page. The conditional avoids asking users to reload unnecessarily. |
 | `done_open` | Open YouTube | <div dir="rtl">فتح YouTube</div> | Button that opens youtube.com in the same tab (verbal noun فتح). |
 | `done_back` | Back to the video | <div dir="rtl">العودة إلى الفيديو</div> | Button instead of "Open YouTube" when the page was opened from a video's button: goes back to that tab and reloads it where the video was (verbal noun العودة). |
-| `popup_autostart_label` | Remove music by default | <div dir="rtl">إزالة الموسيقى افتراضيًا</div> | The default for new videos; changing it does not change the current video. |
-| `popup_default_on` | New videos start with music removal on. Click {icon} in the player to restore original sound for that video only. | <div dir="rtl">تُزال الموسيقى تلقائيًا من الفيديوهات الجديدة. اضغط على {icon} في المشغّل لاستعادة الصوت الأصلي لهذا الفيديو فقط.</div> | Helper when the default is on. Preserve {icon}; it becomes the crossed-out note. |
-| `popup_one_video` | New videos play their original sound. Click {icon} in the player to remove music for that video only. | <div dir="rtl">تُشغَّل الفيديوهات الجديدة بصوتها الأصلي. اضغط على {icon} في المشغّل لإزالة الموسيقى من هذا الفيديو فقط.</div> | Helper when the default is off. Preserve {icon}; it becomes the plain note. |
+| `popup_autostart_label` | Remove music by default | <div dir="rtl">إزالة الموسيقى افتراضيًا</div> | The default for every video the user opens; changing it doesn't change the video already playing. |
+| `popup_default_on` | Music is removed from every video you open. Click {icon} in a video to restore its original sound. | <div dir="rtl">تُزال الموسيقى من كل فيديو تفتحه. اضغط على {icon} في أي فيديو لاستعادة صوته الأصلي.</div> | Draft Arabic: native review required. Helper when the default is on. Preserve {icon}; it becomes the crossed-out note. |
+| `popup_one_video` | Every video you open keeps its original sound. Click {icon} in a video to remove its music. | <div dir="rtl">كل فيديو تفتحه يحتفظ بصوته الأصلي. اضغط على {icon} في أي فيديو لإزالة موسيقاه.</div> | Draft Arabic: native review required. Helper when the default is off. Preserve {icon}; it becomes the plain note. |
 | `link_help` | Help | <div dir="rtl">مساعدة</div> | Link to the help (how Musicless works, what to do); reporting a problem is one link further. مساعدة without the article, as Google's menus. |
 | `link_help_url` | https://github.com/IbraheemTuffaha/musicless#using-musicless | <div dir="rtl">https://github.com/IbraheemTuffaha/musicless/blob/main/docs/help.ar.md</div> | Not translated as text: the address of the help in this language (README's "Using Musicless" in English, docs/help.ar.md in Arabic). |
 | `link_privacy` | Privacy policy | <div dir="rtl">سياسة الخصوصية</div> | The published privacy policy. |

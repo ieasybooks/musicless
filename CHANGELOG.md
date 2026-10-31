@@ -32,7 +32,7 @@ It is not a previous version of this extension.
   and its mask weighs the music estimate more.
 - Works in Chrome, Edge, Brave, and other Chromium browsers, version 111
   or newer, on a computer.
-- **Remove music by default** applies to new videos without changing the
+- **Remove music by default** applies to every video you open without changing the
   current video. Player choices last for one video; the popup explains both
   defaults. Restoring the unprocessed audio is labelled **Restore original sound**.
 - A first-run choice, **Turn on Musicless**, on a one-screen first-run page (or the

@@ -42,7 +42,7 @@ Turn it on and watch
 • Choose Turn on Musicless after installation. Musicless then removes music automatically. If YouTube was already open, reload that page.
 • Give it a few seconds at the start of each video. You’ll see Removing music while you wait. Jumping ahead may cause another short pause.
 • Click the crossed-out music note in the video to Restore original sound. Click it again to Remove music.
-• To choose videos yourself, open Musicless from the browser toolbar and turn off Remove music by default. The default applies to new videos, leaving the current video alone. The player button changes only that video.
+• To choose videos yourself, open Musicless from the browser toolbar and turn off Remove music by default. The default applies to every video you open, leaving the current video alone. The player button changes only that video.
 
 Your usual controls still work: volume, mute, fullscreen and playback speed. You can jump to another part of the video, watch Shorts or live streams, and use supported YouTube videos on other websites. Musicless works on computers, not phone browsers or other video services.
 
