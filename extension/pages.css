@@ -82,6 +82,10 @@ a.button {
 }
 button.primary:hover,
 a.button:hover { background: var(--accent-hover); }
+@media (prefers-reduced-motion: no-preference) {
+  button.primary, a.button { transition: transform 150ms ease-out, background-color 150ms ease-out; }
+  button.primary:active, a.button:active { transform: scale(0.97); }
+}
 [lang="ar"] button.primary,
 [lang="ar"] a.button { font-size: 15px; }
 
