@@ -1,26 +1,42 @@
 // First-run page: the disclosure and the one choice that turns Musicless on,
 // then what to expect, where the control is, and the one thing left to do.
-import { localizePage, localizeWithGlyph } from "./i18n.js";
+import { localizePage, localizeWithGlyph, t } from "./i18n.js";
 
 const $ = (id) => document.getElementById(id);
 localizePage();
+const brand = document.querySelector(".brand");
+let currentConsent = null;
 function hint(on) {
-  localizeWithGlyph($("doneControl"), on ? "popup_default_on" : "popup_one_video", { on });
+  $("step1Title").textContent = t(on ? "done_step1_title" : "done_step1_off_title");
+  $("step3Title").textContent = t(on ? "done_step3_title" : "done_step3_off_title");
+  if (on) {
+    $("step1Text").textContent = t("done_step1_text");
+    localizeWithGlyph($("step3Text"), "done_step3_text", { on: true });
+  } else {
+    localizeWithGlyph($("step1Text"), "done_step1_off_text");
+    $("step3Text").textContent = t("done_step3_off_text");
+  }
 }
 
 function show(consented) {
+  if (consented === currentConsent) return;
+  const celebrate = currentConsent === false && consented;
+  currentConsent = consented;
+  brand.classList.toggle("intact", !consented);
+  brand.removeAttribute("hidden"); // SVG has no reflecting .hidden property
   $("setup").classList.toggle("off", consented);
   $("done").classList.toggle("off", !consented);
+  document.querySelector("main").classList.toggle("celebrate", celebrate);
+  if (celebrate) $("doneHeading").focus();
 }
 
 chrome.storage.sync.get({ consented: false, autoStart: true }).then(({ consented, autoStart }) => {
-  show(consented);
   hint(autoStart);
+  show(consented);
 });
 $("accept").addEventListener("click", async () => {
   await chrome.storage.sync.set({ consented: true });
   show(true);
-  $("doneHeading").focus();
 });
 
 // Opened from a video's button: return to its tab and ask that same document

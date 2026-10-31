@@ -49,3 +49,16 @@ test("popup helpers explain every video opened and preserve original-sound wordi
   assert.equal(ar.popup_default_on.message, "تُزال الموسيقى من كل فيديو تفتحه. اضغط على {icon} في أي فيديو لاستعادة صوته الأصلي.");
   assert.equal(ar.popup_one_video.message, "كل فيديو تفتحه يحتفظ بصوته الأصلي. اضغط على {icon} في أي فيديو لإزالة موسيقاه.");
 });
+
+test("setup next steps cover both defaults with described, localized glyphs", () => {
+  const keys = ["done_step1_title", "done_step1_text", "done_step2_title", "done_step2_text",
+    "done_step3_title", "done_step3_text", "done_step1_off_title", "done_step1_off_text",
+    "done_step3_off_title", "done_step3_off_text"];
+  for (const catalog of [en, ar]) {
+    assert.equal(catalog.done_wait, undefined);
+    for (const key of keys) { assert(catalog[key].message); assert(catalog[key].description); }
+    assert.deepEqual(placeholders(catalog.done_step3_text.message), ["{icon}"]);
+    assert.deepEqual(placeholders(catalog.done_step1_off_text.message), ["{icon}"]);
+    assert.equal(catalog.done_step3_off_text.message.includes("{icon}"), false);
+  }
+});

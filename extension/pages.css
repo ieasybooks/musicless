@@ -102,16 +102,25 @@ h1:focus-visible {
   box-sizing: border-box;
   max-width: 560px;
   margin: 0 auto;
-  padding: 28vh 24px 64px;
+  padding: min(16vh, 120px) 24px 48px;
   text-align: center;
 }
-/* The mark: the toolbar icon itself, the same in light and dark, as a brand
-   mark is. */
+/* The setup page alone starts with the whole note; turning it on reveals
+   the two supplied broken pieces. Hide it until the stored state is known. */
 .welcome .brand {
+  display: block;
   width: 64px;
   height: 64px;
   margin: 0 auto 28px;
-  background: url(icons/icon.svg) center / contain no-repeat;
+}
+.brand .top { transform-box: view-box; transform-origin: 0 0; transform: translate(41.02px, 42.84px) rotate(0deg) translate(-41.02px, -42.84px); }
+.brand .whole-note { opacity: 0; }
+.brand.intact .whole-note { opacity: 1; }
+.brand.intact .piece { opacity: 0; }
+.brand.intact .top { transform: translate(39.44px, 54.96px) rotate(-16deg) translate(-41.02px, -42.84px); }
+@media (prefers-reduced-motion: no-preference) {
+  .brand:not(.intact) .whole-note, .brand:not(.intact) .piece { transition: opacity 0s 140ms; }
+  .brand:not(.intact) .top { transition: opacity 0s 140ms, transform 560ms cubic-bezier(.23, 1, .32, 1) 140ms; }
 }
 /* Both states in one place; each flows on its own, so the heading stays put
    and the button follows its own text. */
@@ -123,7 +132,26 @@ h1:focus-visible {
 .welcome section p { max-width: 500px; margin: 0 auto 8px; color: var(--muted); font-size: 16px; line-height: 24px; text-wrap: pretty; }
 .welcome section p:has(+ div), .welcome section p:has(+ p[hidden] + div) { margin-bottom: 32px; } /* the last one shown */
 .welcome section p.aside { margin-top: 16px; font-size: 14px; line-height: 20px; }
+.welcome .steps { box-sizing: border-box; max-width: 380px; margin: 24px auto; padding-inline-start: 28px; list-style-type: decimal; text-align: start; }
+.welcome .steps li { padding-inline-start: 4px; margin-bottom: 16px; font-size: 16px; line-height: 24px; }
+.welcome .steps li::marker { color: var(--faint); font-variant-numeric: tabular-nums; }
+.welcome .steps strong { font-weight: 500; }
+.welcome .steps p { margin: 4px 0 0; }
+.welcome .done-actions { margin-top: 32px; }
+@media (prefers-reduced-motion: no-preference) {
+  .welcome .celebrate #done .steps > li,
+  .welcome .celebrate #done > .aside,
+  .welcome .celebrate #done > .done-actions {
+    animation: next-step 380ms cubic-bezier(.23, 1, .32, 1) both;
+    animation-delay: calc(240ms + var(--order) * 70ms);
+  }
+  @keyframes next-step {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
 [lang="ar"] .welcome section p { font-size: 17px; line-height: 28px; }
+[lang="ar"] .welcome .steps li { font-size: 17px; line-height: 28px; }
 [lang="ar"] .welcome section p.aside { font-size: 15px; line-height: 24px; }
 
 /* The player button's glyph inside a sentence, in the text's own colour. */

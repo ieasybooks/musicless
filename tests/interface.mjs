@@ -204,11 +204,11 @@ try {
   await step("the welcome instruction's glyph stays visible in forced colors", async () => {
     await setSettings(browser, extensionId, { consented: true });
     await page.goto(`chrome-extension://${extensionId}/welcome.html`);
-    await page.waitForSelector("#doneControl .glyph", { visible: true });
+    await page.waitForSelector("#done .steps .glyph", { visible: true });
     const cdp = await page.createCDPSession();
     await cdp.send("Emulation.setEmulatedMedia", { features: [{ name: "forced-colors", value: "active" }] });
     try {
-      const glyph = await page.$("#doneControl .glyph");
+      const glyph = await page.$("#done .steps .glyph");
       const png = await glyph.screenshot({ type: "png" });
       writeFileSync(join(WORK, "forced-colors-glyph.png"), png);
       const differentPixels = await page.evaluate(async data => {
@@ -308,14 +308,51 @@ try {
         await welcome.setViewport({ width: 900, height: 750, deviceScaleFactor: 1 });
         await welcome.goto(`chrome-extension://${localized.extensionId}/welcome.html`);
         await welcome.waitForSelector("#done:not(.off)");
-        const instruction = await welcome.$eval("#doneControl", el => el.textContent);
-        const expectedInstruction = await welcome.evaluate(() => chrome.i18n.getMessage("popup_one_video").replace("{icon}", ""));
-        assert.equal(instruction, expectedInstruction, "setup must also reflect a changed default");
+        const checkSteps = async on => {
+          const state = await welcome.evaluate(on => ({
+            titles: [...document.querySelectorAll(".steps strong")].map(el => el.textContent),
+            expected: [on ? "done_step1_title" : "done_step1_off_title", "done_step2_title",
+              on ? "done_step3_title" : "done_step3_off_title"].map(key => chrome.i18n.getMessage(key)),
+            glyphStep: [...document.querySelectorAll(".steps li")].findIndex(el => el.querySelector(".glyph")),
+            crossed: !!document.querySelector(".steps .glyph-on"),
+            numbering: getComputedStyle(document.querySelector(".steps")).listStyleType,
+            intact: document.querySelector(".brand").classList.contains("intact"),
+            iconWidth: document.querySelector(".brand").getBoundingClientRect().width,
+          }), on);
+          assert.deepEqual(state.titles, state.expected);
+          assert.equal(state.glyphStep, on ? 2 : 0); assert.equal(state.crossed, on);
+          assert.equal(state.numbering, "decimal"); assert(!state.intact);
+          assert.equal(state.iconWidth, 64);
+        };
+        await checkSteps(false);
+        assert.equal(await welcome.evaluate(() => document.getAnimations().length), 0, "already-on pages must not animate");
+        await setSettings(localized.browser, localized.extensionId, { autoStart: true });
+        await welcome.waitForSelector("#step3Text .glyph-on");
+        await checkSteps(true);
+        for (const reduce of [false, true]) {
+          await welcome.emulateMediaFeatures([{ name: "prefers-reduced-motion", value: reduce ? "reduce" : "no-preference" }]);
+          await popup.evaluate(() => chrome.storage.sync.set({ consented: false }));
+          await welcome.waitForSelector(".brand.intact");
+          assert.equal(await welcome.$eval(".whole-note", el => getComputedStyle(el).opacity), "1");
+          if (reduce) await popup.evaluate(() => chrome.storage.sync.set({ consented: true }));
+          else await welcome.click("#accept");
+          await welcome.waitForSelector("#done:not(.off)");
+          const motion = await welcome.evaluate(() => ({ count: document.getAnimations().length,
+            topMoving: document.querySelector(".brand .top").getAnimations().some(a => a.effect.getTiming().duration === 560),
+            focused: document.activeElement.id, intact: document.querySelector(".brand").classList.contains("intact") }));
+          assert.equal(motion.focused, "doneHeading"); assert(!motion.intact);
+          assert(reduce ? motion.count === 0 : motion.count > 0 && motion.topMoving, JSON.stringify(motion));
+          await sleep(1000);
+          assert.equal(await welcome.$eval(".whole-note", el => getComputedStyle(el).opacity), "0");
+        }
+        await welcome.reload();
+        await welcome.waitForSelector("#done:not(.off)");
+        assert.equal(await welcome.evaluate(() => document.getAnimations().length), 0);
         for (const scheme of ["light", "dark"]) {
           await welcome.emulateMediaFeatures([{ name: "prefers-color-scheme", value: scheme }]);
           await welcome.screenshot({ path: join(WORK, `${lang}-welcome-${scheme}.png`) });
         }
-        return { lang, defaultsExplained: true, perVideoGlyphs: true, consentRequired: true };
+        return { lang, defaultsExplained: true, perVideoGlyphs: true, consentRequired: true, numberedSteps: true, snapAndReducedMotion: true };
       } finally { await localized.browser.close(); }
     });
   }
