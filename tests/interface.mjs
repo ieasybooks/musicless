@@ -291,6 +291,16 @@ try {
           assert.equal(state.crossed, on); assert.equal(state.described, "oneVideo");
           for (const scheme of ["light", "dark"]) {
             await popup.emulateMediaFeatures([{ name: "prefers-color-scheme", value: scheme }]);
+            await popup.waitForFunction(scheme => document.querySelector(".popup-header img").currentSrc.endsWith(
+              `musicless-logo-${scheme === "dark" ? "paper" : "ink"}.svg`), {}, scheme);
+            const header = await popup.evaluate(() => ({
+              height: document.querySelector(".popup-header").getBoundingClientRect().height,
+              logoHeight: document.querySelector(".popup-header img").getBoundingClientRect().height,
+              alt: document.querySelector(".popup-header img").alt,
+              linked: !!document.querySelector(".popup-header a"),
+            }));
+            assert.equal(header.height, 50); assert.equal(header.logoHeight, 26);
+            assert.equal(header.alt, "Musicless"); assert(!header.linked);
             await popup.screenshot({ path: join(WORK, `${lang}-popup-${on ? "on" : "off"}-${scheme}.png`) });
           }
         }

@@ -137,6 +137,15 @@ h1:focus-visible {
 
 /* ---- the toolbar popup ---- */
 .popup { width: 320px; }
+.popup-header {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: 50px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--divider);
+}
+.popup-header img { display: block; height: 26px; width: auto; }
 @media (prefers-color-scheme: dark) {
   .popup { --bg: #28292c; } /* a popup floats a step above the page */
 }
