@@ -6,7 +6,7 @@
 
   "control_name": { "message": "Remove music", "description": "Name and tooltip of the player button while removal is off or has failed. A click removes music, or opens recovery choices after a failure." },
   "control_on": { "message": "Restore original sound", "description": "Name and tooltip while removal is on. Restores the original audio for this video without starting a paused video." },
-  "control_setup": { "message": "Enable Musicless", "description": "Player button before consent; opens the first-run disclosure." },
+  "control_setup": { "message": "Turn on Musicless", "description": "Player button before consent; opens the first-run disclosure." },
   "notice_working": { "message": "Removing music", "description": "Under the spinner in the middle of the video while it waits a moment for the first audio without music (at the start, or after a jump)." },
   "notice_done": { "message": "Music removal is on", "description": "Said once by screen readers when a wait ends and the video plays without its music." },
   "notice_blocked": { "message": "Click to play", "description": "Name, read by screen readers, of the round play button in the middle of the video when the browser needs a click before it plays sound." },
@@ -18,7 +18,7 @@
 
   "failure_protected": { "message": "This video is copy-protected.", "description": "Copy-protected: the owner locked the video, as rented movies are." },
   "failure_codec": {"message": "Musicless can’t work with this video’s audio."},
-  "failure_missed": {"message": "Reload this page to start removing music.", "description": "Under the title “Musicless is enabled” (done_heading), on a video that was already playing when the user turned Musicless on: its sound went by unread, and a reload is all it needs. The main button is “Reload page”."},
+  "failure_missed": {"message": "Reload this page to start removing music.", "description": "Under the title “Musicless is on” (done_heading), on a video that was already playing when the user turned Musicless on: its sound went by unread, and a reload is all it needs. The main button is “Reload page”."},
   "failure_uncaptured": {"message": "Try reloading the page.", "description": "Musicless could not find this player’s sound (it may play in a part of the page Musicless cannot read)."},
   "failure_source": {"message": "Musicless can’t access the sound in this video."},
   "failure_slow": {"message": "This is taking longer than expected. Try again in a moment."},
@@ -29,8 +29,8 @@
 
   "setup_heading": { "message": "Watch YouTube without the music", "description": "Heading of the first-run page: what the user gets." },
   "consent_text": {"message": "Musicless uses the audio from the YouTube videos you watch to remove most of the music, all on your computer. It never saves or uploads the audio. Your settings may sync through Chrome Sync.", "description": "Disclosure before any audio is read, on the first-run page and in the popup. Keep all facts: uses the audio of the videos watched on YouTube, only on the computer, never saves or uploads it, settings may sync through Chrome Sync."},
-  "consent_accept": { "message": "Enable Musicless", "description": "The affirmative choice under the local-audio disclosure." },
-  "done_heading": { "message": "Musicless is enabled", "description": "After consent; also the title when an already-open video needs reloading." },
+  "consent_accept": { "message": "Turn on Musicless", "description": "The affirmative choice under the local-audio disclosure." },
+  "done_heading": { "message": "Musicless is on", "description": "After consent; also the title when an already-open video needs reloading." },
   "done_wait": { "message": "Give Musicless a few seconds to remove the music when a video starts.", "description": "Explains the short wait when music removal is on." },
   "done_text": {"message": "If YouTube was already open, reload that page.", "description": "Conditional reminder to reload YouTube pages that were already open before activation. Shown after activation on the welcome page and in the popup."},
   "done_open": { "message": "Open YouTube", "description": "Button: opens youtube.com in this tab." },

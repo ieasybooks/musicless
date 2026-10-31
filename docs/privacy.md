@@ -18,7 +18,7 @@ recording, media downloads or audio export.
 ## Settings and storage
 
 Chrome stores your **Remove music by default** setting and your consent to local
-audio processing, given by choosing **Enable Musicless**. These may sync between
+audio processing, given by choosing **Turn on Musicless**. These may sync between
 your devices through Chrome Sync.
 A random security token stays on this device to prevent web pages from
 connecting to Musicless's audio processor.

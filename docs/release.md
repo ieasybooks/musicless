@@ -37,7 +37,7 @@ On Linux, before the tag:
    music" under it. On a Short the button sits with the Short's own buttons.
    The recovery dialog offers Try again (or Reload page) and Play original sound;
    a copy-protected video offers only Play original sound.
-   The first run asks you to **Enable Musicless** before it processes a video.
+   The first run asks you to **Turn on Musicless** before it processes a video.
 7. **Package check.** `./scripts/package.sh` writes `dist/musicless-<version>.zip`.
    Unzip it and run `MUSICLESS_EXTENSION=<folder> QUICK=1 node local.mjs`, then
    load that folder in a clean profile and play one video. The release zip
@@ -51,7 +51,7 @@ On Linux, before the tag:
 On macOS and on Windows, with the same unzipped release, before you publish
 the store item:
 
-- Choose **Enable Musicless**, reload an open YouTube tab, and play a
+- Choose **Turn on Musicless**, reload an open YouTube tab, and play a
   public video with speech over music.
 - Seek, change speed, turn the player button off and on, and open the
   recovery dialog on a video it cannot process.

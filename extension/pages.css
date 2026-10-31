@@ -140,7 +140,7 @@ h1:focus-visible {
 @media (prefers-color-scheme: dark) {
   .popup { --bg: #28292c; } /* a popup floats a step above the page */
 }
-/* Before the first run: the disclosure and "Enable Musicless", as on the first-run page. */
+/* Before the first run: the disclosure and "Turn on Musicless", as on the first-run page. */
 .popup #consent { padding: 16px; }
 .popup h1 { margin: 0 0 4px; font-size: 16px; line-height: 24px; font-weight: 500; }
 [lang="ar"] .popup h1 { font-size: 17px; line-height: 28px; }

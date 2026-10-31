@@ -62,7 +62,7 @@ extension UI uses the same Arabic (they come from
 
 | English | Arabic |
 | --- | --- |
-| Enable Musicless | تفعيل Musicless |
+| Turn on Musicless | تفعيل Musicless |
 | Remove music | إزالة الموسيقى |
 | Restore original sound | استعادة الصوت الأصلي |
 | Play original sound | تشغيل الصوت الأصلي |
@@ -71,7 +71,7 @@ extension UI uses the same Arabic (they come from
 | Try again | إعادة المحاولة |
 | Reload page | إعادة تحميل الصفحة |
 
-Buttons use familiar Arabic labels. "Enable Musicless" uses «تفعيل Musicless» so it is distinct
+Buttons use familiar Arabic labels. "Turn on Musicless" uses «تفعيل Musicless» so it is distinct
 from playing a video. The player toggle says
 «استعادة الصوت الأصلي» to restore original sound without suggesting that a paused video
 will start. The recovery choice stays «تشغيل الصوت الأصلي». After "YouTube™"

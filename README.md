@@ -42,13 +42,13 @@ is no listing URL yet. This page will gain one after the listing is live.
    on **Developer mode**, click **Load unpacked**, and choose the unzipped
    folder.
 4. Reload any YouTube tabs that were already open.
-5. The first time, choose **Enable Musicless** on the page that opens (or in the
+5. The first time, choose **Turn on Musicless** on the page that opens (or in the
    toolbar popup, under the same words). Until you do, Musicless does not remove
    music; its button on the player opens that page.
 
 ## Using Musicless
 
-- **Start watching.** Choose **Enable Musicless** after installation, then open YouTube.
+- **Start watching.** Choose **Turn on Musicless** after installation, then open YouTube.
   If YouTube was already open, reload that page. You can also turn Musicless
   on from its icon in the browser toolbar.
 - **Give it a few seconds.** Musicless removes music automatically. A video
@@ -97,7 +97,7 @@ computer. Audio is used only to remove background music during playback. It
 is not uploaded, shared, or saved as an audio file. The developer receives no
 audio, browsing history, identifiers, or usage analytics. There is no account.
 
-The automatic-removal setting, and whether you have chosen **Enable Musicless**, are
+The automatic-removal setting, and whether you have chosen **Turn on Musicless**, are
 stored in Chrome's extension storage and may sync between your devices if
 Chrome Sync is enabled. See the [privacy policy](docs/privacy.md).
 

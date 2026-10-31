@@ -269,6 +269,7 @@ try {
         await popup.goto(`chrome-extension://${localized.extensionId}/popup.html`);
         await popup.waitForSelector("#accept", { visible: true });
         const expectedAccept = await popup.evaluate(() => chrome.i18n.getMessage("consent_accept"));
+        assert.equal(expectedAccept, lang === "ar" ? "تفعيل Musicless" : "Turn on Musicless");
         assert.equal(await popup.$eval("#accept", el => el.textContent), expectedAccept);
         await popup.click("#accept");
         await popup.waitForSelector("#settings:not([hidden])");

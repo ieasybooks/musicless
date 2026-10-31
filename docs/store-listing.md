@@ -7,7 +7,7 @@ submission. Edge Add-ons can use the same public text. Images are in
 [release.md](release.md)).
 
 Do not submit until the release zip matches this page: English and Arabic UI,
-the first-run **Enable Musicless** choice, no debug recorder, and the player labels
+the first-run **Turn on Musicless** choice, no debug recorder, and the player labels
 named below.
 
 ## Listing
@@ -39,7 +39,7 @@ category. This is a recommendation, not a category Google requires by name.
 Watch YouTube™ with less background music, while keeping speech and singing. Musicless is for anyone who wants to avoid music for religious or personal reasons, or simply prefers to hear the voices.
 
 Turn it on and watch
-• Choose Enable Musicless after installation. Musicless then removes music automatically. If YouTube was already open, reload that page.
+• Choose Turn on Musicless after installation. Musicless then removes music automatically. If YouTube was already open, reload that page.
 • Give it a few seconds at the start of each video. You’ll see Removing music while you wait. Jumping ahead may cause another short pause.
 • Click the crossed-out music note in the video to Restore original sound. Click it again to Remove music.
 • To choose videos yourself, open Musicless from the browser toolbar and turn off Remove music by default. The default applies to new videos, leaving the current video alone. The player button changes only that video.
@@ -98,7 +98,7 @@ Reduce background music during YouTube video playback while preserving voices, b
 **`storage`:**
 
 ```text
-Stores the automatic music-removal preference and whether the user has acknowledged the first-run local-audio disclosure (Enable Musicless) in chrome.storage.sync, so Musicless starts consistently and does not repeat the disclosure; both may sync between the user's own devices through Chrome Sync. Also stores a random token in chrome.storage.local that the extension's own hidden processing frame checks, so that web pages cannot connect to it. Opening setup from a video temporarily stores its tab, frame and document identifiers in chrome.storage.session for Back to the video; these are not synced and are cleared on return or when the browser session ends. No audio, video, browsing-history log, or analytics is stored in extension storage.
+Stores the automatic music-removal preference and whether the user has acknowledged the first-run local-audio disclosure (Turn on Musicless) in chrome.storage.sync, so Musicless starts consistently and does not repeat the disclosure; both may sync between the user's own devices through Chrome Sync. Also stores a random token in chrome.storage.local that the extension's own hidden processing frame checks, so that web pages cannot connect to it. Opening setup from a video temporarily stores its tab, frame and document identifiers in chrome.storage.session for Back to the video; these are not synced and are cleared on return or when the browser session ends. No audio, video, browsing-history log, or analytics is stored in extension storage.
 ```
 
 Re-read this against the keys the extension actually writes. If the
@@ -164,7 +164,7 @@ may stay in English. Describe only behavior the zip actually has.
 ```text
 Purpose: local background-music reduction during playback, keeping speech and singing. No Musicless account, payment, backend, microphone permission, media downloads, or export is needed.
 
-1. Install the submitted package on a desktop Chrome version supported by the manifest. A first-run page opens; Musicless does not process audio until you choose Enable Musicless there (or Enable Musicless in the toolbar popup, under the same disclosure). Before that, the player button shows a music note with a small dot; its tooltip says Enable Musicless and it opens that page, which then offers Back to the video (it reloads that video where it was). A video that was already playing when Musicless was turned on shows "Musicless is enabled" and Reload page. Reload website tabs that were open before installation.
+1. Install the submitted package on a desktop Chrome version supported by the manifest. A first-run page opens; Musicless does not process audio until you choose Turn on Musicless there (or Turn on Musicless in the toolbar popup, under the same disclosure). Before that, the player button shows a music note with a small dot; its tooltip says Turn on Musicless and it opens that page, which then offers Back to the video (it reloads that video where it was). A video that was already playing when Musicless was turned on shows "Musicless is on" and Reload page. Reload website tabs that were open before installation.
 2. Open a normal, non-copy-protected YouTube video with speech over background music. A public video works; no YouTube login is required for ordinary public playback. Leave the video unmuted. The first audio may take a few seconds to prepare; the video waits during preparation, with YouTube's spinner in the middle of the video and "Removing music" under it.
 3. Musicless's button sits in the player's control bar, left of captions: a struck-through music note while separation is on. Listen for reduced instruments with retained speech and singing. Some music leakage is expected and is disclosed. Click the button (tooltip: Restore original sound) to hear the original, then click it again (tooltip: Remove music) to turn removal back on.
 4. Try volume, mute, a seek, and a speed change. Check an embedded player as well (the button sits in its top row of buttons) and a Short (the button sits with the Short's own buttons at its top). In the toolbar popup, turn automatic removal off, open another supported video, and click the button on its player.
@@ -197,7 +197,7 @@ There is no "100% music-free" claim.
 | File | What it shows | Caption |
 | --- | --- | --- |
 | `en-1-music-removed.png` | Musicless's struck note in YouTube's control bar, its tooltip "Restore original sound" | Removes most of the music. Keeps the voices. |
-| `en-2-turn-on-once.png` | The first-run page: the disclosure and Enable Musicless | Turn it on once. Then it works by itself. |
+| `en-2-turn-on-once.png` | The first-run page: the disclosure and Turn on Musicless | Turn it on once. Then it works by itself. |
 | `en-3-you-choose.png` | The recovery dialog: Couldn’t remove the music, Play original sound, Try again | If the music can’t be removed, the video waits for you. |
 | `en-4-one-setting.png` | The toolbar popup: the one setting and Help | One setting. Everything runs on your computer. |
 | `promo-tile-440x280.png` | The paper logo (the snapped note and the name musicless) on ink | none |

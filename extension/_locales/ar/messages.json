@@ -6,7 +6,7 @@
 
   "control_name": { "message": "إزالة الموسيقى" },
   "control_on": { "message": "استعادة الصوت الأصلي" },
-  "control_setup": { "message": "تفعيل Musicless" },
+  "control_setup": {"message": "تفعيل Musicless", "description": "Player button before consent; opens the first-run disclosure."},
   "notice_working": {"message": "جارٍ إزالة الموسيقى"},
   "notice_done": { "message": "إزالة الموسيقى مفعّلة" },
   "notice_blocked": { "message": "انقر للتشغيل" },
@@ -18,7 +18,7 @@
 
   "failure_protected": { "message": "هذا الفيديو محمي من النسخ." },
   "failure_codec": {"message": "لا يدعم Musicless الصوت في هذا الفيديو."},
-  "failure_missed": {"message": "أعد تحميل الصفحة لبدء إزالة الموسيقى."},
+  "failure_missed": {"message": "أعد تحميل الصفحة لبدء إزالة الموسيقى.", "description": "Under the title “Musicless is on” (done_heading), on a video that was already playing when the user turned Musicless on: its sound went by unread, and a reload is all it needs. The main button is “Reload page”."},
   "failure_uncaptured": {"message": "جرّب إعادة تحميل الصفحة."},
   "failure_source": {"message": "لا يستطيع Musicless الوصول إلى صوت هذا الفيديو."},
   "failure_slow": {"message": "تستغرق إزالة الموسيقى وقتًا أطول من المتوقع. حاول مرة أخرى بعد قليل."},
@@ -29,8 +29,8 @@
 
   "setup_heading": { "message": "شاهد YouTube بدون موسيقى" },
   "consent_text": {"message": "يستخدم Musicless صوت فيديوهات YouTube التي تشاهدها لإزالة معظم الموسيقى، على حاسوبك فقط. لا يحفظ الصوت ولا يرسله إلى أي مكان. قد تتزامن إعداداتك عبر Chrome Sync."},
-  "consent_accept": { "message": "تفعيل Musicless" },
-  "done_heading": { "message": "تم تفعيل Musicless" },
+  "consent_accept": {"message": "تفعيل Musicless", "description": "The affirmative choice under the local-audio disclosure."},
+  "done_heading": {"message": "تم تفعيل Musicless", "description": "After consent; also the title when an already-open video needs reloading."},
   "done_wait": { "message": "انتظر بضع ثوانٍ لإزالة الموسيقى عند بدء الفيديو." },
   "done_text": {"message": "إذا كان YouTube مفتوحًا قبل التفعيل، فأعد تحميل صفحته."},
   "done_open": { "message": "فتح YouTube" },

@@ -33,3 +33,12 @@ test("docs/translations.md lists every key with the catalogs' exact texts", () =
     assert.equal(row.ar, ar[key].message, key);
   }
 });
+
+test("activation labels clearly name the action and the resulting state", () => {
+  assert.equal(en.consent_accept.message, "Turn on Musicless");
+  assert.equal(en.control_setup.message, "Turn on Musicless");
+  assert.equal(en.done_heading.message, "Musicless is on");
+  assert.equal(ar.consent_accept.message, "تفعيل Musicless");
+  assert.equal(ar.control_setup.message, "تفعيل Musicless");
+  assert.equal(ar.done_heading.message, "تم تفعيل Musicless");
+});

@@ -479,7 +479,7 @@ await step("nothing is read before consent; consenting starts the next video", a
       before.status === "setup" && before.originalGain === null && !before.attached && frames === 0 && !paused && time > 2 &&
         media === 0 && captured.some((stream) => stream.missed) && leftOff && turnedOn &&
         failed.failure.reason === "missed" && failMs < 5000 &&
-        dialog.title === "Musicless is enabled" && dialog.main === "Reload page" && dialog.focused && state.status === "on" && good(a),
+        dialog.title === "Musicless is on" && dialog.main === "Reload page" && dialog.focused && state.status === "on" && good(a),
       { status_before: before.status, routed_before: before.originalGain !== null, engine_frames_before: frames, played_before: !paused,
         audio_kept_before: media, left_without_choosing_kept_it_off: leftOff, turned_on_by_keyboard: turnedOn, missed_ms: failMs,
         dialog, next_video_audio_ms: ms, ...a });
