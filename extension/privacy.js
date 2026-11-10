@@ -1,5 +1,5 @@
-// This page only chooses which bundled policy text to show. Reading it does
-// not change consent or settings, and needs no network access.
+// This page only chooses which bundled policy text, and which name, to show.
+// Reading it does not change consent or settings, and needs no network access.
 const sections = [...document.querySelectorAll("main > section")];
 const preferred = globalThis.chrome?.i18n?.getMessage("locale_code") === "ar" ? "ar" : "en";
 
@@ -10,6 +10,7 @@ function showLanguage() {
   document.documentElement.dir = language === "ar" ? "rtl" : "ltr";
   for (const section of sections) section.hidden = section.id !== language;
   document.title = document.getElementById(language).querySelector("h1").textContent;
+  document.getElementById("product-name").textContent = document.getElementById(language).dataset.name;
   for (const link of document.querySelectorAll("nav a")) {
     if (link.hash === `#${language}`) link.setAttribute("aria-current", "true");
     else link.removeAttribute("aria-current");

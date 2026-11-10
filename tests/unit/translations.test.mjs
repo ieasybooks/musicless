@@ -38,9 +38,9 @@ test("activation labels clearly name the action and the resulting state", () => 
   assert.equal(en.consent_accept.message, "Turn on Musicless");
   assert.equal(en.control_setup.message, "Turn on Musicless");
   assert.equal(en.done_heading.message, "Musicless is on");
-  assert.equal(ar.consent_accept.message, "تفعيل Musicless");
-  assert.equal(ar.control_setup.message, "تفعيل Musicless");
-  assert.equal(ar.done_heading.message, "تم تفعيل Musicless");
+  assert.equal(ar.consent_accept.message, "تفعيل «بلا موسيقى»");
+  assert.equal(ar.control_setup.message, "تفعيل «بلا موسيقى»");
+  assert.equal(ar.done_heading.message, "تم تفعيل «بلا موسيقى»");
 });
 
 test("popup helpers explain every video opened and preserve original-sound wording", () => {

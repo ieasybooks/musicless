@@ -77,7 +77,7 @@ another part of the video, watch Shorts or live streams, and use supported
 YouTube videos on other websites. Musicless does not block ads.
 
 Something not working? [Report a problem](https://github.com/IbraheemTuffaha/musicless/issues/new?template=bug.yml).
-Help in Arabic: [استخدام Musicless](docs/help.ar.md).
+Help in Arabic: [استخدام «بلا موسيقى»](docs/help.ar.md).
 
 ## What to expect
 

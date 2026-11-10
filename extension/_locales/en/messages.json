@@ -1,7 +1,7 @@
 {
   "locale_code": { "message": "en", "description": "Not translated: the language code of this catalog (BCP 47), for the lang attribute." },
   "locale_dir": { "message": "ltr", "description": "Not translated: the writing direction of this catalog, ltr or rtl." },
-  "extension_name": { "message": "Musicless", "description": "The brand. Keep it in Latin letters in every language." },
+  "extension_name": { "message": "Musicless", "description": "The brand. Arabic has its own name, بلا موسيقى (“without music”); keep Musicless in Latin letters in any other language." },
   "extension_description": { "message": "Removes most of the background music from YouTube™ videos and keeps the voices. Everything runs on your computer.", "description": "Store summary and extensions-page description. 132 characters at most." },
 
   "control_name": { "message": "Remove music", "description": "Name and tooltip of the player button while removal is off or has failed. A click removes music, or opens recovery choices after a failure." },

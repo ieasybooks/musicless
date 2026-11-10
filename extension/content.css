@@ -12,7 +12,7 @@
   -webkit-font-smoothing: antialiased;
 }
 /* Arabic: YouTube's Latin face first, so the Latin words in Arabic text
-   (YouTube, Musicless) look as they do everywhere else, then the systems' Arabic
+   (such as YouTube) look as they do everywhere else, then the systems' Arabic
    faces. */
 .musicless-notice[lang="ar"],
 .musicless-dialog[lang="ar"] {

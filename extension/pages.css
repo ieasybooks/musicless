@@ -43,7 +43,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 /* Arabic: the same Latin faces first, so the Latin words in Arabic text
-   (Musicless, YouTube) look as they do in English, then the systems' Arabic
+   (YouTube, Chrome Sync) look as they do in English, then the systems' Arabic
    faces. Arabic letters are smaller than Latin ones at the same size: one
    step up, with more room between lines. */
 [lang="ar"] body {
