@@ -11,6 +11,10 @@ The name (`بلا موسيقى`) and the summary are the manifest `name` and
 supplies them; keep them identical here. The summary must stay at or under 132
 characters on its own. Recount after any edit.
 
+The description says بدون موسيقى once on purpose. It is the phrase Arabic
+speakers usually search for, and the name already covers بلا موسيقى. Keep it
+when editing.
+
 ## الاسم
 
 ```text
@@ -28,7 +32,7 @@ characters on its own. Recount after any edit.
 ## الوصف
 
 ```text
-شاهد YouTube™‎ مع موسيقى خلفية أقل، مع إبقاء الكلام والغناء. إضافة «بلا موسيقى» لمن يريد تجنّب الموسيقى لأسباب دينية أو شخصية، أو يفضّل سماع الأصوات البشرية مع موسيقى أقل.
+شاهد YouTube™‎ مع موسيقى خلفية أقل، مع إبقاء الكلام والغناء. إضافة «بلا موسيقى» لمن يريد المشاهدة بدون موسيقى لأسباب دينية أو شخصية، أو يفضّل سماع الأصوات البشرية مع موسيقى أقل.
 
 فعّله وابدأ المشاهدة
 • بعد التثبيت، اختر تفعيل «بلا موسيقى». ستُزال الموسيقى تلقائيًا. إذا كان YouTube مفتوحًا من قبل، فأعد تحميل صفحته.
