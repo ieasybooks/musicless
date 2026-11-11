@@ -66,14 +66,16 @@ try {
   const promo = `<div style="width:440px;height:280px;background:${INK};display:grid;place-items:center;line-height:0">${sized("musicless-logo-paper.svg", 320)}</div>`;
   await render(page, promo, 440, 280, join(ROOT, "docs/store/promo-tile-440x280.png"));
   copyFileSync(join(BRAND, "musicless-icon.svg"), join(ROOT, "extension/icons/icon.svg"));
+  // The popup's logos: English, and Arabic with «بلا موسيقى».
   for (const tone of ["ink", "paper"]) {
-    const name = `musicless-logo-${tone}.svg`;
-    copyFileSync(join(BRAND, name), join(ROOT, "extension/icons", name));
+    for (const name of [`musicless-logo-${tone}.svg`, `musicless-logo-ar-${tone}.svg`]) {
+      copyFileSync(join(BRAND, name), join(ROOT, "extension/icons", name));
+    }
   }
   // The player button's two glyphs, for sentences that point at it.
   writeFileSync(join(ROOT, "extension/icons/player-on.svg"), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">${note()}</svg>\n`);
   writeFileSync(join(ROOT, "extension/icons/player-off.svg"), `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><g fill="#fff">${PLAIN}</g></svg>\n`);
-  console.log("wrote extension/icons/icon-{16,32,48,128}.png, extension/icons/{icon,player-on,player-off}.svg, docs/store/store-icon-128.png, docs/store/promo-tile-440x280.png");
+  console.log("wrote extension/icons/icon-{16,32,48,128}.png, extension/icons/{icon,player-on,player-off}.svg, extension/icons/musicless-logo{,-ar}-{ink,paper}.svg, docs/store/store-icon-128.png, docs/store/promo-tile-440x280.png");
 } finally {
   await browser.close();
   rmSync(profile, { recursive: true, force: true });
