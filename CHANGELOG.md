@@ -25,7 +25,9 @@ It is not a previous version of this extension.
 
 - A Chrome extension (Manifest V3) that removes background music from
   YouTube videos and keeps speech and singing, on the user's computer.
-- English and Arabic, including right-to-left layout.
+- English and Arabic, including right-to-left layout. In Arabic the extension
+  is called «بلا موسيقى», with its own logo, and its pages' titles use the
+  bundled Alexandria typeface.
 - Spleeter 2-stem (Deezer) runs in the browser with ONNX Runtime Web, on one
   processor thread. Compared with Spleeter's own mask, Musicless removes more
   of the music under speech: the model sees every window at the same level,
