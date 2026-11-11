@@ -1,4 +1,4 @@
-// Toolbar popup: one-time consent, then the default for new videos.
+// Toolbar popup: one-time consent, then the default for every video the user opens.
 import { localizePage, localizeWithGlyph, t } from "./i18n.js";
 import { DEFAULTS } from "./settings.js";
 
@@ -19,7 +19,7 @@ function show(consented) {
   $("settings").hidden = !consented;
 }
 
-// The switch sets the default for new videos. The player button changes one video.
+// The switch sets the default for every video the user opens. The player button changes one video.
 function hint() {
   const on = $("autoStart").checked;
   localizeWithGlyph($("oneVideo"), on ? "popup_default_on" : "popup_one_video", { on });
