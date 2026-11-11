@@ -2,3 +2,4 @@
 *.png binary
 *.onnx binary
 *.wasm binary
+*.woff2 binary

@@ -6,6 +6,14 @@ const $ = (id) => document.getElementById(id);
 localizePage();
 $("help").href = t("link_help_url");
 
+// The logo in the catalog's language: Arabic has its own, with «بلا موسيقى».
+const logo = document.querySelector(".popup-header img");
+if (document.documentElement.lang === "ar") {
+  document.querySelector(".popup-header source").srcset = "icons/musicless-logo-ar-paper.svg";
+  logo.src = "icons/musicless-logo-ar-ink.svg";
+}
+logo.alt = t("extension_name");
+
 function show(consented) {
   $("consent").hidden = consented;
   $("settings").hidden = !consented;

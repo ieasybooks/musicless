@@ -1,7 +1,7 @@
 /* Shared look of the extension's own pages (popup, first run), in the manner
-   of Chrome's own: the system's fonts, its light or dark appearance, one
-   accent colour spent on the one action. Logical properties keep the layout
-   right in Arabic (dir="rtl", set by i18n.js). */
+   of Chrome's own: the system's fonts (Arabic titles aside, below), its light
+   or dark appearance, one accent colour spent on the one action. Logical
+   properties keep the layout right in Arabic (dir="rtl", set by i18n.js). */
 :root {
   color-scheme: light dark;
   --bg: #ffffff;
@@ -50,6 +50,24 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "SF Arabic", "Noto Sans Arabic", "Geeza Pro", Tahoma, system-ui, sans-serif;
   font-size: 14px;
   line-height: 22px;
+}
+/* Arabic titles are set in Alexandria, the face the Arabic logo is drawn
+   from: headings, the steps' titles and the policy's name. It is the one font
+   Musicless ships, cut to its Arabic letters (OFL, THIRD_PARTY_NOTICES.txt).
+   Latin words keep the system's faces, as in English, and size-adjust brings
+   its letters to the size of the system's Arabic. */
+@font-face {
+  font-family: "Alexandria Arabic";
+  src: url(fonts/alexandria-arabic.woff2) format("woff2");
+  font-weight: 100 900;
+  size-adjust: 84%;
+  unicode-range: U+0020, U+00A0, U+00AB, U+00BB, U+0600-06FF, U+FB50-FDFF, U+FE70-FEFF;
+}
+[lang="ar"] h1,
+[lang="ar"] h2,
+[lang="ar"] .welcome .steps strong,
+[lang="ar"] .privacy header > span {
+  font-family: "Alexandria Arabic", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "SF Arabic", "Noto Sans Arabic", "Geeza Pro", Tahoma, system-ui, sans-serif;
 }
 h1 { margin: 0; font-weight: 400; }
 p { margin: 0; }
@@ -178,6 +196,9 @@ h1:focus-visible {
   border-bottom: 1px solid var(--divider);
 }
 .popup-header img { display: block; height: 26px; width: auto; }
+/* The Arabic logo's letters reach further below the line: a taller image at
+   the same scale, so the note keeps its size. */
+[lang="ar"] .popup-header img { height: 28.36px; }
 @media (prefers-color-scheme: dark) {
   .popup { --bg: #28292c; } /* a popup floats a step above the page */
 }

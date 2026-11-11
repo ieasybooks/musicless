@@ -26,3 +26,14 @@ SoundTouchJS (third_party/soundtouch/), @soundtouchjs/core 2.0.4
   https://mozilla.org/MPL/2.0/). The files are unmodified; their source is the
   files themselves and https://github.com/cutterbl/SoundTouchJS.
   A TypeScript port of the SoundTouch library by Olli Parviainen.
+
+Alexandria 5.100, a typeface (fonts/alexandria-arabic.woff2)
+  Copyright 2022 The Alexandria Project Authors (https://github.com/Gue3bara/Alexandria).
+  SIL Open Font License 1.1 (licenses/alexandria-OFL.txt), which still covers the
+  font file. The Arabic titles of the extension's pages use it, and the Arabic logo
+  is drawn from its letters. The file is Alexandria[wght].ttf from Google Fonts
+  (https://github.com/google/fonts, ofl/alexandria, commit 31738c3f), cut to its
+  Arabic letters as WOFF2 with fontTools 4.67 and Brotli:
+    pyftsubset 'Alexandria[wght].ttf' --flavor=woff2 --layout-features='*'
+      --name-IDs='*' --name-languages='*' --output-file=alexandria-arabic.woff2
+      --unicodes='U+0020,U+00A0,U+00AB,U+00BB,U+0600-06FF,U+FB50-FDFF,U+FE70-FEFF'

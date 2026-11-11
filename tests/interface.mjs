@@ -291,16 +291,22 @@ try {
           assert.equal(state.crossed, on); assert.equal(state.described, "oneVideo");
           for (const scheme of ["light", "dark"]) {
             await popup.emulateMediaFeatures([{ name: "prefers-color-scheme", value: scheme }]);
-            await popup.waitForFunction(scheme => document.querySelector(".popup-header img").currentSrc.endsWith(
-              `musicless-logo-${scheme === "dark" ? "paper" : "ink"}.svg`), {}, scheme);
+            await popup.waitForFunction((scheme, lang) => {
+              const logo = document.querySelector(".popup-header img");
+              return logo.complete && logo.currentSrc.endsWith(
+                `musicless-logo-${lang === "ar" ? "ar-" : ""}${scheme === "dark" ? "paper" : "ink"}.svg`);
+            }, {}, scheme, lang);
             const header = await popup.evaluate(() => ({
               height: document.querySelector(".popup-header").getBoundingClientRect().height,
               logoHeight: document.querySelector(".popup-header img").getBoundingClientRect().height,
+              logoLoaded: document.querySelector(".popup-header img").naturalWidth > 0,
               alt: document.querySelector(".popup-header img").alt,
               linked: !!document.querySelector(".popup-header a"),
             }));
-            assert.equal(header.height, 50); assert.equal(header.logoHeight, 26);
-            assert.equal(header.alt, "Musicless"); assert(!header.linked);
+            assert.equal(header.height, 50); assert(header.logoLoaded);
+            // The Arabic logo is taller at the same scale: its letters reach further down.
+            assert(Math.abs(header.logoHeight - (lang === "ar" ? 28.36 : 26)) < 0.02, `logo height ${header.logoHeight}`);
+            assert.equal(header.alt, lang === "ar" ? "بلا موسيقى" : "Musicless"); assert(!header.linked);
             await popup.screenshot({ path: join(WORK, `${lang}-popup-${on ? "on" : "off"}-${scheme}.png`) });
           }
         }
@@ -308,6 +314,12 @@ try {
         await welcome.setViewport({ width: 900, height: 750, deviceScaleFactor: 1 });
         await welcome.goto(`chrome-extension://${localized.extensionId}/welcome.html`);
         await welcome.waitForSelector("#done:not(.off)");
+        // Arabic titles are drawn in the bundled Alexandria; English never loads it.
+        const titleFont = await welcome.evaluate(async () => {
+          await document.fonts.ready;
+          return [...document.fonts].map(face => `${face.family.replaceAll('"', "")} ${face.status}`);
+        });
+        assert.deepEqual(titleFont, [`Alexandria Arabic ${lang === "ar" ? "loaded" : "unloaded"}`]);
         const checkSteps = async on => {
           const state = await welcome.evaluate(on => ({
             titles: [...document.querySelectorAll(".steps strong")].map(el => el.textContent),
