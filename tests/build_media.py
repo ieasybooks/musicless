@@ -119,9 +119,10 @@ VIDEO = VIDEO_H264
 dash("mp4-aac", ["-c:a", "aac", "-b:a", "128k", "-ar", "44100"], "audio/mp4")
 
 # Muxed fragmented MP4 without B-frames (clean audio timestamps), and with
-# B-frames, where ffmpeg stretches the first AAC packet's duration to 2943
-# samples. That leaves a 43.5 ms timestamp gap which Chrome plays straight
-# through but the extension honors (a known difference on malformed files).
+# B-frames, where ffmpeg stretches the first AAC packet over the video's
+# two-frame delay: 2943 samples at 29.97 fps, 3528 at 25 fps (the synthetic
+# video). That leaves a 43.5 or 56.8 ms timestamp gap which Chrome plays
+# straight through but the extension honors (a known difference on malformed files).
 codecs = 'video/mp4; codecs="avc1.64001e, mp4a.40.2"'
 for name, extra in (("muxed", ["-bf", "0"]), ("muxed-gap", [])):
     folder = out / name

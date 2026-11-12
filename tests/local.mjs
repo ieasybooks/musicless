@@ -798,15 +798,17 @@ if (h264) await step("muxed fMP4 appended in 7 KB slices", async () => {
   await page.close();
 });
 
-if (!QUICK && h264) await step("muxed fMP4 with a 43.5 ms timestamp gap (known edge case)", async () => {
+if (!QUICK && h264) await step("muxed fMP4 with a timestamp gap (known edge case)", async () => {
   source = `${MEDIA}/${SET}/muxed-gap/audio.mp4`;
   const page = await open("muxed-gap");
   await play(page);
   await timeUntilOn(page, "muxed-gap on");
   const a = await listen(page, "muxed-gap", 25);
-  // Expected: in sync until the gap's effect shows, then 43.5 ms late against Chrome's playback.
-  report.record("muxed fMP4 with a 43.5 ms timestamp gap (known edge case)", a.corr >= 0.7 && a.lag_ms >= -5 && a.lag_ms <= 50,
-    { note: "informational: the file's first AAC packet claims 2943 samples", ...a });
+  // Expected: in sync until the gap's effect shows, then late by the gap against Chrome's
+  // playback. The gap follows the video's frame rate (see build_media.py): 43.5 ms at
+  // 29.97 fps (the vlog media), 56.8 ms at 25 fps (the synthetic media).
+  report.record("muxed fMP4 with a timestamp gap (known edge case)", a.corr >= 0.7 && a.lag_ms >= -5 && a.lag_ms <= 60,
+    { note: "informational: the file's first AAC packet is stretched over the video's B-frame delay", ...a });
   await page.close();
 });
 
