@@ -56,8 +56,8 @@ What to expect
 Your audio stays on your computer
 Musicless uses the audio already loaded by YouTube to remove music during playback. It never uploads, shares or saves that audio. It does not offer recording, media downloads or audio export. No account is needed, and the developer receives no audio, browsing history or usage analytics. Your automatic-removal choice and whether you have turned Musicless on may sync between your devices through Chrome Sync. YouTube still loads the video through its own service.
 
-Free and open source. Code and help: https://github.com/IbraheemTuffaha/musicless
-Privacy policy: https://github.com/IbraheemTuffaha/musicless/blob/main/docs/privacy.md
+Free and open source. Code and help: https://github.com/ieasybooks/musicless
+Privacy policy: https://github.com/ieasybooks/musicless/blob/main/docs/privacy.md
 
 Musicless is an independent project and is not affiliated with or endorsed by YouTube or Google. YouTube is a trademark of Google LLC. Use of this trademark is subject to Google Permissions.
 ```
@@ -71,10 +71,10 @@ Play original sound (its choices).
 
 | Field | Value |
 | --- | --- |
-| Homepage | `https://github.com/IbraheemTuffaha/musicless` after `main` is this extension |
-| Support | `https://github.com/IbraheemTuffaha/musicless/issues` |
+| Homepage | `https://github.com/ieasybooks/musicless` after `main` is this extension |
+| Support | `https://github.com/ieasybooks/musicless/issues` |
 | Official / verified site | Leave empty unless you verify a domain you control. Do not verify `github.com`. |
-| Privacy policy | `https://github.com/IbraheemTuffaha/musicless/blob/main/docs/privacy.md` only after that URL shows this policy while signed out |
+| Privacy policy | `https://github.com/ieasybooks/musicless/blob/main/docs/privacy.md` only after that URL shows this policy while signed out |
 | Price | Free. No in-app purchases. |
 | Visibility | Public |
 | Regions | All regions, unless you have a restriction |

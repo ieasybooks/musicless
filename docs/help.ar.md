@@ -29,5 +29,5 @@ two saying the same things, with the button names exactly as in
 يمكنك أيضًا الانتقال داخل الفيديو، ومشاهدة Shorts والبث المباشر وفيديوهات YouTube
 المدعومة على المواقع الأخرى. لا تحجب الإضافة الإعلانات.
 
-هل هناك مشكلة؟ [أبلغ عنها](https://github.com/IbraheemTuffaha/musicless/issues/new?template=bug.yml)
+هل هناك مشكلة؟ [أبلغ عنها](https://github.com/ieasybooks/musicless/issues/new?template=bug.yml)
 (النموذج بالإنجليزية). لا تُرفق صوتًا خاصًا أو معلومات شخصية.

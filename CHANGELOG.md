@@ -55,4 +55,4 @@ It is not a previous version of this extension.
   choice are stored in Chrome extension storage and may sync through
   Chrome Sync.
 
-[1.0.0]: https://github.com/IbraheemTuffaha/musicless/releases/tag/v1.0.0
+[1.0.0]: https://github.com/ieasybooks/musicless/releases/tag/v1.0.0

@@ -19,7 +19,7 @@ You need `curl`, `tar`, and `python3`. Browser tests also need `ffmpeg`
 and Google Chrome, Edge, Brave, or another Chromium browser.
 
 ```sh
-git clone https://github.com/IbraheemTuffaha/musicless
+git clone https://github.com/ieasybooks/musicless
 cd musicless
 ./setup.sh --dev
 ```

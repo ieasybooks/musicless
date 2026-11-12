@@ -49,6 +49,6 @@
   "popup_default_on": {"message": "تُزال الموسيقى من كل فيديو تفتحه. اضغط على {icon} في أي فيديو لاستعادة صوته الأصلي.", "description": "Helper when the default is on. Preserve {icon}; it becomes the crossed-out note."},
   "popup_one_video": {"message": "كل فيديو تفتحه يحتفظ بصوته الأصلي. اضغط على {icon} في أي فيديو لإزالة موسيقاه.", "description": "Helper when the default is off. Preserve {icon}; it becomes the plain note."},
   "link_help": { "message": "مساعدة" },
-  "link_help_url": { "message": "https://github.com/IbraheemTuffaha/musicless/blob/main/docs/help.ar.md" },
+  "link_help_url": { "message": "https://github.com/ieasybooks/musicless/blob/main/docs/help.ar.md" },
   "link_privacy": { "message": "سياسة الخصوصية" }
 }

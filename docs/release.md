@@ -106,7 +106,7 @@ git push origin main
 Do not force-push `main`. If the push is rejected, `main` is not on top of
 `origin/main`.
 
-After this, `https://github.com/IbraheemTuffaha/musicless/blob/main/docs/privacy.md`
+After this, `https://github.com/ieasybooks/musicless/blob/main/docs/privacy.md`
 must show the privacy policy while you are signed out. That URL is the one
 you put in the store.
 
@@ -138,7 +138,7 @@ Download the draft's zip, `SHA256SUMS`, and attestation file into one folder.
 
 ```sh
 sha256sum -c SHA256SUMS
-gh attestation verify musicless-1.0.0.zip --repo IbraheemTuffaha/musicless
+gh attestation verify musicless-1.0.0.zip --repo ieasybooks/musicless
 ```
 
 On macOS, `shasum -a 256 -c SHA256SUMS` checks the same file.

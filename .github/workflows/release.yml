@@ -130,7 +130,7 @@ jobs:
               "## Verify",
               "",
               "    sha256sum -c SHA256SUMS",
-              "    gh attestation verify musicless-*.zip --repo IbraheemTuffaha/musicless",
+              "    gh attestation verify musicless-*.zip --repo ieasybooks/musicless",
               "",
           ])
           notes = body + "\n" + verify

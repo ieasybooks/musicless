@@ -30,13 +30,13 @@ is no listing URL yet. This page will gain one after the listing is live.
 ### A GitHub Release
 
 1. Download `musicless-<version>.zip` and `SHA256SUMS` from the
-   [releases](https://github.com/IbraheemTuffaha/musicless/releases) into the
+   [releases](https://github.com/ieasybooks/musicless/releases) into the
    same folder.
 2. Check the file, then the attestation:
 
    ```sh
    sha256sum -c SHA256SUMS
-   gh attestation verify musicless-<version>.zip --repo IbraheemTuffaha/musicless
+   gh attestation verify musicless-<version>.zip --repo ieasybooks/musicless
    ```
 
    On macOS, `shasum -a 256 -c SHA256SUMS` checks the checksum file.
@@ -76,7 +76,7 @@ Volume, mute, fullscreen and playback speed work as usual. You can jump to
 another part of the video, watch Shorts or live streams, and use supported
 YouTube videos on other websites. Musicless does not block ads.
 
-Something not working? [Report a problem](https://github.com/IbraheemTuffaha/musicless/issues/new?template=bug.yml).
+Something not working? [Report a problem](https://github.com/ieasybooks/musicless/issues/new?template=bug.yml).
 Help in Arabic: [استخدام «بلا موسيقى»](docs/help.ar.md).
 
 ## What to expect

@@ -1,7 +1,7 @@
 # Musicless privacy policy
 
 Musicless removes background music from YouTube playback on your computer. It is
-maintained by the owner of <https://github.com/IbraheemTuffaha/musicless>.
+maintained by the owner of <https://github.com/ieasybooks/musicless>.
 
 ## Audio
 
@@ -45,7 +45,7 @@ purpose. It is not sold or used for advertising, assessing creditworthiness or l
 ## Contact
 
 For privacy questions, use the email on the Chrome Web Store listing or
-<https://github.com/IbraheemTuffaha/musicless/issues>. Keep private audio and
+<https://github.com/ieasybooks/musicless/issues>. Keep private audio and
 personal information out of public issues.
 
 Last updated: 11 November 2026.
@@ -57,7 +57,7 @@ translation should say the same things. A native speaker should review it
 before the store submission. In Arabic the product is called «بلا موسيقى».
 
 تزيل إضافة «بلا موسيقى» موسيقى الخلفية أثناء تشغيل مقاطع YouTube على حاسوبك. يتولى صيانتها
-صاحب <https://github.com/IbraheemTuffaha/musicless>.
+صاحب <https://github.com/ieasybooks/musicless>.
 
 ### الصوت
 
@@ -100,7 +100,7 @@ before the store submission. In Arabic the product is called «بلا موسيق
 ### التواصل
 
 للاستفسار عن الخصوصية، استخدم البريد الإلكتروني في صفحة الإضافة على سوق Chrome
-الإلكتروني أو <https://github.com/IbraheemTuffaha/musicless/issues>. لا تنشر صوتًا
+الإلكتروني أو <https://github.com/ieasybooks/musicless/issues>. لا تنشر صوتًا
 خاصًا أو معلومات شخصية في طلبات الدعم العلنية.
 
 آخر تحديث: 11 نوفمبر 2026.

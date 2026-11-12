@@ -4,7 +4,7 @@
 
 Report security issues privately:
 
-https://github.com/IbraheemTuffaha/musicless/security/advisories/new
+https://github.com/ieasybooks/musicless/security/advisories/new
 
 That form works once private vulnerability reporting is enabled for this
 repository. Please do not open a public issue, and do not post a proof of

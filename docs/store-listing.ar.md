@@ -52,8 +52,8 @@ when editing.
 يبقى الصوت على حاسوبك
 تستخدم إضافة «بلا موسيقى» الصوت الذي حمّله YouTube لإزالة الموسيقى أثناء المشاهدة. لا ترسل الصوت إلى أي مكان ولا تشاركه ولا تحفظه. ولا توفّر تسجيلًا أو تنزيل وسائط أو تصدير صوت. لا تحتاج إلى حساب، ولا يتلقى المطوّر الصوت أو سجل التصفح أو تحليلات الاستخدام. قد يتزامن خيار الإزالة التلقائية وما إذا كنت قد فعّلت «بلا موسيقى» بين أجهزتك عبر Chrome Sync. ويظل YouTube يحمّل الفيديو عبر خدمته المعتادة.
 
-مجانية ومفتوحة المصدر. الشفرة البرمجية والمساعدة: https://github.com/IbraheemTuffaha/musicless
-سياسة الخصوصية: https://github.com/IbraheemTuffaha/musicless/blob/main/docs/privacy.md
+مجانية ومفتوحة المصدر. الشفرة البرمجية والمساعدة: https://github.com/ieasybooks/musicless
+سياسة الخصوصية: https://github.com/ieasybooks/musicless/blob/main/docs/privacy.md
 
 «بلا موسيقى» مشروع مستقل، وهو غير تابع لـ YouTube أو Google ولا يحظى بتأييدهما. YouTube علامة تجارية لـ Google LLC. يخضع استخدام هذه العلامة لشروط Google Permissions.
 ```

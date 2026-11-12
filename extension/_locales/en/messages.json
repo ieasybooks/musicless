@@ -49,6 +49,6 @@
   "popup_default_on": {"message": "Music is removed from every video you open. Click {icon} in a video to restore its original sound.", "description": "Helper when the default is on. Preserve {icon}; it becomes the crossed-out note."},
   "popup_one_video": {"message": "Every video you open keeps its original sound. Click {icon} in a video to remove its music.", "description": "Helper when the default is off. Preserve {icon}; it becomes the plain note."},
   "link_help": { "message": "Help", "description": "Link to the help: how Musicless works and what to do; reporting a problem is one link further." },
-  "link_help_url": { "message": "https://github.com/IbraheemTuffaha/musicless#using-musicless", "description": "Not translated: the address of the help in this language (README's \"Using Musicless\"; docs/help.ar.md for Arabic)." },
+  "link_help_url": { "message": "https://github.com/ieasybooks/musicless#using-musicless", "description": "Not translated: the address of the help in this language (README's \"Using Musicless\"; docs/help.ar.md for Arabic)." },
   "link_privacy": { "message": "Privacy policy" }
 }
