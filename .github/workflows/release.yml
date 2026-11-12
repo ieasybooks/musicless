@@ -1,8 +1,7 @@
 name: Release
 
 # A tag runs the workflow file in the commit the tag points at.
-# Tag a commit that contains this file. A tag on the old backend
-# history does not run this workflow.
+# Tag a commit that contains this file.
 on:
   push:
     tags:

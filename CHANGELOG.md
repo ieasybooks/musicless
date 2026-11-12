@@ -11,10 +11,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 First release of the extension. The interface is in English and Arabic.
 
-This repository used to contain a different program, a local backend that
-downloaded video. That code remains on branch `backend` at tag `backend-final`.
-It is not a previous version of this extension.
-
 ### Changed
 
 - Renamed nomusic to Musicless before its first release, with a new logo, icons and colours.

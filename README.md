@@ -132,7 +132,3 @@ MIT. See [LICENSE](LICENSE). Third-party notices are in
 [extension/THIRD_PARTY_NOTICES.txt](extension/THIRD_PARTY_NOTICES.txt): the
 Spleeter model (Deezer, MIT), ONNX Runtime Web (Microsoft, MIT),
 SoundTouchJS (MPL-2.0) and the Alexandria typeface (OFL-1.1).
-
-This repository used to contain a different program, a local backend that
-downloaded video. That code remains on branch `backend` at tag `backend-final`.
-Version 1.0.0 is the extension, and it does not use that backend.

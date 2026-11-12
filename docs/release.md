@@ -58,48 +58,18 @@ the store item:
 - Switch the browser language to Arabic and check right-to-left layout.
 - The extension stays usable at about 400 MB of extra memory while it runs.
 
-## 2. Keep the old backend, then prepare main
+## 2. Push main
 
-Branch `backend` and the annotated tag `backend-final` preserve the last
-backend commit on GitHub (`89006dce37924c3674c2d3d26caa25379dc163c4`). The backend
-files are removed in the commit "Make the offline extension the project".
-
-The release candidate is `brand/musicless`. The older `release/v1` branch
-does not contain the redesign or rebrand. Finish reviewing and testing the
-candidate, including the release-day dates from step 1, before moving `main`.
-Review the history being published as well as the final files: deleting a
-file in a later commit does not remove its earlier versions.
-
-Start in a clean worktree and check the remote:
-
-```sh
-git switch brand/musicless
-git status --short                # must be empty
-git fetch origin
-git rev-parse origin/main          # must print 89006dce37924c3674c2d3d26caa25379dc163c4
-git merge-base --is-ancestor origin/main brand/musicless
-```
-
-If the remote changed or the ancestry check fails, stop and reconcile those
-changes with the reviewed Musicless candidate, then repeat the checks.
-Update the backend backup only if new backend commits need preserving.
-
-Advance local `main` to the candidate using a fast-forward:
+`main` must be the commit you tested, including the release-day dates from
+step 1, on top of `origin/main`. Review the history being published as well
+as the final files: deleting a file in a later commit does not remove its
+earlier versions.
 
 ```sh
 git switch main
-git merge --ff-only brand/musicless
-git rev-parse main brand/musicless # both lines must show the same commit
-```
-
-If either command fails or the two commits differ, resolve that before
-pushing. This check must be repeated after any further candidate commits.
-
-These commands push only the intended branches and tag. Run them yourself
-after the checks above pass:
-
-```sh
-git push origin refs/heads/backend refs/tags/backend-final
+git status --short                # must be empty
+git fetch origin
+git merge-base --is-ancestor origin/main main
 git push origin main
 ```
 
@@ -114,9 +84,8 @@ you put in the store.
 
 Tag the tested commit you just pushed. It contains
 `.github/workflows/release.yml`, and `manifest.json` says `1.0.0`. If the
-tagging day changed, return to step 1: update and commit the dates on
-`brand/musicless`, rebuild and test, then repeat step 2 to advance and push
-`main` before tagging.
+tagging day changed, return to step 1: update and commit the dates, rebuild
+and test, then repeat step 2 before tagging.
 
 ```sh
 git tag -a v1.0.0 main -m "Musicless 1.0.0"
@@ -130,7 +99,7 @@ The second, the only one that can write, builds the zip again without
 the test tools, checks that it is the zip the tests ran (same SHA-256),
 writes `SHA256SUMS`, attests the zip and the checksum file, and opens a
 draft GitHub Release. A tag whose name is not `v` plus the manifest version
-fails. A tag on the old backend history does not run this workflow.
+fails.
 
 ## 4. Check the draft, then publish it
 
