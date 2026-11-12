@@ -48,7 +48,7 @@ For privacy questions, use the email on the Chrome Web Store listing or
 <https://github.com/ieasybooks/musicless/issues>. Keep private audio and
 personal information out of public issues.
 
-Last updated: 11 November 2026.
+Last updated: 12 November 2026.
 
 ## العربية
 
@@ -103,4 +103,4 @@ before the store submission. In Arabic the product is called «بلا موسيق
 الإلكتروني أو <https://github.com/ieasybooks/musicless/issues>. لا تنشر صوتًا
 خاصًا أو معلومات شخصية في طلبات الدعم العلنية.
 
-آخر تحديث: 11 نوفمبر 2026.
+آخر تحديث: 12 نوفمبر 2026.
