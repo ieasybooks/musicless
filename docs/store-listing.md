@@ -83,9 +83,10 @@ Play original sound (its choices).
 | Percentage rollout | Not available for a first release |
 | After approval | Deferred publishing: uncheck automatic publication, then publish within 30 days |
 
-**Non-trader or trader** is your decision from your own circumstances. A free
-personal project is often a non-trader. A free extension that is part of a
-business can still be a trader. Do not guess this in the form.
+**Non-trader or trader** is declared once for the whole developer account,
+not per item. The ieasybooks account already declares itself a non-trader,
+as its Baheth listing shows, so Musicless gets the same. Change it only in the
+account settings, and only if ieasybooks's circumstances change.
 
 ## Privacy practices
 

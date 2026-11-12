@@ -150,10 +150,12 @@ below.
 
 ## 5. Chrome Web Store
 
-Open <https://chrome.google.com/webstore/devconsole/> with the account you
-will publish from. Register, pay the fee, accept the terms, verify the
-contact email, and turn on 2-Step Verification yourself. Complete whatever
-identity check the account asks for.
+Musicless is published by ieasybooks. Open
+<https://chrome.google.com/webstore/devconsole/> with the ieasybooks
+developer account, the one that already publishes Baheth, and add Musicless
+there as a new item, not under a personal account. That account is
+registered, so there is no fee or sign-up; confirm that 2-Step Verification
+is still on and the contact email is still current.
 
 Upload the zip from the draft. Fill the listing, the Arabic locale, privacy,
 and reviewer notes from [store-listing.md](store-listing.md) and
