@@ -25,6 +25,17 @@ Edit the English and Arabic text, store links, and YouTube video IDs in
 [content.mjs](content.mjs). Rebuild the site to see your changes.
 The audio tool's copy and FAQ are in [audio/copy.js](audio/copy.js).
 
+The About, Privacy policy, Terms of use and Contact & support pages
+(`/en/about`, `/en/privacy`, `/en/terms`, `/en/support` and the same under
+`/ar/`) are built from [pages.txt](pages.txt), the approved text, one block per
+page and language: line 1 is the title, line 2 the lead paragraph, `## ` starts
+a section heading and every other line is a paragraph. Links are
+`[label](href)`, and `tab:privacy` links to the privacy policy in the same
+language. The **Last updated** line of the privacy policy and terms is in
+[content.mjs](content.mjs). Change their text only to an approved version, and
+update `tests/fixtures/landing-pages.txt` to match: the landing tests compare
+every page with it word for word.
+
 Each page shows a local poster. Selecting it loads that language's launch video
 in YouTube's privacy-enhanced player. The link below opens the video on YouTube.
 
@@ -93,8 +104,11 @@ and downloads the actual R2 model. Set `FIREFOX=/path/to/firefox` to run the sam
 suite in Firefox instead. It uses synthetic audio to check real MP3
 and AAC M4A downloads, duration/channels, audio agreement with the Python
 reference, native and WASM encoders, caching, retries, cancellation, validation,
-capability gating and English/Arabic responsive layouts. Artifacts stay ignored
-under `tests/.work/landing`. The site never needs this test environment.
+capability gating and English/Arabic responsive layouts. It also checks the
+About, Privacy policy, Terms of use and Contact & support pages against the
+approved text, with their links, footer, sitemap entries and layout.
+Artifacts stay ignored under `tests/.work/landing`. The site never needs this
+test environment.
 Set `LANDING_LONG=1` to also process and verify a full 10-minute file.
 
 ## Deployment
@@ -102,7 +116,9 @@ Set `LANDING_LONG=1` to also process and verify a full 10-minute file.
 On Cloudflare Pages, use the repository root as the build root,
 `npm ci && npm run build:landing` as the build command, and `dist/landing` as the
 output directory. On another static host, publish the contents of that
-directory and serve `index.html` for `/`, `/en/`, and `/ar/`.
+directory and serve `index.html` for `/`, `/en/`, and `/ar/`, and
+`en/privacy.html` and the other pages at `/en/privacy` and so on, without a
+redirect.
 Serve `.mjs` as JavaScript and `.wasm` as `application/wasm`. HTTPS is required
 outside localhost. The build fetches the pinned ORT package with SHA-256
 verification if `setup.sh` has not supplied it locally. It does not bundle the

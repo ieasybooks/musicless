@@ -4,10 +4,11 @@ const mobile = navigator.userAgentData?.mobile || /Android|iPhone|iPad|iPod|Mobi
 // iPads and Android tablets can identify as desktop Macs or Linux PCs, even with a mouse.
 const possibleTablet = navigator.maxTouchPoints > 0 && /Macintosh|Linux/.test(ua);
 
+// The store buttons and the film are on the landing only, not the text pages.
 if (browser && !mobile && !possibleTablet) {
   const store = browser[1] === 'Firefox' ? 'firefox' : 'chrome';
   const link = document.querySelector(`[data-store="${store}"]`);
-  if (Number(browser[2]) >= Number(link.dataset.minVersion)) {
+  if (link && Number(browser[2]) >= Number(link.dataset.minVersion)) {
     link.querySelector('span').textContent = link.dataset.installLabel;
     link.classList.add('preferred');
     link.parentElement.prepend(link);
@@ -29,7 +30,7 @@ language.addEventListener('keydown', event => {
 });
 
 const film = document.querySelector('.film-play');
-film.addEventListener('click', event => {
+film?.addEventListener('click', event => {
   if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
   event.preventDefault();
   const player = document.createElement('iframe');
