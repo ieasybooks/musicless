@@ -26,7 +26,9 @@ createServer(async (req, res) => {
     const url = new URL(req.url, 'http://localhost');
     let file = resolve(root, '.' + decodeURIComponent(url.pathname));
     if (file !== resolve(root) && !file.startsWith(root)) return res.writeHead(403).end();
-    if ((await stat(file)).isDirectory()) {
+    // As on the host, /en/privacy serves en/privacy.html.
+    if (!extname(file) && !url.pathname.endsWith('/') && await stat(file + '.html').then(info => info.isFile(), () => false)) file += '.html';
+    else if ((await stat(file)).isDirectory()) {
       if (!url.pathname.endsWith('/')) {
         return res.writeHead(301, { Location: url.pathname + '/' + url.search }).end();
       }

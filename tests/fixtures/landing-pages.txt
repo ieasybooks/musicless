@@ -1,0 +1,117 @@
+===== Musicless / about / en
+About Musicless
+Musicless removes most of the background music from YouTube videos and keeps the voices, all on your own computer.
+## What Musicless does
+A browser extension for Chrome, Firefox and other Chromium-based browsers on computers. It works on YouTube videos, Shorts and live streams, including YouTube players on other websites. A button in the player brings back the original sound, and you choose whether music is removed by default.
+On the website, you can also remove the music from an MP3 or M4A file.
+Its interface is in Arabic and English.
+## How it works
+Musicless separates the voices from the music with an AI model that runs inside your browser, then plays the voices in sync with the video. Some music can remain, especially quiet music behind speech, and voices can sound a little different.
+## Who makes it
+Musicless is made by EasyBooks. It's free, has no ads and works without an account.
+Follow EasyBooks on [Telegram](https://t.me/ieasybooks), [YouTube](https://youtube.com/@ieasybooks), [X](https://x.com/iieasybooks), [Facebook](https://fb.com/ieasybooks) and [GitHub](https://github.com/ieasybooks).
+
+===== Musicless / about / ar
+عن «بلا موسيقى»
+تزيل إضافة «بلا موسيقى» معظم موسيقى الخلفية من فيديوهات YouTube وتُبقي الأصوات البشرية، وكل ذلك يجري على حاسوبك.
+## ما تقدّمه الإضافة
+إضافة لمتصفحات الحاسوب: Chrome وFirefox وسائر المتصفحات المبنية على Chromium. تعمل على فيديوهات YouTube ومقاطع Shorts والبث المباشر، وعلى مشغّلات YouTube المضمّنة في المواقع الأخرى. وفي المشغّل زر يعيد الصوت الأصلي متى شئت، ولك أن تختار هل تُزال الموسيقى تلقائيًا من كل فيديو، أم من الفيديوهات التي تختارها فقط.
+ويتيح الموقع كذلك إزالة الموسيقى من الملفات الصوتية بصيغتي MP3 وM4A.
+تتوفر الإضافة بواجهة عربية وإنجليزية.
+## كيف تعمل الإضافة
+تفصل الإضافة الأصوات البشرية عن الموسيقى باستخدام نموذج ذكاء اصطناعي يعمل داخل متصفحك، ثم تشغّل الأصوات متزامنةً مع الفيديو. وقد تبقى بعض الموسيقى، خصوصًا الموسيقى الخافتة خلف الكلام، وقد تتغير جودة الأصوات قليلًا.
+## مَن يطوّر الإضافة
+«بلا موسيقى» من تطوير الكتب المُيسّرة، وهي مجانية وخالية من الإعلانات، ويمكنك استخدامها دون حساب.
+تابع الكتب المُيسّرة على [تيليجرام](https://t.me/ieasybooks) و[YouTube](https://youtube.com/@ieasybooks) و[X](https://x.com/iieasybooks) و[فيسبوك](https://fb.com/ieasybooks) و[GitHub](https://github.com/ieasybooks).
+
+===== Musicless / privacy / en
+Privacy policy
+This policy explains how the Musicless browser extension and the musicless.ieasybooks.com website handle information. Musicless is made by EasyBooks, and you can use it without an account.
+## How Musicless handles audio
+Musicless processes the audio of the video you're watching in your browser's memory, to separate the voices from the music. The audio never leaves your computer: it isn't uploaded, shared or saved, and it's discarded as the video plays on or when you close the page. Musicless doesn't collect your viewing history.
+Audio files you process on the website are handled the same way: in your browser, never uploaded. The first time, your browser downloads the music-removal model and keeps a copy for next time.
+## Information stored on your device
+Your browser saves your “Remove music by default” setting and that you turned Musicless on, and may sync them across your devices. A random security token stays on this device, and a link back to the video you came from is kept until you return to it or close the browser.
+None of this is sent to us, and uninstalling Musicless removes it from your browser.
+## Services we use
+The video on the website plays in YouTube's player when you choose to play it. Your device then connects to their servers directly, which receive technical information such as your IP address and may use cookies, under their own privacy policies.
+## Advertising and analytics
+Musicless has no ads and doesn't track you across apps or websites. Neither the extension nor the website uses analytics. We don't sell any data or use it for advertising. Musicless's use of information follows the Chrome Web Store User Data Policy, including its Limited Use requirements.
+## Permissions
+Musicless doesn't ask for access to your location, camera, microphone or contacts. It works only on YouTube pages and on YouTube players embedded in other websites.
+## Contact and privacy requests
+If you write to us, we receive what you send, such as your name, email address and message, and use it only to reply to you. To ask about privacy, or to have your messages deleted, email [easybooksdev@gmail.com](mailto:easybooksdev@gmail.com).
+## Changes to this policy
+We publish the current version of this policy, and the date it was last updated, on this page.
+
+===== Musicless / privacy / ar
+سياسة الخصوصية
+تبيّن هذه السياسة كيف نتعامل مع المعلومات في إضافة «بلا موسيقى» للمتصفح وموقع musicless.ieasybooks.com. الإضافة من تطوير الكتب المُيسّرة، ويمكنك استخدامها دون حساب.
+## كيف تعالج الإضافة الصوت
+لفصل الأصوات البشرية عن الموسيقى، تعالج «بلا موسيقى» صوت الفيديو الذي تشاهده داخل ذاكرة متصفحك. ولا يغادر هذا الصوت حاسوبك أبدًا: لا يُرفع إلى أي مكان، ولا يُشارَك مع أحد، ولا يُحفظ، بل يُحذف أولًا بأول مع تقدّم الفيديو أو عند إغلاق الصفحة. ولا تجمع الإضافة سجل مشاهدتك.
+والأمر نفسه في الملفات الصوتية التي تعالجها في الموقع: تُعالَج داخل متصفحك ولا تُرفع. وعند أول استخدام ينزّل متصفحك نموذج إزالة الموسيقى، ويحتفظ بنسخة منه للمرات التالية.
+## ما يُحفظ على جهازك
+يحفظ متصفحك إعداد «إزالة الموسيقى افتراضيًا» وأنك فعّلت الإضافة، وقد يزامنهما بين أجهزتك. ويُحفظ على هذا الجهاز وحده رمز أمان عشوائي، ورابط يعيدك إلى الفيديو الذي جئت منه، ويبقى حتى تعود إليه أو تغلق المتصفح.
+ولا يُرسَل شيء من ذلك إلينا، ويُحذف كله من متصفحك عند إزالة الإضافة.
+## الخدمات التي نستخدمها
+يُعرض الفيديو الموجود في الموقع عبر مشغّل YouTube حين تختار تشغيله. وعندئذ يتصل جهازك بخوادم YouTube مباشرة، فتتلقى معلومات تقنية مثل عنوان IP، وقد تستخدم ملفات تعريف الارتباط، وفق سياسات الخصوصية الخاصة بها.
+## الإعلانات والإحصاءات
+لا تعرض الإضافة إعلانات، ولا تتتبّعك في التطبيقات أو المواقع الأخرى. ولا تستخدم هي ولا موقعها أي أدوات لجمع الإحصاءات. ولا نبيع أي بيانات، ولا نستخدمها لأغراض إعلانية. ويلتزم استخدام «بلا موسيقى» للمعلومات بسياسة بيانات المستخدمين في سوق Chrome الإلكتروني، بما في ذلك متطلبات «الاستخدام المحدود».
+## الأذونات
+لا تطلب الإضافة إذن الوصول إلى موقعك الجغرافي أو الكاميرا أو الميكروفون أو جهات الاتصال. ولا تعمل إلا في صفحات YouTube، وفي مشغّلات YouTube المضمّنة في المواقع الأخرى.
+## التواصل وطلبات الخصوصية
+إذا راسلتنا، نتلقى ما ترسله إلينا، كاسمك وبريدك الإلكتروني ونص رسالتك، ولا نستخدمه إلا للرد عليك. ولأي سؤال عن الخصوصية، أو لطلب حذف رسائلك، راسلنا على [easybooksdev@gmail.com](mailto:easybooksdev@gmail.com).
+## تحديثات هذه السياسة
+ننشر في هذه الصفحة النسخة الحالية من هذه السياسة، مع تاريخ آخر تحديث لها.
+
+===== Musicless / terms / en
+Terms of use
+These terms cover your use of the Musicless browser extension and the musicless.ieasybooks.com website. By using Musicless, you agree to them. Musicless is made by EasyBooks and is free.
+## Using Musicless
+Use Musicless lawfully and respectfully. Don't disrupt it, try to get into parts of it you aren't allowed to reach, or send it so many requests that it slows down for others.
+## Content and rights
+Musicless changes only how YouTube videos sound on your computer. Their rights stay with their owners, and Musicless claims no ownership of them. Musicless isn't affiliated with or endorsed by YouTube or Google.
+## Accuracy and availability
+Musicless is provided free and as is, without warranties of any kind. It may leave some music in or change how voices sound, and we don't guarantee that it will always work or be free of errors. If you find a mistake, please report it.
+## Limitation of liability
+As far as the law allows, EasyBooks isn't liable for any loss or damage arising from using, or being unable to use, Musicless or its content.
+## Changes to these terms
+We may update these terms. We publish the current version here, with the date it was last updated. Continuing to use Musicless after an update means you accept it.
+## Contact
+For questions about these terms, email [easybooksdev@gmail.com](mailto:easybooksdev@gmail.com).
+
+===== Musicless / terms / ar
+شروط الاستخدام
+تنظّم هذه الشروط استخدامك لإضافة «بلا موسيقى» للمتصفح وموقع musicless.ieasybooks.com، ويُعدّ استخدامك لها موافقةً عليها. الإضافة من تطوير الكتب المُيسّرة، وهي مجانية.
+## استخدام «بلا موسيقى»
+استخدم الإضافة استخدامًا مشروعًا ولائقًا، ولا تحاول تعطيلها، أو الوصول إلى أجزاء غير مسموح لك بها، أو إرسال طلبات كثيرة تُبطئها على المستخدمين الآخرين.
+## المحتوى والحقوق
+لا تغيّر «بلا موسيقى» سوى طريقة سماعك لفيديوهات YouTube على حاسوبك. وتبقى الحقوق كلها لأصحابها، ولا تدّعي الإضافة ملكية شيء منها. و«بلا موسيقى» ليست تابعة لـYouTube أو Google، ولا معتمدة منهما.
+## الدقة والتوافر
+تُقدَّم الإضافة مجانًا و«كما هي»، دون ضمانات من أي نوع. وقد تبقى بعض الموسيقى أو تتغير الأصوات قليلًا، ولا نضمن أن تعمل دائمًا أو تخلو من الأعطال. وإن وجدت خطأ، فنرجو أن تبلغنا به.
+## حدود المسؤولية
+في حدود ما يسمح به القانون، لا تتحمل الكتب المُيسّرة أي مسؤولية عن خسارة أو ضرر ينشأ عن استخدام الإضافة أو محتواها، أو عن تعذّر استخدامهما.
+## تحديثات هذه الشروط
+قد نحدّث هذه الشروط من حين لآخر، وننشر نسختها الحالية في هذه الصفحة مع تاريخ آخر تحديث. واستمرارك في استخدام الإضافة بعد التحديث يعني قبولك للشروط المحدّثة.
+## التواصل
+لأي سؤال عن هذه الشروط، راسلنا على [easybooksdev@gmail.com](mailto:easybooksdev@gmail.com).
+
+===== Musicless / support / en
+Contact & support
+Musicless is made by EasyBooks. For questions and suggestions, or to report a problem or a mistake, contact us.
+## Email us
+Our address for questions, support and privacy requests: [easybooksdev@gmail.com](mailto:easybooksdev@gmail.com). You can also [open an issue on GitHub](https://github.com/ieasybooks/musicless/issues); it's public, so keep personal information out of it.
+## Reporting a problem
+If it's about something specific in Musicless, send its link or tell us where to find it. If it's about the extension or the website, include your browser and its version, Musicless's version and what happened before it. Don't send passwords or sensitive information.
+## Privacy
+Musicless works without an account and doesn't track you across apps or websites. For how we handle information, or for a privacy request, see [the privacy policy](tab:privacy).
+
+===== Musicless / support / ar
+التواصل والدعم
+«بلا موسيقى» من تطوير الكتب المُيسّرة. لأي سؤال أو اقتراح، أو للإبلاغ عن مشكلة أو خطأ، تواصل معنا.
+## راسلنا
+بريدنا الإلكتروني للأسئلة والدعم وطلبات الخصوصية: [easybooksdev@gmail.com](mailto:easybooksdev@gmail.com). ويمكنك كذلك [فتح بلاغ على GitHub](https://github.com/ieasybooks/musicless/issues)، وهو علني، فلا تضع فيه معلومات شخصية.
+## الإبلاغ عن مشكلة
+إن كانت ملاحظتك عن شيء محدد في الإضافة، فأرسل رابطه أو أخبرنا بمكانه. وإن كانت المشكلة في عمل الإضافة أو الموقع، فاذكر اسم متصفحك وإصداره، وإصدار الإضافة، وما حدث قبل ظهورها. ولا ترسل إلينا كلمات مرور أو أي معلومات حساسة.
+## الخصوصية
+يمكنك استخدام الإضافة دون حساب، وهي لا تتتبّعك في التطبيقات أو المواقع الأخرى. ولمعرفة كيف نتعامل مع المعلومات، أو لتقديم طلب يتعلق بالخصوصية، راجع [سياسة الخصوصية](tab:privacy).

@@ -99,7 +99,8 @@ h1 span { color: #777065; }
 .faq-list details[open] .plus::after { display: none; }
 details p { max-width: 650px; font-size: 15px; line-height: 1.75; color: var(--muted); padding: 0 26px 21px 0; }
 .footer { margin-top: 90px; padding-block: 28px 36px; display: flex; justify-content: space-between; gap: 18px; align-items: baseline; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; }
-.footer nav { gap: 22px; font-size: 13px; }
+.footer nav { flex-wrap: wrap; gap: 6px 22px; font-size: 13px; }
+.footer nav a[aria-current] { color: var(--ink); }
 .footer p a { color: var(--ink); }
 .skip { position: fixed; z-index: 10; top: 12px; inset-inline-start: 12px; padding: 10px 20px; background: var(--ink); color: var(--paper); transform: translateY(-200%); }
 .skip:focus { transform: none; }
@@ -113,6 +114,17 @@ details p { max-width: 650px; font-size: 15px; line-height: 1.75; color: var(--m
 [lang=ar] .button { font-size: 16px; }
 [lang=ar] .control-note { margin: 30px 47px 0 0; }
 [lang=ar] details p { padding: 0 0 21px 26px; }
+/* About, Privacy policy, Terms of use and Contact & support */
+.page { padding-block: 64px 8px; }
+.page > * { max-width: 660px; }
+.page h1 { font-size: clamp(36px, 4.4vw, 46px); line-height: 1.15; letter-spacing: -1.4px; text-wrap: balance; }
+.page p { margin-top: 14px; font-size: 17px; line-height: 1.75; text-wrap: pretty; overflow-wrap: break-word; }
+.page .lead { margin-top: 22px; font-size: 19px; line-height: 1.65; color: #514c44; }
+.page .updated { margin-top: 14px; font-size: 14px; color: var(--muted); }
+.page h2 { margin-top: 46px; }
+.page h2 + p { margin-top: 10px; }
+[lang=ar] .page h1 { font-size: clamp(32px, 3.9vw, 40px); line-height: 1.55; letter-spacing: 0; }
+[lang=ar] .page p { line-height: 1.95; }
 @media (max-width: 700px) {
   .shell { padding-inline: 24px; }
   .header { min-height: 90px; }
@@ -132,6 +144,11 @@ details p { max-width: 650px; font-size: 15px; line-height: 1.75; color: var(--m
   .questions { margin-top: 48px; }
   .footer { margin-top: 64px; flex-direction: column; gap: 16px; }
   [lang=ar] .intro { font-size: 17px; }
+  .page { padding-top: 40px; }
+  .page h1 { letter-spacing: -1px; }
+  .page .lead { font-size: 17px; }
+  .page p { font-size: 16px; }
+  .page h2 { margin-top: 38px; }
 }
 @media (max-width: 360px) {
   .film-play { gap: 4px; padding-bottom: 6px; }
