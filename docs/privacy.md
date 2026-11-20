@@ -1,19 +1,34 @@
 # Musicless privacy policy
 
-Musicless removes background music from YouTube playback on your computer. It is
+Musicless removes background music from YouTube playback and local audio files. It is
 maintained by the owner of <https://github.com/ieasybooks/musicless>.
 
 ## Audio
 
-Musicless uses audio already loaded by supported YouTube pages and embedded
+The Musicless extension uses audio already loaded by supported YouTube pages and embedded
 players to separate voices from background music and play them in sync with the
 video. Processing stays in your browser's memory. Audio is never uploaded,
 shared or saved as a file. Temporary audio buffers are discarded as they are
 replaced or the page or session closes. The developer never receives the audio.
 
-Musicless has no backend service and collects no viewing history, analytics,
+The extension has no backend service and collects no viewing history, analytics,
 advertising identifiers, account credentials or personal profiles. It offers no
 recording, media downloads or audio export.
+
+## Website audio files
+
+The website can process an MP3 or AAC-based M4A file that you choose. Decoding,
+music removal, previewing and encoding all happen on your device. The file,
+its name and its audio are never uploaded. The result is kept temporarily in
+browser memory and saved to your device only when you choose Download.
+Choosing another file or leaving the page releases the temporary audio.
+
+After you select a file and choose Remove music, the website downloads its
+processing tools and model from the site and `files.ieasybooks.com`, hosted by
+Cloudflare. These requests contain normal network metadata such as your IP
+address, but no audio. Your browser may cache these tools and model for reuse;
+this cache contains no audio or filenames. Clear this site's browser data to
+remove the saved model. The website adds no analytics or tracking scripts.
 
 ## Settings and storage
 
@@ -48,7 +63,7 @@ For privacy questions, use the email on Musicless's store listing or
 <https://github.com/ieasybooks/musicless/issues>. Keep private audio and
 personal information out of public issues.
 
-Last updated: 14 November 2026.
+Last updated: 20 November 2026.
 
 ## العربية
 
@@ -56,6 +71,8 @@ Last updated: 14 November 2026.
 
 تزيل إضافة «بلا موسيقى» موسيقى الخلفية أثناء تشغيل مقاطع YouTube على حاسوبك. يتولى صيانتها
 صاحب <https://github.com/ieasybooks/musicless>.
+
+ويتيح الموقع أيضًا إزالة موسيقى الخلفية من الملفات الصوتية المحلية.
 
 ### الصوت
 
@@ -68,6 +85,20 @@ Last updated: 14 November 2026.
 ليست لإضافة «بلا موسيقى» خدمة خلفية، ولا تجمع سجل مشاهدة أو تحليلات استخدام أو
 معرّفات إعلانية أو بيانات تسجيل دخول أو ملفات شخصية. ولا توفّر تسجيلًا أو
 تنزيل وسائط أو تصدير صوت.
+
+### الملفات الصوتية على الموقع
+
+يمكن للموقع معالجة ملف MP3 أو ملف M4A بصوت AAC تختاره بنفسك. تتم قراءة الصوت
+وإزالة الموسيقى والمعاينة والحفظ على جهازك. لا يُرفع الملف أو اسمه أو صوته إلى
+أي جهة. تبقى النتيجة مؤقتًا في ذاكرة المتصفح، ولا تُحفظ على جهازك إلا عند اختيار
+التنزيل. يُحرّر الصوت المؤقت عند اختيار ملف آخر أو مغادرة الصفحة.
+
+بعد اختيار الملف والضغط على «أزل الموسيقى»، تُنزّل أدوات المعالجة والنموذج من
+الموقع ومن `files.ieasybooks.com` المستضافَين لدى Cloudflare. تتضمن هذه الطلبات
+معلومات الشبكة المعتادة مثل عنوان IP، ولا تتضمن أي صوت. قد يحفظ المتصفح الأدوات
+والنموذج لإعادة استخدامهما، ولا تحتوي هذه الذاكرة المؤقتة على صوت أو أسماء ملفات.
+يمكنك حذف بيانات الموقع في المتصفح لإزالة النموذج المحفوظ. لا يضيف الموقع
+شيفرات لتحليلات الاستخدام أو التتبع.
 
 ### الإعدادات والتخزين
 
@@ -101,4 +132,4 @@ Last updated: 14 November 2026.
 الإضافات أو <https://github.com/ieasybooks/musicless/issues>. لا تنشر صوتًا
 خاصًا أو معلومات شخصية في طلبات الدعم العلنية.
 
-آخر تحديث: 14 نوفمبر 2026.
+آخر تحديث: 20 نوفمبر 2026.

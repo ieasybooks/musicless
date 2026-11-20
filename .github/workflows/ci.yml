@@ -40,6 +40,8 @@ jobs:
       - name: Unit tests
         working-directory: tests
         run: npm run unit
+      - name: Browser audio tool (real MP3/M4A exports)
+        run: npm run test:landing
       - name: Build synthetic test media (nothing copyrighted)
         run: |
           tests/.venv/bin/python tests/build_media.py synthetic "$MUSICLESS_TEST_DIR/media/synth" 240
