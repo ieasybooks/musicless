@@ -1,9 +1,10 @@
 // One-time creation before Terraform can scope a token to this Worker's tag.
 // Public workers.dev and preview URLs stay disabled; Terraform adds the domain.
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { copyFileSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { setTimeout } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 
 const directory = fileURLToPath(new URL('.', import.meta.url));
@@ -42,9 +43,17 @@ try {
   run(process.execPath, ['release.mjs'], landing);
   run(process.execPath, ['check.mjs', '--model-only'], landing);
   console.log('Bootstrapping the main site at ' + commit);
-  execFileSync('./node_modules/.bin/wrangler', ['deploy', '--message', commit, '--tag', commit.slice(0, 12)], {
-    cwd: landing, stdio: 'inherit', env: { ...process.env, WRANGLER_SEND_METRICS: 'false' },
-  });
+  // A new Worker can take a moment to appear in Cloudflare's settings API
+  // after its assets are uploaded. Retrying this same initial build is safe.
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const result = spawnSync('./node_modules/.bin/wrangler', ['deploy', '--message', commit, '--tag', commit.slice(0, 12)], {
+      cwd: landing, stdio: 'inherit', env: { ...process.env, WRANGLER_SEND_METRICS: 'false' },
+    });
+    if (result.error) throw result.error;
+    if (result.status === 0) break;
+    if (attempt === 3) throw new Error('Initial Worker deployment failed');
+    await setTimeout(2000);
+  }
 } finally {
   rmSync(temporary, { recursive: true, force: true });
 }
