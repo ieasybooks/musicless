@@ -44,29 +44,30 @@ the files' bytes and this header.
 
 ## One-time setup
 
-Both PRs can merge before setup. Deployment is disabled until the repository
-variable `MUSICLESS_WEBSITE_DEPLOY_ENABLED` is `true`; all checks still run.
+Set up infrastructure before merging the website deployment PR. Every
+successful main CI run deploys automatically; no enablement variable is needed.
 The browser audio tool can merge separately: the hosting pipeline supports
 the existing landing page as well as the page with MP3/M4A processing.
 
-1. Merge this deployment PR and the companion infrastructure PR. Update both
-   local main branches. Install both sets of Musicless dependencies as above.
-2. From the infrastructure repository, create the initial Worker:
+1. Keep Musicless on the clean deployment PR checkout. From the infrastructure
+   repository, create the initial Worker:
 
    ```sh
    mise run vault:run INFRASTRUCTURE_CLOUDFLARE_API_TOKEN=CLOUDFLARE_API_TOKEN -- \
      node ../musicless/landing/bootstrap.mjs
    ```
 
-   This checks Musicless is on a clean, current main checkout and that the
-   Worker does not exist. It builds, checks the model if present, and deploys
-   with the commit recorded in the version message. `workers.dev` and preview
+   This checks the Worker does not exist, fetches Musicless main, and builds
+   that main commit in a temporary checkout using this PR's deployment tools.
+   It installs dependencies, checks the model if present, and deploys with
+   the main commit recorded in the version message. `workers.dev` and preview
    URLs stay disabled; there is no public hostname until Terraform adds it.
    The initial creation needs the existing infrastructure credentials because
    Cloudflare's Individual Workers Editor token can only name an existing Worker.
-3. In infrastructure, run the normal full plan/review/apply workflow. This adds
+2. Merge the companion infrastructure PR and update its local main. Run the
+   normal full plan/review/apply workflow. This adds
    the domain, `MUSICLESS_WEB_DEPLOY_TOKEN` and the vault caller.
-4. Save the generated token to the vault without printing it:
+3. Save the generated token to the vault without printing it:
 
    ```sh
    mise run tf -- show -json \
@@ -74,10 +75,10 @@ the existing landing page as well as the page with MP3/M4A processing.
      | mise run vault:set MUSICLESS_WEB_DEPLOY_TOKEN
    ```
 
-5. Enable deployment and run CI on main:
+4. Merge this website deployment PR. Its main CI run deploys after all checks
+   pass. A manual rerun is also available:
 
    ```sh
-   gh variable set MUSICLESS_WEBSITE_DEPLOY_ENABLED --body true --repo ieasybooks/musicless
    gh workflow run ci.yml --ref main --repo ieasybooks/musicless
    ```
 

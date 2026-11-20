@@ -87,7 +87,6 @@ jobs:
     needs: [test, website]
     if: >-
       github.repository == 'ieasybooks/musicless' &&
-      vars.MUSICLESS_WEBSITE_DEPLOY_ENABLED == 'true' &&
       github.ref == 'refs/heads/main' &&
       github.actor == 'AliOsm' &&
       (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
