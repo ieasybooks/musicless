@@ -15,9 +15,11 @@ On Linux, before the tag:
    already accepted. The tag will be `v` followed by that version.
 2. **Changelog and policy.** Move the changes for this version out of
    `Unreleased` into a dated changelog section. Leave released sections alone.
-   Update the privacy policy's **Last updated** date only when its content
-   changes, keeping `docs/privacy.md` and both languages of
-   `extension/privacy.html` in sync. Include those changes in the tested commit.
+   The website's privacy policy, `/en/privacy` and `/ar/privacy` (text in
+   `landing/pages.txt`, **Last updated** date in `landing/content.mjs`), is the
+   source of truth. If it changed since the last release, update both
+   languages of `extension/privacy.html` to match it in this release. Include
+   those changes in the tested commit.
 3. **Build.** `./setup.sh --dev`. It checks every download and the built
    model against the pinned SHA-256.
 4. **Unit tests.** `cd tests && npm run unit`.
@@ -89,9 +91,10 @@ git push origin main
 Do not force-push `main`. If the push is rejected, `main` is not on top of
 `origin/main`.
 
-After this, `https://github.com/ieasybooks/musicless/blob/main/docs/privacy.md`
-must show the privacy policy while you are signed out. That URL is the one
-you put in the store.
+The stores link to the privacy policy on the website,
+`https://musicless.ieasybooks.com/en/privacy`, which is the source of truth.
+`docs/privacy.md` only points to it, and `extension/privacy.html` is updated
+to match it with the next extension release.
 
 ## 3. Tag
 
