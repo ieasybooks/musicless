@@ -134,7 +134,7 @@ committed. Do not commit `extension/model/` or `extension/vendor/`.
 After editing the content-script modules, run `npm run build` before reloading
 the extension. Packaging rebuilds the content script automatically.
 
-- [Landing page: build and deployment](landing/README.md)
+- [Landing page: local preview](landing/README.md) and [automated Cloudflare deployment](docs/web-deployment.md)
 - [Testing](docs/testing.md)
 - [Releasing](docs/release.md) and the [store listing](docs/store-listing.md)
 - [How it works](docs/how-it-works.md) and [where to make a change](docs/how-it-works.md#where-to-make-a-change)

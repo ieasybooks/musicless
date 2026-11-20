@@ -1,0 +1,14 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "musicless-web",
+  "account_id": "aaed7434338705aa46de5e4e3575e02b",
+  "compatibility_date": "2026-11-04",
+  "workers_dev": false,
+  "preview_urls": false,
+  // Infrastructure owns the custom domain. There is no Worker script.
+  "assets": {
+    "directory": "../dist/landing",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "404-page"
+  }
+}

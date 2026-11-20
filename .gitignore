@@ -6,6 +6,7 @@ node_modules/
 tests/.venv/
 tests/.work/
 dist/
+.wrangler/
 
 # Python
 __pycache__/

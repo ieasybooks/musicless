@@ -11,7 +11,8 @@ permissions:
 
 concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  # Never interrupt a production deploy; newer PR checks may replace older ones.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   test:
@@ -58,3 +59,70 @@ jobs:
         working-directory: tests
         run: MUSICLESS_EXTENSION="$RUNNER_TEMP/musicless" MEDIA_SET=synth QUICK=1 node local.mjs
       # Evidence stays in the run log: profiles, recordings and media are not uploaded.
+
+  website:
+    name: Static website hosting
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      WRANGLER_SEND_METRICS: 'false'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - run: npm ci --no-audit --no-fund
+      - run: npm ci --prefix landing --no-audit --no-fund
+      - run: npm --prefix landing test
+      - run: npm --prefix landing run build
+      - run: npm --prefix landing run deploy:check
+      - run: npm --prefix landing run test:hosting
+      - run: npm --prefix landing run check:model
+
+  deploy-website:
+    name: Deploy musicless.ieasybooks.com
+    needs: [test, website]
+    if: >-
+      github.repository == 'ieasybooks/musicless' &&
+      vars.MUSICLESS_WEBSITE_DEPLOY_ENABLED == 'true' &&
+      github.ref == 'refs/heads/main' &&
+      github.actor == 'AliOsm' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: production
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      WRANGLER_SEND_METRICS: 'false'
+      SHA: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          package-manager-cache: false
+      - run: npm ci --no-audit --no-fund
+      - run: npm ci --prefix landing --no-audit --no-fund
+      - run: npm --prefix landing run build
+      - run: npm --prefix landing run check:model
+      - uses: ieasybooks/vault@1bce5652d3d2461b0c6d590c3358d8c877fe61c8 # v1.1.0
+        with:
+          secrets: MUSICLESS_WEB_DEPLOY_TOKEN=CLOUDFLARE_API_TOKEN
+      - name: Compare with the live commit
+        id: order
+        run: node landing/deploy-order.mjs "$SHA"
+      - name: Deploy the tested commit
+        if: steps.order.outputs.action == 'deploy'
+        run: npm --prefix landing run deploy -- --message "$SHA" --tag "${SHA:0:12}"
+      - name: Verify the deployed files
+        if: steps.order.outputs.action != 'skip'
+        run: npm --prefix landing run check:live -- --retry

@@ -1,0 +1,19 @@
+{
+  "name": "musicless-website",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node release.mjs",
+    "test": "node --test deploy.test.mjs",
+    "test:hosting": "node test-hosting.mjs",
+    "check:live": "node check.mjs",
+    "check:model": "node check.mjs --model-only",
+    "deploy:check": "wrangler deploy --dry-run",
+    "deploy": "wrangler deploy",
+    "rollback": "wrangler rollback",
+    "bootstrap": "node bootstrap.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "4.158.0"
+  }
+}
