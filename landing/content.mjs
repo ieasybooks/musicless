@@ -7,7 +7,7 @@ export const content = {
   en: {
     name: 'Musicless', dir: 'ltr', language: 'English', chooseLanguage: 'Choose language',
     title: 'Musicless — keep the voices, skip the music',
-    description: 'A free browser extension that removes most background music from YouTube videos and keeps the voices. Everything runs on your computer.',
+    description: 'Remove most background music from YouTube videos or MP3 and M4A audio files. Free, with all audio processing on your device.',
     skip: 'Skip to content', home: 'Musicless home', nav: 'Navigation',
     how: 'How it works', questions: 'Questions', initiative: 'An EasyBooks project',
     headline: 'Keep the voices.<br><span>Skip the music.</span>',
@@ -39,7 +39,7 @@ export const content = {
   ar: {
     name: 'بلا موسيقى', dir: 'rtl', language: 'العربية', chooseLanguage: 'اختر اللغة',
     title: 'بلا موسيقى — تُزيل معظم الموسيقى وتُبقي الأصوات البشرية',
-    description: 'إضافة مجانية تُزيل معظم موسيقى الخلفية من فيديوهات YouTube وتُبقي الأصوات البشرية. كل شيء يعمل على حاسوبك.',
+    description: 'أزل معظم موسيقى الخلفية من فيديوهات YouTube أو ملفات MP3 وM4A. مجانًا، مع معالجة الصوت على جهازك.',
     skip: 'انتقل إلى المحتوى', home: 'الصفحة الرئيسية لإضافة بلا موسيقى', nav: 'التنقل',
     how: 'كيف تعمل؟', questions: 'أسئلة شائعة', initiative: 'من مبادرة الكتب المُيسّرة',
     headline: 'شاهد ما تحب.<br><span>بلا موسيقى.</span>',

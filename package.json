@@ -3,9 +3,15 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "node tools/build-content.mjs"
+    "build": "node tools/build-content.mjs",
+    "build:landing": "node landing/build.mjs",
+    "preview:landing": "node landing/serve.mjs",
+    "test:landing": "node tests/landing.mjs"
   },
   "devDependencies": {
-    "esbuild": "0.25.12"
+    "@mediabunny/aac-encoder": "1.66.2",
+    "@mediabunny/mp3-encoder": "1.66.2",
+    "esbuild": "0.25.12",
+    "mediabunny": "1.66.2"
   }
 }

@@ -4,6 +4,11 @@ import { resolve, join } from 'node:path';
 import manifest from '../extension/manifest.json' with { type: 'json' };
 import { firefoxManifest } from '../tools/firefox-manifest.mjs';
 import { content, stores } from './content.mjs';
+import { audioCopy } from './audio/copy.js';
+import { MODEL_SHA256 } from './audio/config.js';
+import pins from '../tools/dependencies.json' with { type: 'json' };
+import { build } from 'esbuild';
+import { copyOrt } from '../tools/fetch-ort.mjs';
 
 const here = fileURLToPath(new URL('.', import.meta.url));
 const repo = resolve(here, '..');
@@ -38,8 +43,34 @@ await cp(join(repo, 'extension/licenses/alexandria-OFL.txt'), join(out, 'assets/
 await cp(join(repo, 'extension/icons/player-on.svg'), join(out, 'assets/player-on.svg'));
 await cp(join(repo, 'docs/store/github-social-1280x640.png'), join(out, 'assets/social.png'));
 await cp(join(here, 'assets'), join(out, 'assets'), { recursive: true });
+if (MODEL_SHA256 !== pins.model_sha256) throw new Error('Update the website model URL to match the extension weights');
+await build({
+  entryPoints: [join(here, 'audio/app.js'), join(here, 'audio/worker.js')],
+  outdir: join(out, 'assets/audio'), bundle: true, splitting: true, format: 'esm',
+  platform: 'browser', target: 'es2022', minify: true, chunkNames: 'chunks/[name]-[hash]',
+});
+for (const file of ['model.js', 'grid.js']) {
+  await mkdir(join(out, 'assets/engine'), { recursive: true });
+  await cp(join(repo, 'extension', file), join(out, 'assets/engine', file));
+}
+await copyOrt(join(out, 'assets/engine/vendor'));
+await cp(join(here, 'audio/audio.css'), join(out, 'assets/audio.css'));
+await cp(join(repo, 'extension/licenses'), join(out, 'licenses'), { recursive: true });
+for (const [name, source] of Object.entries({
+  'mediabunny-MPL-2.0.txt': 'mediabunny/LICENSE',
+  'mp3-encoder-MPL-2.0.txt': '@mediabunny/mp3-encoder/LICENSE',
+  'aac-encoder-MPL-2.0.txt': '@mediabunny/aac-encoder/LICENSE',
+  'lame-LICENSE.txt': '@mediabunny/mp3-encoder/licenses/lame/LICENSE',
+  'lame-COPYING.txt': '@mediabunny/mp3-encoder/licenses/lame/COPYING',
+  'ffmpeg-LICENSE.md': '@mediabunny/aac-encoder/licenses/ffmpeg/LICENSE.md',
+  'ffmpeg-LGPL-2.1.txt': '@mediabunny/aac-encoder/licenses/ffmpeg/COPYING.LGPLv2.1',
+  'mp3-encoder-build.md': '@mediabunny/mp3-encoder/README.md',
+  'aac-encoder-build.md': '@mediabunny/aac-encoder/README.md',
+})) await cp(join(repo, 'node_modules', source), join(out, 'licenses', name));
+await cp(join(here, 'THIRD_PARTY.md'), join(out, 'licenses/THIRD_PARTY.md'));
 
 for (const [lang, c] of Object.entries(content)) {
+  const a = audioCopy[lang];
   const videoUrl = `https://youtu.be/${c.videoId}`;
   const languages = Object.entries(content).map(([code, choice]) =>
     `<a href="/${code}/" hreflang="${code}" lang="${code}" dir="${choice.dir}"${code === lang ? ' aria-current="page"' : ''}>${choice.language}</a>`
@@ -74,7 +105,9 @@ for (const [lang, c] of Object.entries(content)) {
   <link rel="icon" type="image/svg+xml" href="/assets/musicless-icon.svg">
   ${lang === 'ar' ? '<link rel="preload" href="/assets/alexandria-arabic.woff2" as="font" type="font/woff2" crossorigin>' : ''}
   <link rel="stylesheet" href="/assets/site.css">
+  <link rel="stylesheet" href="/assets/audio.css">
   <script src="/assets/site.js" defer></script>
+  <script src="/assets/audio/app.js" type="module"></script>
 </head>
 <body>
   <a class="skip" href="#main">${c.skip}</a>
@@ -93,6 +126,11 @@ for (const [lang, c] of Object.entries(content)) {
     <section class="hero" aria-labelledby="headline">
       <a class="eyebrow" href="https://ieasybooks.com/${lang}/">${c.initiative}<span aria-hidden="true">↗</span></a>
       <h1 id="headline">${c.headline}</h1>
+      <div class="audio-modes" role="tablist" aria-label="${a.modes}">
+        <button type="button" id="youtube-tab" role="tab" data-mode="youtube" aria-controls="youtube-panel" aria-selected="true">${a.youtube}</button>
+        <button type="button" id="files-tab" role="tab" data-mode="files" aria-controls="files-panel" aria-selected="false" tabindex="-1">${a.files}</button>
+      </div>
+      <div id="youtube-panel" role="tabpanel" aria-labelledby="youtube-tab">
       <p class="intro">${c.intro}</p>
       <div class="actions">
         <div class="stores">
@@ -108,9 +146,17 @@ for (const [lang, c] of Object.entries(content)) {
         <a class="watch-link" href="#film">${play}${c.watch}</a>
       </div>
       <p class="free">${c.free}</p>
+      </div>
+      <section id="files-panel" role="tabpanel" aria-labelledby="files-tab" hidden>
+        <p class="intro audio-intro">${a.intro}</p>
+        <input type="file" id="audio-file" accept=".mp3,.m4a,audio/mpeg,audio/mp4" hidden aria-label="${a.choose}">
+        <div id="audio-workspace" class="audio-workspace" tabindex="-1"><p>${a.noScript}</p></div>
+        <p class="audio-privacy"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>${a.local}</p>
+        <div class="visually-hidden" id="audio-announcement" role="status" aria-live="polite"></div>
+      </section>
     </section>
 
-    <section id="film" class="film-section" aria-labelledby="film-title">
+    <section id="film" class="film-section" aria-labelledby="film-title" data-youtube-section>
       <h2 id="film-title">${c.film}</h2>
       <div class="film">
         <a class="film-play" href="${videoUrl}" data-video-id="${c.videoId}">
@@ -121,7 +167,7 @@ for (const [lang, c] of Object.entries(content)) {
       <a class="youtube-link" href="${videoUrl}">${c.youtube}</a>
     </section>
 
-    <section id="how" class="how" aria-labelledby="how-title">
+    <section id="how" class="how" aria-labelledby="how-title" data-youtube-section>
       <h2 id="how-title">${c.stepsTitle}</h2>
       <ol class="steps">${c.steps.map(([title, body], i) => `
         <li><span class="step-number" aria-hidden="true">${i + 1}</span><div><h3>${title}</h3><p>${body}</p></div></li>`).join('')}
@@ -131,8 +177,11 @@ for (const [lang, c] of Object.entries(content)) {
 
     <section id="questions" class="questions" aria-labelledby="questions-title">
       <h2 id="questions-title">${c.faqTitle}</h2>
-      <div class="faq-list">${c.faqs.map(([q, a]) => `
+      <div class="faq-list" data-youtube-questions>${c.faqs.map(([q, a]) => `
         <details><summary>${q}<span class="plus" aria-hidden="true"></span></summary><p>${a}</p></details>`).join('')}
+      </div>
+      <div class="faq-list" data-files-questions hidden>${a.faqs.map(([q, answer]) => `
+        <details><summary>${q}<span class="plus" aria-hidden="true"></span></summary><p>${answer}</p></details>`).join('')}
       </div>
     </section>
   </main>
@@ -149,4 +198,4 @@ for (const [lang, c] of Object.entries(content)) {
 }
 await writeFile(join(out, 'robots.txt'), `User-agent: *\nAllow: /\nSitemap: ${origin}/sitemap.xml\n`);
 await writeFile(join(out, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${['en', 'ar'].map(lang => `<url><loc>${origin}/${lang}/</loc></url>`).join('')}</urlset>\n`);
-console.log('Built dist/landing (static HTML, CSS and JavaScript; no runtime dependencies).');
+console.log('Built dist/landing (static site and browser audio workers; model fetched from R2 on Submit).');
