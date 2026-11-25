@@ -4,7 +4,7 @@ Musicless separates the voices from YouTube's audio in the browser, while the
 video plays, and plays them in place of the original track.
 
 ```
- page world                     content script (isolated world)         extension frame (hidden)
+ page world                     content script (isolated world)         extension frame (invisible)
  ──────────                     ───────────────────────────────         ────────────────────────
  YouTube's player                main.js: a Session + Button per <video>
    │ appendBuffer(audio) ──▶ capture.js ──postMessage──▶ capture-bus.js
@@ -27,7 +27,7 @@ video plays, and plays them in place of the original track.
 | `audio.js`, `playback-intent.js` | The page's one AudioContext and each video's routing; in Firefox, the leash and taking a video over from an earlier copy (Browser quirks). The user's play or pause, kept apart from Musicless's holds. |
 | `button.js`, `content.css`, `i18n.js` | What Musicless shows on a video, in English or Arabic (`_locales/`): a button in YouTube's own control bar (or the embedded player's top row, or a Short's own row of buttons; a small corner button where a player has none), a spinner in the middle of the video while the first audio is prepared, a play button when the browser waits for a click, and the recovery dialog. It shows and hides with YouTube's controls, and ignores clicks a page script fakes. |
 | `engine.js` | The page's connection to the hidden frame; routes messages by stream; notices a frame or worker that has gone away and starts a new one; removes the frame 30 s after nothing uses it. |
-| `separator.html/js` | The hidden frame, in the extension's own origin (WebAssembly allowed, out of the page's reach). It accepts one connection, and only with a random token that page scripts cannot read: the background script (a service worker in Chrome, an event page in Firefox) makes it once, and the content script sends it only to the extension's own origin, fixed when the frame is created. Then it starts the tab worker and connects it to the shared model. |
+| `separator.html/js` | A transparent 1×1 frame that ignores pointer events, in the extension's own origin (WebAssembly allowed, out of the page's reach). It accepts one connection, and only with a random token that page scripts cannot read: the background script (a service worker in Chrome, an event page in Firefox) makes it once, and the content script sends it only to the extension's own origin, fixed when the frame is created. Then it starts the tab worker and connects it to the shared model. |
 | `tab-worker.js` | Per tab: demuxes (`demux.js`), decodes with WebCodecs, resamples to 44.1 kHz, computes the STFT (`dsp.js`), sends it to the model, synthesizes the voices and crossfades the window edges. Keeps at most 64 MiB of audio per video and nothing more than 15 minutes behind the playhead, and separates again whatever the player replaced. |
 | `model-client.js` | Per-tab connection to the shared model: readiness, request IDs, deadlines and heartbeat. Reports failures back to the tab worker without depending on its stream or scheduling state. |
 | `model-worker.js`, `model.js` | One copy of the model for every tab (a shared worker; WebCodecs is not available there, which is why decoding stays per tab). A priority queue puts the chunk a playing video needs first. |

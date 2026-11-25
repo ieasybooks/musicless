@@ -56,7 +56,9 @@ export class Engine {
     frame.src = url;
     frame.tabIndex = -1;
     frame.setAttribute("aria-hidden", "true");
-    frame.style.setProperty("display", "none", "important");
+    // Vivaldi on Android throttles workers in a display:none frame, including
+    // embedded players and desktop-site mode. The transparent pixel takes no taps.
+    frame.className = "musicless-engine";
     const channel = new MessageChannel();
     channel.port1.onmessage = (event) => this.dispatch(event.data);
     frame.addEventListener("load", () => handshake(frame, origin, channel.port2), { once: true });

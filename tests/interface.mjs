@@ -273,6 +273,20 @@ try {
     return state;
   });
 
+  await step("the mobile audio frame has a box without obscuring the page or taking taps", async () => {
+    await playerUI(page);
+    const state = await page.evaluate(() => {
+      const frame = document.createElement("iframe");
+      frame.className = "musicless-engine";
+      document.body.append(frame);
+      const rect = frame.getBoundingClientRect();
+      return { size: [rect.width, rect.height], opacity: getComputedStyle(frame).opacity,
+        takesTaps: document.elementFromPoint(rect.left + 0.5, rect.top + 0.5) === frame };
+    });
+    assert.deepEqual(state, { size: [1, 1], opacity: "0", takesTaps: false });
+    return state;
+  });
+
   await step("the welcome instruction's glyph stays visible in forced colors", async () => {
     await setSettings(browser, extensionId, { consented: true });
     await gotoExtensionPage(page, extensionId, "welcome.html");

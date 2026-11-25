@@ -3,6 +3,20 @@
    and the corners from the player's. Text over the picture follows YouTube's
    tooltip and dialog surfaces. */
 
+/* The processing frame. Keep it out of page flow and
+   hit testing while its workers prepare audio for the visible video. */
+iframe.musicless-engine {
+  display: block !important;
+  position: fixed !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 1px !important;
+  height: 1px !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
 .musicless-btn,
 .musicless-tip,
 .musicless-notice,
