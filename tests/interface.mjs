@@ -92,6 +92,8 @@ try {
   await step("Back reloads a previously loaded muted video before missed capture is reported", () => fromVideo(async (page, welcome) => {
     await welcome.click("#accept");
     await welcome.waitForSelector("#back", { visible: true });
+    // Firefox for Android exposes tabs but no windows API.
+    await welcome.evaluate(() => Object.defineProperty(chrome, "windows", { value: undefined, configurable: true }));
     const before = await frameState(page);
     assert(!before.attached && !before.failure, "the muted video must not have reported missed capture yet");
     const navigation = page.waitForNavigation({ waitUntil: "domcontentloaded", timeout: 15000 });

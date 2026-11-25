@@ -48,7 +48,7 @@ test("Back ignores hidden players and does not claim a reload when no visible vi
 });
 
 test("setup remembers the requesting frame and document as well as its tab", async () => {
-  let receive, stored;
+  let receive, stored, active;
   load("background.js", {
     chrome: {
       runtime: {
@@ -56,10 +56,11 @@ test("setup remembers the requesting frame and document as well as its tab", asy
         onInstalled: { addListener() {} }, onMessage: { addListener: (fn) => { receive = fn; } },
       },
       storage: { session: { set: async (value) => { stored = plain(value); } } },
-      tabs: { query: async () => [], create: async () => ({ id: 99 }) },
+      tabs: { query: async () => [{ id: 99 }], update: async id => { active = id; } },
     },
   });
   receive({ type: "open-welcome" }, { tab: { id: 7 }, frameId: 12, documentId: "source-document" });
   await flush();
+  assert.equal(active, 99, "reuse setup even when the Android windows API is absent");
   assert.deepEqual(stored, { videoTab: { id: 7, frameId: 12, documentId: "source-document" } });
 });
