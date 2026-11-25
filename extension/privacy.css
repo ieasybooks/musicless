@@ -19,7 +19,7 @@
 .privacy h2 { font-size: 20px; line-height: 28px; margin: 28px 0 8px; font-weight: 500; }
 .privacy p { font-size: 16px; line-height: 26px; margin-bottom: 16px; }
 .privacy p a { overflow-wrap: anywhere; }
-.privacy .translation-note { color: var(--muted); }
+.privacy .updated { color: var(--muted); }
 [lang="ar"] .privacy h1 { font-size: 34px; line-height: 48px; }
 [lang="ar"] .privacy h2 { font-size: 21px; line-height: 32px; }
 [lang="ar"] .privacy p { font-size: 17px; line-height: 30px; }

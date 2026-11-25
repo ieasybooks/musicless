@@ -145,7 +145,7 @@ const site = join(root, 'dist/landing');
 const origin = 'https://musicless.ieasybooks.com';
 const textPages = ['about', 'privacy', 'terms', 'support'];
 const dated = { privacy: true, terms: true };
-const updated = { en: 'Last updated: November 20, 2026', ar: 'آخر تحديث: 20 نوفمبر 2026' };
+const updated = { en: 'Last updated: November 24, 2026', ar: 'آخر تحديث: 24 نوفمبر 2026' };
 const footerLinks = {
   en: [['About', '/en/about'], ['Privacy policy', '/en/privacy'], ['Terms of use', '/en/terms'],
     ['Contact & support', '/en/support'], ['Source code', 'https://github.com/ieasybooks/musicless']],

@@ -34,7 +34,7 @@ export const content = {
     ],
     footer: 'Free software, from', parent: 'EasyBooks',
     about: 'About', privacy: 'Privacy policy', terms: 'Terms of use', support: 'Contact &amp; support', source: 'Source code',
-    footerNav: 'Project links', updated: 'Last updated: November 20, 2026',
+    footerNav: 'Project links', updated: 'Last updated: November 24, 2026',
   },
   ar: {
     name: 'بلا موسيقى', dir: 'rtl', language: 'العربية', chooseLanguage: 'اختر اللغة',
@@ -66,6 +66,6 @@ export const content = {
     ],
     footer: 'برمجيات مجانية من', parent: 'الكتب المُيسّرة',
     about: 'عن الإضافة', privacy: 'سياسة الخصوصية', terms: 'شروط الاستخدام', support: 'التواصل والدعم', source: 'الشيفرة المصدرية',
-    footerNav: 'روابط المشروع', updated: 'آخر تحديث: 20 نوفمبر 2026',
+    footerNav: 'روابط المشروع', updated: 'آخر تحديث: 24 نوفمبر 2026',
   },
 };

@@ -28,7 +28,7 @@ Follow EasyBooks on [Telegram](https://t.me/ieasybooks), [YouTube](https://youtu
 Privacy policy
 This policy explains how the Musicless browser extension and the musicless.ieasybooks.com website handle information. Musicless is made by EasyBooks, and you can use it without an account.
 ## How Musicless handles audio
-Musicless processes the audio of the video you're watching in your browser's memory, to separate the voices from the music. The audio never leaves your computer: it isn't uploaded, shared or saved, and it's discarded as the video plays on or when you close the page. Musicless doesn't collect your viewing history.
+Musicless processes the audio of the video you're watching in your browser's memory, to separate the voices from the music. The audio never leaves your device: it isn't uploaded, shared or saved, and it's discarded as the video plays on or when you close the page. Musicless doesn't collect your viewing history.
 Audio files you process on the website are handled the same way: in your browser, never uploaded. The first time, your browser downloads the music-removal model and keeps a copy for next time.
 ## Information stored on your device
 Your browser saves your “Remove music by default” setting and that you turned Musicless on, and may sync them across your devices. A random security token stays on this device, and a link back to the video you came from is kept until you return to it or close the browser.
@@ -48,7 +48,7 @@ We publish the current version of this policy, and the date it was last updated,
 سياسة الخصوصية
 تبيّن هذه السياسة كيف نتعامل مع المعلومات في إضافة «بلا موسيقى» للمتصفح وموقع musicless.ieasybooks.com. الإضافة من تطوير الكتب المُيسّرة، ويمكنك استخدامها دون حساب.
 ## كيف تعالج الإضافة الصوت
-لفصل الأصوات البشرية عن الموسيقى، تعالج إضافة «بلا موسيقى» صوت الفيديو الذي تشاهده داخل ذاكرة متصفحك. ولا يغادر هذا الصوت حاسوبك أبدًا: لا يُرسَل إلى أي مكان، ولا يُشارَك مع أحد، ولا يُحفظ، بل يُحذف أولًا بأول مع تقدّم الفيديو أو عند إغلاق الصفحة. ولا تجمع الإضافة سجل مشاهدتك.
+لفصل الأصوات البشرية عن الموسيقى، تعالج إضافة «بلا موسيقى» صوت الفيديو الذي تشاهده داخل ذاكرة متصفحك. ولا يغادر هذا الصوت جهازك أبدًا: لا يُرسَل إلى أي مكان، ولا يُشارَك مع أحد، ولا يُحفظ، بل يُحذف أولًا بأول مع تقدّم الفيديو أو عند إغلاق الصفحة. ولا تجمع الإضافة سجل مشاهدتك.
 والأمر نفسه في الملفات الصوتية التي تعالجها في الموقع: تُعالَج داخل متصفحك ولا تُرفع. وعند أول استخدام ينزّل متصفحك نموذج إزالة الموسيقى، ويحتفظ بنسخة منه للمرات التالية.
 ## ما يُحفظ على جهازك
 يحفظ متصفحك إعداد «إزالة الموسيقى افتراضيًا» وحالة تفعيل الإضافة، وقد يزامنهما بين أجهزتك. ويُحفظ على هذا الجهاز وحده رمز أمان عشوائي، ورابط يعيدك إلى الفيديو الذي جئت منه، ويبقى حتى تعود إليه أو تغلق المتصفح.
@@ -70,7 +70,7 @@ These terms cover your use of the Musicless browser extension and the musicless.
 ## Using Musicless
 Use Musicless lawfully and respectfully. Don't disrupt it, try to get into parts of it you aren't allowed to reach, or send it so many requests that it slows down for others.
 ## Content and rights
-Musicless changes only how YouTube videos sound on your computer. Their rights stay with their owners, and Musicless claims no ownership of them. Musicless isn't affiliated with or endorsed by YouTube or Google.
+Musicless changes only how YouTube videos sound on your device. Their rights stay with their owners, and Musicless claims no ownership of them. Musicless isn't affiliated with or endorsed by YouTube or Google.
 ## Accuracy and availability
 Musicless is provided free and as is, without warranties of any kind. It may leave some music in or change how voices sound, and we don't guarantee that it will always work or be free of errors. If you find a mistake, please report it.
 ## Limitation of liability
@@ -86,7 +86,7 @@ For questions about these terms, email [easybooksdev@gmail.com](mailto:easybooks
 ## استخدام «بلا موسيقى»
 استخدم الإضافة استخدامًا مشروعًا ولائقًا، ولا تحاول تعطيلها، أو الوصول إلى أجزاء غير مسموح لك بها، أو إرسال طلبات كثيرة تُبطئها على المستخدمين الآخرين.
 ## المحتوى والحقوق
-لا تغيّر إضافة «بلا موسيقى» سوى طريقة سماعك لفيديوهات YouTube على حاسوبك. وتبقى الحقوق كلها لأصحابها، ولا تدّعي الإضافة ملكية شيء منها. وإضافة «بلا موسيقى» ليست تابعة لـ YouTube أو Google، ولا معتمدة منهما.
+لا تغيّر إضافة «بلا موسيقى» سوى طريقة سماعك لفيديوهات YouTube على جهازك. وتبقى الحقوق كلها لأصحابها، ولا تدّعي الإضافة ملكية شيء منها. وإضافة «بلا موسيقى» ليست تابعة لـ YouTube أو Google، ولا معتمدة منهما.
 ## الدقة والتوافر
 تُقدَّم الإضافة مجانًا و«كما هي»، دون ضمانات من أي نوع. وقد تبقى بعض الموسيقى أو تتغير الأصوات قليلًا، ولا نضمن أن تعمل دائمًا أو تخلو من الأعطال. وإن وجدت خطأ، فنرجو أن تبلغنا به.
 ## حدود المسؤولية
