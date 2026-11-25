@@ -149,7 +149,8 @@ a native speaker's review before submission.
 A GitHub Release does not update copies installed from the store. Each
 store must receive the verified zip for the new version.
 
-The images in `docs/store/` come from `tests/screenshots.mjs`. Remake them
+The images in `docs/store/` come from `tests/screenshots.mjs`. Install DejaVu Sans
+for the English and Arabic setup and settings captions. Remake the screenshots
 after any change to the button, the pages or the strings:
 
 ```sh

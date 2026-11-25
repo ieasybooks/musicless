@@ -409,6 +409,13 @@ try {
       const localized = await launch({ lang, consented: false, diagnostics: false });
       try {
         const popup = await localized.browser.newPage();
+        await popup.setViewport({ width: 720, height: 600 });
+        await gotoExtensionPage(popup, localized.extensionId, "welcome.html");
+        await popup.waitForSelector("#setup:not(.off)");
+        await popup.evaluate(() => document.fonts.ready);
+        assert(await popup.$eval("#setup h1", el => el.offsetHeight === parseFloat(getComputedStyle(el).lineHeight)),
+          "the full setup title fits on one line");
+        await popup.goto("about:blank");
         await popup.setViewport({ width: 320, height: 600, deviceScaleFactor: 2 });
         await gotoExtensionPage(popup, localized.extensionId, "popup.html");
         await popup.waitForSelector("#accept", { visible: true });
@@ -416,6 +423,11 @@ try {
         assert.equal(expectedAccept, lang === "ar" ? "تفعيل «بلا موسيقى»" : "Turn on Musicless");
         assert.equal(await popup.$eval("#accept", el => el.textContent), expectedAccept);
         await popup.click("#accept");
+        await popup.waitForSelector("#settings:not([hidden])");
+        assert(await popup.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "settings fit a narrow phone");
+        await popup.goto("about:blank");
+        await popup.setViewport({ width: 390, height: 600, deviceScaleFactor: 2 });
+        await gotoExtensionPage(popup, localized.extensionId, "popup.html");
         await popup.waitForSelector("#settings:not([hidden])");
         for (const on of [true, false]) {
           if (!on) await popup.click("#autoStart");
@@ -433,6 +445,20 @@ try {
           assert(state.text.toLowerCase().includes(lang === "ar" ? "كل فيديو تفتحه" : "every video you open"));
           assert.equal(state.icon, state.iconName);
           assert.equal(state.crossed, on); assert.equal(state.described, "oneVideo");
+          const [start, end, instruction, last] = await popup.$eval("#oneVideo", hint => {
+            const first = hint.firstChild, last = hint.lastChild;
+            const nextLine = first.data.indexOf("\n") + 1;
+            const top = (node, i) => {
+              const range = document.createRange();
+              range.setStart(node, i);
+              range.setEnd(node, i + 1);
+              return range.getBoundingClientRect().top;
+            };
+            return [top(first, 0), top(first, nextLine - 2), top(first, nextLine), top(last, last.length - 1)];
+          });
+          assert.equal(start, end, "the default fits on the first line");
+          assert.equal(instruction, last, "the player instruction fits on the second line");
+          assert(instruction > end);
           for (const scheme of ["light", "dark"]) {
             await emulateMedia(popup, { "prefers-color-scheme": scheme });
             await until(popup, ([scheme, lang]) => {
