@@ -61,7 +61,7 @@ async function fromVideo(check) {
 // The real Button module, with only its Session supplied as a UI fixture.
 // Browser focus, keyboard/pointer events, DOM moves and styles remain real.
 async function playerUI(page, shorts = false) {
-  await gotoExtensionPage(page, extensionId, "privacy.html");
+  await gotoExtensionPage(page, extensionId, "separator.html");
   await bringToFront(page);
   await page.evaluate(async shorts => {
     const css = document.createElement("link"); css.rel = "stylesheet"; css.href = "content.css";
@@ -409,9 +409,11 @@ try {
       const localized = await launch({ lang, consented: false, diagnostics: false });
       try {
         const popup = await localized.browser.newPage();
+        const privacyUrl = `https://musicless.ieasybooks.com/${lang === "ar" ? "ar" : "en"}/privacy`;
         await popup.setViewport({ width: 720, height: 600 });
         await gotoExtensionPage(popup, localized.extensionId, "welcome.html");
         await popup.waitForSelector("#setup:not(.off)");
+        assert.equal(await popup.$eval("#privacy", link => link.href), privacyUrl);
         await popup.evaluate(() => document.fonts.ready);
         assert(await popup.$eval("#setup h1", el => el.offsetHeight === parseFloat(getComputedStyle(el).lineHeight)),
           "the full setup title fits on one line");
@@ -419,6 +421,7 @@ try {
         await popup.setViewport({ width: 320, height: 600, deviceScaleFactor: 2 });
         await gotoExtensionPage(popup, localized.extensionId, "popup.html");
         await popup.waitForSelector("#accept", { visible: true });
+        assert.equal(await popup.$eval("#privacy", link => link.href), privacyUrl);
         const expectedAccept = await popup.evaluate(() => chrome.i18n.getMessage("consent_accept"));
         assert.equal(expectedAccept, lang === "ar" ? "تفعيل «بلا موسيقى»" : "Turn on Musicless");
         assert.equal(await popup.$eval("#accept", el => el.textContent), expectedAccept);

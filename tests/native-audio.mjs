@@ -63,7 +63,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const { browser, extensionId } = await launch({ diagnostics: false });
   try {
     const page = await browser.newPage();
-    await gotoExtensionPage(page, extensionId, "privacy.html");
+    await gotoExtensionPage(page, extensionId, "separator.html");
     console.log(await page.evaluate(checkNativeAudio, audioFixtures()));
   } finally {
     await browser.close();

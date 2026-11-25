@@ -5,7 +5,7 @@ The extension's controls and setup messages live in `extension/_locales/en/messa
 language from the browser's UI language and falls back to English per message. This table
 is for review by a native speaker; the Arabic is Modern Standard Arabic, plain and short.
 `tests/unit/translations.test.mjs` checks that the table matches both catalogs.
-The bundled privacy policy has its own English and Arabic text in `extension/privacy.html`.
+The website's English and Arabic privacy policies live in `landing/pages.txt`.
 
 Conventions
 - In Arabic the extension is called بلا موسيقى ("without music"). Arabic text never uses
@@ -86,3 +86,4 @@ Conventions
 | `link_help` | Help | <div dir="rtl">مساعدة</div> | Link to the help (how Musicless works, what to do); reporting a problem is one link further. مساعدة without the article, as Google's menus. |
 | `link_help_url` | https://github.com/ieasybooks/musicless#using-musicless | <div dir="rtl">https://github.com/ieasybooks/musicless/blob/main/docs/help.ar.md</div> | Not translated as text: the address of the help in this language (README's "Using Musicless" in English, docs/help.ar.md in Arabic). |
 | `link_privacy` | Privacy policy | <div dir="rtl">سياسة الخصوصية</div> | The published privacy policy. |
+| `link_privacy_url` | https://musicless.ieasybooks.com/en/privacy | <div dir="rtl">https://musicless.ieasybooks.com/ar/privacy</div> | The website privacy policy URL for this language. |

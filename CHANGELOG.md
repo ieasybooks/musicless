@@ -18,8 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The English and Arabic store screenshots for setup and settings now use
   DejaVu Sans for their captions.
-- The offline privacy policy now covers both the extension and the Musicless
-  website in English and Arabic.
+- The privacy policy link in setup now opens the Musicless website in your
+  language, English or Arabic.
 
 ## [1.1.2] - 2026-11-21
 

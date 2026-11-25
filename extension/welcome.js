@@ -5,6 +5,7 @@ import { loadSettings, onSettingsChanged } from "./settings.js";
 
 const $ = (id) => document.getElementById(id);
 localizePage();
+$("privacy").href = t("link_privacy_url");
 const brand = document.querySelector(".brand");
 let currentConsent = null;
 function hint(on) {

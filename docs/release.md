@@ -17,9 +17,7 @@ On Linux, before the tag:
    `Unreleased` into a dated changelog section. Leave released sections alone.
    The website's privacy policy, `/en/privacy` and `/ar/privacy` (text in
    `landing/pages.txt`, **Last updated** date in `landing/content.mjs`), is the
-   source of truth. If it changed since the last release, update both
-   languages of `extension/privacy.html` to match it in this release. Include
-   those changes in the tested commit.
+   source of truth for the extension and the store listings.
    When adding a platform, publish its website install instructions after the
    corresponding public store listing offers that version. A merge to main
    can deploy the website while the package is still in store review.
@@ -94,10 +92,9 @@ git push origin main
 Do not force-push `main`. If the push is rejected, `main` is not on top of
 `origin/main`.
 
-The stores link to the privacy policy on the website,
-`https://musicless.ieasybooks.com/en/privacy`, which is the source of truth.
-`docs/privacy.md` only points to it, and `extension/privacy.html` is updated
-to match it with the next extension release.
+The stores link to the English privacy policy at
+`https://musicless.ieasybooks.com/en/privacy`. The extension links to the
+English or Arabic policy based on the language it displays.
 
 ## 3. Tag
 

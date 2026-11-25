@@ -50,5 +50,6 @@
   "popup_one_video": {"message": "كل فيديو تفتحه يحتفظ بصوته الأصلي.\nاضغط على {icon} في أي فيديو لإزالة موسيقاه.", "description": "Helper when the default is off. Preserve {icon}; it becomes the plain note."},
   "link_help": { "message": "مساعدة" },
   "link_help_url": { "message": "https://github.com/ieasybooks/musicless/blob/main/docs/help.ar.md" },
-  "link_privacy": { "message": "سياسة الخصوصية" }
+  "link_privacy": { "message": "سياسة الخصوصية" },
+  "link_privacy_url": { "message": "https://musicless.ieasybooks.com/ar/privacy" }
 }
