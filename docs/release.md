@@ -20,6 +20,9 @@ On Linux, before the tag:
    source of truth. If it changed since the last release, update both
    languages of `extension/privacy.html` to match it in this release. Include
    those changes in the tested commit.
+   When adding a platform, publish its website install instructions after the
+   corresponding public store listing offers that version. A merge to main
+   can deploy the website while the package is still in store review.
 3. **Build.** `./setup.sh --dev`. It checks every download and the built
    model against the pinned SHA-256.
 4. **Unit tests.** `cd tests && npm run unit`.
@@ -186,8 +189,9 @@ section, and in the repository homepage, only after the listing is live.
 
 Open <https://addons.mozilla.org/developers/> with the ieasybooks Mozilla
 account and upload the verified `musicless-<version>-firefox.zip` as a new
-version of Musicless. Choose Firefox on the desktop only: Musicless does not
-run on phones. Its add-on ID, `musicless@ieasybooks` in the Firefox manifest,
+version of Musicless. For the build with Android audio decoding, select Firefox
+for desktop and Android. Verify a signed-out install on both after approval.
+Its add-on ID, `musicless@ieasybooks` in the Firefox manifest,
 can never change.
 
 Mozilla asks for the source of generated files, and `content.bundle.js` is
@@ -220,7 +224,7 @@ dashboard.
 
 When setting up or reviewing the repository:
 
-1. **Description.** "Removes the background music from YouTube videos and keeps the voices. A browser extension; everything runs on your computer."
+1. **Description.** "Removes the background music from YouTube videos and keeps the voices. A browser extension; everything runs on your device."
 2. **Topics.** `browser-extension`, `chrome-extension`, `firefox-addon`, `chromium`, `webextension`, `youtube`, `privacy`, `onnx`, `webassembly`.
 3. **Homepage.** Empty until the Chrome Web Store listing is live, then that listing URL.
 4. **Social preview.** Upload [store/github-social-1280x640.png](store/github-social-1280x640.png), the supplied 1280×640 image with the logo, tagline, quieter product description and faint stave with a gap.

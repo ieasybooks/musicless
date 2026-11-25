@@ -192,6 +192,25 @@ Short's own buttons, and in an embedded player it joins the top row of
 buttons. Run it after YouTube changes its player. (The local test page has no
 YouTube controls, so `local.mjs` covers the corner button instead.)
 
+## Android playback
+
+On a phone, open a YouTube video with sound on and test music removal at
+1×, 1.5× and 2×. Listen for pauses and check that speech stays in sync.
+Press Home once with the original audio and once with music removal on.
+Let each Home trial run for at least a minute with DevTools disconnected.
+Record how far the video advances and whether it pauses while Musicless
+prepares audio. Audio already buffered before Home can hide a slowdown.
+Also record whether playback resumes from the media notification if it stops. Also check the center Play control and the action
+rail on a Short, and an embedded player on another site. Use a handset for
+these checks because browser background policies and CPU speed affect the result.
+
+An Android emulator can run the synthetic AAC and Opus players at the same
+rates. The native decoder regression can also run in desktop Firefox:
+
+```sh
+FIREFOX=/path/to/firefox node native-audio.mjs
+```
+
 ## Store images
 
 ```sh
@@ -218,6 +237,7 @@ after turning it off (the model is released 30 s after nothing needs it).
 
 `.github/workflows/ci.yml` runs the setup and the unit tests, packages the
 extension, and runs QUICK and interface on the unzipped package with synthetic media
-in Chrome. On a tag, `.github/workflows/release.yml` runs the
+in Chrome. Firefox also decodes mid-stream AAC and Opus packets and checks
+their PCM length and placement across timestamp gaps. On a tag, `.github/workflows/release.yml` runs the
 full local suite, interface and the memory check on the package before it is attested
 (see [release.md](release.md)).

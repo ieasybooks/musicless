@@ -17,11 +17,11 @@ named below.
 Musicless
 ```
 
-**Summary** (113 of 132 characters; it is the manifest `description`, from
+**Summary** (111 of 132 characters; it is the manifest `description`, from
 `extension/_locales/en/messages.json`, so the package supplies it):
 
 ```text
-Removes most of the background music from YouTube™ videos and keeps the voices. Everything runs on your computer.
+Removes most of the background music from YouTube™ videos and keeps the voices. Everything runs on your device.
 ```
 
 **Language:** English (`default_locale: en`), plus Arabic (`ar`) from the
@@ -40,19 +40,19 @@ Watch YouTube™ with less background music, while keeping speech and singing. M
 Turn it on and watch
 • Choose Turn on Musicless after installation. Musicless then removes music automatically. If YouTube was already open, reload that page.
 • Give it a few seconds at the start of each video. You’ll see Removing music while you wait. Jumping ahead may cause another short pause.
-• Click the crossed-out music note in the video to Restore original sound. Click it again to Remove music.
-• To choose videos yourself, open Musicless from the browser toolbar and turn off Remove music by default. The default applies to every video you open, leaving the current video alone. The player button changes only that video.
+• Select the crossed-out music note in the video to Restore original sound. Select it again to Remove music.
+• To choose videos yourself, open Musicless from your browser’s extensions menu and turn off Remove music by default. The default applies to every video you open, leaving the current video alone. The player button changes only that video.
 
-Your usual controls still work: volume, mute, fullscreen and playback speed. You can jump to another part of the video, watch Shorts or live streams, and use supported YouTube videos on other websites. Musicless works on computers, not phone browsers or other video services.
+Your usual controls still work: volume, mute, fullscreen and playback speed. You can jump to another part of the video, watch Shorts or live streams, and use supported YouTube videos on other websites. On Android, Musicless works in Firefox, Brave Nightly and Vivaldi.
 
 What to expect
 • Some music may remain, especially quiet background music behind speech. Voices can sound a little duller. Musicless cannot guarantee completely music-free playback.
-• Music removal uses your computer’s processor and about 400 MB of memory. Performance varies by computer and video.
+• Music removal uses your device’s processor. On desktop it uses about 400 MB of memory. Performance varies by device and video.
 • If removal fails, the video pauses and stays silent. Choose Try again or Reload page when offered, or Play original sound to continue with the original audio, including any music. Copy-protected videos, such as rentals, can only play with their music.
-• If a play button appears in the middle of the video, click it to start the sound.
+• If a play button appears in the middle of the video, press it to start the sound.
 • If a live stream keeps pausing, try watching a little behind the live broadcast.
 
-Your audio stays on your computer
+Your audio stays on your device
 Musicless uses the audio already loaded by YouTube to remove music during playback. It never uploads, shares or saves that audio. It does not offer recording, media downloads or audio export. No account is needed, and the developer receives no audio, browsing history or usage analytics. Your automatic-removal choice and whether you have turned Musicless on may sync between your devices through your browser's sync. YouTube still loads the video through its own service.
 
 Free and open source. Code and help: https://github.com/ieasybooks/musicless
@@ -116,7 +116,7 @@ If the dashboard has one box per host:
 | Host | Justification |
 | --- | --- |
 | `https://www.youtube.com/*` | Access the standard website's player audio already loaded into MediaSource, separate it locally, synchronize voice playback, and show the on/off and recovery controls. |
-| `https://m.youtube.com/*` | Provide the same local playback separation and controls when a supported desktop browser is using the mobile website. This is website compatibility, not a claim that Chrome extensions run on phones. |
+| `https://m.youtube.com/*` | Provide local audio processing and player controls on the mobile YouTube website in supported browsers. |
 | `https://www.youtube-nocookie.com/*` | Provide the same local playback separation and controls inside privacy-enhanced embedded players whose frame origin is www.youtube-nocookie.com. |
 
 There is no `tabs`, `activeTab`, `scripting`, `downloads`, `tabCapture`,
@@ -142,7 +142,7 @@ is not remote code.
 
 **Data usage.** Check **Website content** only. The form's examples include
 sounds and videos. Audio is processed locally and is not sent off the
-computer. Uncheck personally identifiable information, health, financial,
+device. Uncheck personally identifiable information, health, financial,
 authentication, personal communications, location, web history, and user
 activity.
 
@@ -199,7 +199,7 @@ There is no "100% music-free" claim.
 | `en-1-music-removed.png` | Musicless's struck note in YouTube's control bar, its tooltip "Restore original sound" | Removes most of the music. Keeps the voices. |
 | `en-2-turn-on-once.png` | The first-run page: the disclosure and Turn on Musicless | Turn it on once. Then it works by itself. |
 | `en-3-you-choose.png` | The recovery dialog: Couldn’t remove the music, Play original sound, Try again | If the music can’t be removed, the video waits for you. |
-| `en-4-one-setting.png` | The toolbar popup: the one setting and Help | One setting. Everything runs on your computer. |
+| `en-4-one-setting.png` | The toolbar popup: the one setting and Help | One setting. Everything runs on your device. |
 | `promo-tile-440x280.png` | The paper logo (the snapped note and the name musicless) on ink | none |
 | `store-icon-128.png` | The store icon: the artwork near 96×96 on a transparent 128×128 canvas | none |
 
@@ -213,5 +213,5 @@ The promo tile and the store icon are global.
 Musicless processes audio already loaded by the site's own player in memory and
 plays separated voices during the same video session. It does not download or
 save media, provide audio export or offline access, or bypass copy protection.
-"On your computer" means the separation needs no backend. YouTube still
+"On your device" means the separation needs no backend. YouTube still
 delivers the video.

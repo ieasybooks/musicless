@@ -1,8 +1,8 @@
 ===== Musicless / about / en
 About Musicless
-Musicless removes most of the background music from YouTube videos and keeps the voices, all on your own computer.
+Musicless removes most of the background music from YouTube videos and keeps the voices, all on your own device.
 ## What Musicless does
-A browser extension for Chrome, Firefox and other Chromium-based browsers on computers. It works on YouTube videos, Shorts and live streams, including YouTube players on other websites. A button in the player brings back the original sound, and you choose whether music is removed by default.
+Use Musicless in Chrome, Firefox or another Chromium-based browser on your computer, or in Firefox, Brave Nightly or Vivaldi on Android. It works on YouTube videos, Shorts and live streams, including YouTube players on other websites. A button in the player brings back the original sound, and you choose whether music is removed by default.
 On the website, you can also remove the music from an MP3 or M4A file.
 Its interface is in Arabic and English.
 ## How it works
@@ -13,9 +13,9 @@ Follow EasyBooks on [Telegram](https://t.me/ieasybooks), [YouTube](https://youtu
 
 ===== Musicless / about / ar
 عن «بلا موسيقى»
-تزيل إضافة «بلا موسيقى» معظم موسيقى الخلفية من فيديوهات YouTube وتُبقي الأصوات البشرية، وكل ذلك يجري على حاسوبك.
+تزيل إضافة «بلا موسيقى» معظم موسيقى الخلفية من فيديوهات YouTube وتُبقي الأصوات البشرية، وكل ذلك يجري على جهازك.
 ## ما تقدّمه الإضافة
-إضافة لمتصفحات الحاسوب: Chrome وFirefox وسائر المتصفحات المبنية على Chromium. تعمل على فيديوهات YouTube ومقاطع Shorts والبث المباشر، وعلى مشغّلات YouTube المضمّنة في المواقع الأخرى. وفي المشغّل زر يعيد الصوت الأصلي متى شئت، ولك أن تختار هل تُزال الموسيقى تلقائيًا من كل فيديو، أم من الفيديوهات التي تختارها فقط.
+على الحاسوب، تعمل الإضافة في Chrome وFirefox وسائر المتصفحات المبنية على Chromium، وعلى أندرويد في Firefox وBrave Nightly وVivaldi. تعمل مع فيديوهات YouTube ومقاطع Shorts والبث المباشر، بما في ذلك مشغّلات YouTube المضمّنة في المواقع الأخرى. وفي المشغّل زر يعيد الصوت الأصلي متى شئت، ولك أن تختار هل تُزال الموسيقى تلقائيًا من كل فيديو، أم من الفيديوهات التي تختارها فقط.
 ويتيح الموقع كذلك إزالة الموسيقى من الملفات الصوتية بصيغتي MP3 وM4A.
 تتوفر الإضافة بواجهة عربية وإنجليزية.
 ## كيف تعمل الإضافة

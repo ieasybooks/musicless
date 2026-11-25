@@ -58,5 +58,5 @@ By sending a patch you agree that it is licensed under the MIT license in
 ## What we will probably not merge
 
 A backend, an account, analytics, more site permissions, or a different
-separation model. The extension runs on YouTube, on the user's computer.
+separation model. The extension runs on YouTube, on the user's device.
 Audio is processed there and is not uploaded.
