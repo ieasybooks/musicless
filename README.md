@@ -100,9 +100,10 @@ Help in Arabic: [استخدام «بلا موسيقى»](docs/help.ar.md).
 - **Some music may remain.** Quiet background music behind speech is
   particularly difficult to remove. Voices can also sound a little duller.
   Musicless cannot guarantee completely music-free playback.
-- **It uses your device’s processor.** On desktop, music removal uses about
-  400 MB of memory, shared across tabs. Slower devices may need more time.
-  The memory is freed a few minutes after the last video is paused or closed.
+- **It uses your device’s processor.** In our tests, music removal used up to
+  about 400 MB of extra memory, shared across tabs. Slower devices may need
+  more time. The memory is freed a few minutes after the last video is paused
+  or closed.
 - **Live streams may pause.** Watching a little behind the live broadcast
   reduces the pauses.
 - **Watch YouTube in your browser.** If an Android link opens in the YouTube app,

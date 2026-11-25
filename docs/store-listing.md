@@ -47,7 +47,7 @@ Your usual controls still work: volume, mute, fullscreen and playback speed. You
 
 What to expect
 • Some music may remain, especially quiet background music behind speech. Voices can sound a little duller. Musicless cannot guarantee completely music-free playback.
-• Music removal uses your device’s processor. On desktop it uses about 400 MB of memory. Performance varies by device and video.
+• Music removal uses your device’s processor. It used up to about 400 MB of extra memory in our tests. Performance varies by device and video.
 • If removal fails, the video pauses and stays silent. Choose Try again or Reload page when offered, or Play original sound to continue with the original audio, including any music. Copy-protected videos, such as rentals, can only play with their music.
 • If a play button appears in the middle of the video, press it to start the sound.
 • If a live stream keeps pausing, try watching a little behind the live broadcast.
