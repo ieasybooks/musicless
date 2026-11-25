@@ -238,6 +238,39 @@ try {
     });
   }
 
+  for (const [pagePath, player, controls] of [
+    ["/watch?v=mobile", '<div id="player-container-id"></div>', '<ytm-watch-player-controls><div class="player-controls-top"></div></ytm-watch-player-controls>'],
+    ["/shorts/mobile", "<shorts-video></shorts-video>", "<ytm-reel-player-overlay-renderer><reel-action-bar-view-model></reel-action-bar-view-model></ytm-reel-player-overlay-renderer>"],
+  ]) {
+    await step(`the mobile toggle follows its own controls on ${pagePath}`, async () => {
+      await page.goto(playerURL);
+      await page.evaluate((path, player, controls) => {
+        history.replaceState(null, "", path);
+        // Another overlay can stay mounted during navigation.
+        document.body.innerHTML = '<aside>' + controls + '</aside>' + player;
+        const active = document.body.lastElementChild;
+        active.innerHTML = '<div id="movie_player" class="html5-video-player"><video width="384" height="216"></video></div>';
+      }, pagePath, player, controls);
+      await page.waitForSelector("#movie_player .musicless-sr-only");
+      assert.equal(await page.$(".musicless-btn"), null);
+      const addRow = () => page.$eval("#movie_player", (host, controls) => {
+        host.insertAdjacentHTML("afterend", controls);
+        const row = host.nextElementSibling.firstElementChild;
+        row.innerHTML = '<button><span class="ytmClosedCaptioningButtonButton"></span></button>';
+        row.classList.add("active-row");
+      }, controls);
+      await addRow();
+      const note = '.active-row > .musicless-btn[data-place="top"]';
+      await page.waitForSelector(note, { visible: true });
+      await page.$eval(".active-row", row => row.parentElement.remove());
+      await sleep(2200);
+      assert.equal(await page.$(".musicless-btn"), null);
+      await addRow();
+      await page.waitForSelector(note, { visible: true });
+      assert(await page.$eval(note, el => el === el.parentElement.firstElementChild));
+    });
+  }
+
   await step("a settled watch page picks up controls added late without moving the video", async () => {
     await page.goto(playerURL);
     await page.evaluate(() => {
@@ -271,6 +304,30 @@ try {
     });
     assert(state.focused && state.first && state.mutations === 0);
     return state;
+  });
+
+  await step("the center Play button and action rail both receive taps on mobile Shorts", async () => {
+    await playerUI(page);
+    await page.evaluate(() => {
+      const { control, session, host } = window.ui;
+      const short = document.createElement("shorts-video");
+      short.style.cssText = "display:block;position:relative;width:640px;height:360px";
+      host.replaceWith(short);
+      short.append(host);
+      host.style.zIndex = "0";
+      const overlay = document.createElement("ytm-reel-player-overlay-renderer");
+      overlay.style.cssText = "position:absolute;inset:0;z-index:2";
+      overlay.innerHTML = '<reel-action-bar-view-model><button id="like" style="position:absolute;right:8px;bottom:8px">Like</button></reel-action-bar-view-model>';
+      short.append(overlay);
+      session.status = "blocked";
+      session.toggle = () => { window.ui.played = true; };
+      document.querySelector("#like").onclick = () => { window.ui.liked = true; };
+      control.position(host);
+      control.render();
+    });
+    await page.click(".musicless-notice__disc");
+    await page.click("#like");
+    assert(await page.evaluate(() => window.ui.played && window.ui.liked));
   });
 
   await step("the mobile audio frame has a box without obscuring the page or taking taps", async () => {
