@@ -346,6 +346,26 @@ try {
     return state;
   });
 
+  await step("on a Short the button has the browser's tooltip with the shortcut, and no sign flashes", async () => {
+    await playerUI(page, true);
+    const state = await page.evaluate(() => {
+      ui.control.render();
+      ui.control.showTip();
+      ui.control.flash();
+      return { title: ui.control.el.title, tipHidden: ui.control.tip.hidden, bezel: !!document.querySelector(".musicless-bezel") };
+    });
+    assert.match(state.title, /^Remove music \(⁦(Alt\+Shift\+M|⌥⇧M)⁩\)$/);
+    assert(state.tipHidden && !state.bezel);
+    await playerUI(page);
+    const watch = await page.evaluate(() => {
+      ui.control.render();
+      ui.control.flash();
+      return { title: ui.control.el.getAttribute("title"), bezel: !!document.querySelector(".musicless-bezel") };
+    });
+    assert(watch.title === null && watch.bezel, "the regular player keeps its own tooltip and the sign");
+    return { shorts: state, watch };
+  });
+
   await step("the welcome instruction's glyph stays visible in forced colors", async () => {
     await setSettings(browser, extensionId, { consented: true });
     await gotoExtensionPage(page, extensionId, "welcome.html");
@@ -398,6 +418,40 @@ try {
       const state = await waitFor(videoPage, s => s.status === "off", { label: "new default off" });
       assert(!state.holding && !state.attached);
       return { manualOnReset: true, manualOffReset: true, currentVideoPreserved: true, nextVideoUsesDefault: true };
+    } finally {
+      await videoPage.close();
+      await setSettings(browser, extensionId, { autoStart: true });
+    }
+  });
+
+  await step("Alt+Shift+M toggles the visible video, but not while typing", async () => {
+    await setSettings(browser, extensionId, { consented: true, autoStart: false });
+    const videoPage = await newPage(browser);
+    const shortcut = async () => {
+      await videoPage.keyboard.down("Alt"); await videoPage.keyboard.down("Shift");
+      await videoPage.keyboard.press("KeyM");
+      await videoPage.keyboard.up("Shift"); await videoPage.keyboard.up("Alt");
+    };
+    try {
+      await videoPage.goto(playerURL);
+      await bringToFront(videoPage);
+      await videoPage.waitForFunction(() => window.playerReady === true);
+      await waitFor(videoPage, s => s.status === "off", { label: "default off" });
+      await shortcut();
+      assert(await videoPage.$('.musicless-bezel[data-on="true"]'), "the struck note flashes in the middle");
+      await waitFor(videoPage, s => s.on, { label: "shortcut on" });
+      await shortcut();
+      assert.equal(await videoPage.$$eval(".musicless-bezel", all => all.map(el => el.dataset.on).join()), "false",
+        "one sign at a time, the plain note");
+      await waitFor(videoPage, s => s.status === "off", { label: "shortcut off" });
+      await sleep(1200);
+      assert.equal(await videoPage.$(".musicless-bezel"), null, "the sign goes away");
+      await videoPage.evaluate(() => document.body.append(Object.assign(document.createElement("input"), { id: "typing" })));
+      await videoPage.focus("#typing");
+      await shortcut();
+      await sleep(700);
+      assert.equal((await frameState(videoPage)).status, "off", "the shortcut must not act while typing");
+      return { toggledOn: true, toggledOff: true, ignoredWhileTyping: true };
     } finally {
       await videoPage.close();
       await setSettings(browser, extensionId, { autoStart: true });
