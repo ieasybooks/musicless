@@ -60,9 +60,11 @@ On Linux, before the tag:
    has no debug recorder and no audio-export path. Confirm the unzipped tree
    before you tag. The workflow builds the zip you will actually upload. This
    local zip is only for the listen pass.
-   Open **Privacy policy** from both the welcome page and the popup while
-   offline: the bundled page must open in a new tab without turning Musicless
-   on. Check both languages and light/dark appearance.
+   Open **Privacy policy** from both the welcome page and the popup. It opens
+   the website policy for the language on screen
+   (`https://musicless.ieasybooks.com/en/privacy` or `/ar/privacy`) in a new tab
+   and does not turn Musicless on. Check both languages and light/dark
+   appearance. The link needs a network connection.
 
 On macOS and on Windows, with the same unzipped release, before you publish
 the store item:
