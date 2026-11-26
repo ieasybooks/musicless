@@ -12,5 +12,5 @@ test("Firefox's manifest is Chrome's with an event page, its add-on ID and its m
   const { background: chromeBackground, minimum_chrome_version: _, ...shared } = chrome;
   assert.deepEqual(rest, shared, "everything else as it is");
   assert.deepEqual(background, { scripts: [chromeBackground.service_worker], type: chromeBackground.type });
-  assert.deepEqual(settings, { gecko: { id: "musicless@ieasybooks", strict_min_version: "153.0", data_collection_permissions: { required: ["none"] } } });
+  assert.deepEqual(settings, { gecko: { id: "musicless@ieasybooks", strict_min_version: "153.0", data_collection_permissions: { required: ["none"] } }, gecko_android: {} });
 });

@@ -5,6 +5,7 @@ import { loadSettings, onSettingsChanged } from "./settings.js";
 
 const $ = (id) => document.getElementById(id);
 localizePage();
+$("privacy").href = t("link_privacy_url");
 const brand = document.querySelector(".brand");
 let currentConsent = null;
 function hint(on) {
@@ -63,7 +64,7 @@ $("back").addEventListener("click", async () => {
   chrome.storage.session.remove("videoTab");
   try {
     const tab = await chrome.tabs.update(target.id, { active: true });
-    await chrome.windows.update(tab.windowId, { focused: true });
+    await chrome.windows?.update?.(tab.windowId, { focused: true });
     // Both IDs matter: a document alone can still be in the Back/Forward cache.
     // Ask only if it is still the active document in the original frame.
     await chrome.tabs.sendMessage(target.id, { type: "reload" }, {

@@ -3,6 +3,20 @@
    and the corners from the player's. Text over the picture follows YouTube's
    tooltip and dialog surfaces. */
 
+/* The processing frame. Keep it out of page flow and
+   hit testing while its workers prepare audio for the visible video. */
+iframe.musicless-engine {
+  display: block !important;
+  position: fixed !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 1px !important;
+  height: 1px !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
 .musicless-btn,
 .musicless-tip,
 .musicless-notice,
@@ -27,6 +41,7 @@
   padding: 0;
   border: 0;
   background: none;
+  -webkit-tap-highlight-color: transparent;
   color: #fff;
   cursor: pointer;
 }
@@ -199,6 +214,11 @@
   background: rgba(0, 0, 0, 0.5);
   transition: background-color 100ms linear, transform 100ms ease-out;
 }
+/* A Short's overlay owns swipes and the action rail. Only the center Play
+   control intercepts a tap when the browser requires a gesture for audio. */
+shorts-video > .musicless-notice[data-kind="action"] { z-index: 2147483600; pointer-events: none; }
+shorts-video > .musicless-notice[data-kind="action"] .musicless-notice__disc,
+shorts-video > .musicless-notice[data-kind="action"] .musicless-notice__text { pointer-events: auto; }
 /* A play sign's weight sits left of its box: 2 px to the right looks centred. */
 .musicless-notice__disc svg { display: block; width: 60px; height: 60px; margin-left: 2px; }
 .musicless-notice[data-kind="action"]:hover .musicless-notice__disc { background: rgba(0, 0, 0, 0.65); }

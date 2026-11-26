@@ -112,9 +112,11 @@ function attr(element, name, value) {
 // Wait for a watch page or Short to build its controls. A missing row on
 // these pages is temporary, including when YouTube rebuilds it mid-video.
 function placement(host) {
-  const reel = host.closest("ytd-reel-video-renderer, ytd-reel-video-renderer-cow");
+  const reel = host.closest("ytd-reel-video-renderer, ytd-reel-video-renderer-cow, shorts-video");
   if (reel) {
-    const row = reel.querySelector("ytd-shorts-player-controls #right-controls");
+    // Mobile Shorts put their actions in a rail beside the video.
+    const row = reel.querySelector(reel.localName === "shorts-video"
+      ? "reel-action-bar-view-model" : "ytd-shorts-player-controls #right-controls");
     return row ? { row, before: row.firstElementChild, place: "top" } : null;
   }
   const right = host.querySelector(".ytp-right-controls");
@@ -123,7 +125,9 @@ function placement(host) {
     return { row, before: childHolding(row, row.querySelector(".ytp-subtitles-button")), place: "ytp" };
   }
   const top = host.querySelector(".player-controls-top-right") ??
-    (host.id === "movie_player" ? document.querySelector("#player-controls .player-controls-top-right") : null);
+    (host.id === "movie_player" ?
+      host.closest("#player-container-id")?.querySelector("ytm-watch-player-controls .player-controls-top") ??
+      document.querySelector("#player-controls .player-controls-top-right") : null);
   if (top) {
     const captions = [...top.children].find((child) => child.querySelector?.("[class*='ClosedCaptioning']"));
     return { row: top, before: captions ?? top.firstElementChild, place: "top" };
@@ -457,9 +461,11 @@ export class Button {
   positionPanel() {
     if (this.recovery.hidden) return;
     const focused = this.recovery.contains(document.activeElement) ? document.activeElement : null;
-    if (this.host) {
-      if (this.recovery.parentElement !== this.host) {
-        this.host.append(this.scrim, this.recovery);
+    // Mobile Shorts place their touch overlay above the video player.
+    const player = this.overlayHost();
+    if (player) {
+      if (this.recovery.parentElement !== player) {
+        player.append(this.scrim, this.recovery);
         focused?.focus(); // moving it blurs whatever is focused inside
       }
       this.recovery.classList.remove("musicless-dialog--floating");
@@ -485,6 +491,14 @@ export class Button {
 
   // ---- placement ----------------------------------------------------------
 
+  overlayHost() {
+    const shorts = this.host?.closest("shorts-video");
+    // A fullscreen player can be inside the Short. Keep its controls inside
+    // the fullscreen element, which the browser draws above the whole page.
+    if (shorts && (!document.fullscreenElement || document.fullscreenElement.contains(shorts))) return shorts;
+    return this.host;
+  }
+
   position(host) {
     if (this.retired) return;
     this.host = host;
@@ -506,7 +520,9 @@ export class Button {
       this.el.remove();
       this.hideTip();
     }
-    for (const part of [this.live, this.notice]) if (part.parentElement !== host) host.append(part);
+    if (this.live.parentElement !== host) host.append(this.live);
+    const overlay = this.overlayHost();
+    if (this.notice.parentElement !== overlay) overlay.append(this.notice);
     // The player got its box back while a failure waits: show the dialog again.
     if (this.session.failure && this.recovery.hidden && !this.dismissed) this.openRecovery();
     else this.positionPanel();

@@ -25,7 +25,7 @@ test("docs/translations.md lists every key with the catalogs' exact texts", () =
   const rows = new Map();
   for (const line of read("../../docs/translations.md").split("\n")) {
     const match = /^\| `(\w+)` \| (.*?) \| <div dir="rtl">(.*?)<\/div> \| (.*) \|$/.exec(line);
-    if (match) rows.set(match[1], { en: match[2], ar: match[3] });
+    if (match) rows.set(match[1], { en: match[2].replaceAll("<br>", "\n"), ar: match[3].replaceAll("<br>", "\n") });
   }
   assert.deepEqual([...rows.keys()], Object.keys(en));
   for (const [key, row] of rows) {
@@ -44,10 +44,10 @@ test("activation labels clearly name the action and the resulting state", () => 
 });
 
 test("popup helpers explain every video opened and preserve original-sound wording", () => {
-  assert.equal(en.popup_default_on.message, "Music is removed from every video you open. Click {icon} in a video to restore its original sound.");
-  assert.equal(en.popup_one_video.message, "Every video you open keeps its original sound. Click {icon} in a video to remove its music.");
-  assert.equal(ar.popup_default_on.message, "تُزال الموسيقى من كل فيديو تفتحه. اضغط على {icon} في أي فيديو لاستعادة صوته الأصلي.");
-  assert.equal(ar.popup_one_video.message, "كل فيديو تفتحه يحتفظ بصوته الأصلي. اضغط على {icon} في أي فيديو لإزالة موسيقاه.");
+  assert.equal(en.popup_default_on.message, "Music is removed from every video you open.\nUse {icon} in a video to restore its original sound.");
+  assert.equal(en.popup_one_video.message, "Every video you open keeps its original sound.\nUse {icon} in a video to remove its music.");
+  assert.equal(ar.popup_default_on.message, "تُزال الموسيقى من كل فيديو تفتحه.\nاضغط على {icon} في أي فيديو لاستعادة صوته الأصلي.");
+  assert.equal(ar.popup_one_video.message, "كل فيديو تفتحه يحتفظ بصوته الأصلي.\nاضغط على {icon} في أي فيديو لإزالة موسيقاه.");
 });
 
 test("setup next steps cover both defaults with described, localized glyphs", () => {

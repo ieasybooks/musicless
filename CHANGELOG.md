@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.3] - 2026-11-24
+
+### Added
+
+- You can now remove background music from YouTube videos, Shorts and live
+  streams in Firefox, Brave Nightly and Vivaldi on Android.
+
+### Changed
+
+- The English and Arabic store screenshots for setup and settings now use
+  DejaVu Sans for their captions.
+- The privacy policy link in setup now opens the Musicless website in your
+  language, English or Arabic.
+
 ## [1.1.2] - 2026-11-21
 
 ### Fixed
@@ -88,6 +102,7 @@ First release of the extension. The interface is in English and Arabic.
   choice are stored in Chrome extension storage and may sync through
   Chrome Sync.
 
+[1.1.3]: https://github.com/ieasybooks/musicless/releases/tag/v1.1.3
 [1.1.2]: https://github.com/ieasybooks/musicless/releases/tag/v1.1.2
 [1.1.1]: https://github.com/ieasybooks/musicless/releases/tag/v1.1.1
 [1.1.0]: https://github.com/ieasybooks/musicless/releases/tag/v1.1.0

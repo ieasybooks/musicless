@@ -53,6 +53,11 @@ jobs:
           ./scripts/package.sh
           version=$(python3 -c 'import json; print(json.load(open("extension/manifest.json"))["version"])')
           unzip -q "dist/musicless-$version.zip" -d "$RUNNER_TEMP/musicless"
+      - name: Check native AAC and Opus decoding in Firefox
+        working-directory: tests
+        run: |
+          firefox_bin=$(command -v firefox)
+          FIREFOX="$firefox_bin" MUSICLESS_EXTENSION="$RUNNER_TEMP/musicless" node native-audio.mjs
       - name: Local interface checks of the package
         working-directory: tests
         run: MUSICLESS_EXTENSION="$RUNNER_TEMP/musicless" node interface.mjs

@@ -5,6 +5,7 @@ import { loadSettings } from "./settings.js";
 const $ = (id) => document.getElementById(id);
 localizePage();
 $("help").href = t("link_help_url");
+$("privacy").href = t("link_privacy_url");
 
 // The logo in the catalog's language: Arabic has its own, with «بلا موسيقى».
 const logo = document.querySelector(".popup-header img");

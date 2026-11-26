@@ -102,6 +102,7 @@ test("the engine hands its port to the frame with the token, asked for when the 
   const env = engineSandbox();
   const engine = new env.Engine();
   engine.post({ type: "hello" });
+  assert.equal(env.frames[0].className, "musicless-engine");
   assert.deepEqual(env.asked, [], "not before the frame is there");
   env.frames[0].load();
   await flush();

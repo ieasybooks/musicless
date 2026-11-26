@@ -10,7 +10,7 @@ async function openWelcome() {
     return;
   }
   await chrome.tabs.update(tab.id, { active: true });
-  await chrome.windows.update(tab.windowId, { focused: true });
+  await chrome.windows?.update?.(tab.windowId, { focused: true });
 }
 
 chrome.runtime.onInstalled.addListener(({ reason }) => {

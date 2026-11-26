@@ -17,9 +17,10 @@ On Linux, before the tag:
    `Unreleased` into a dated changelog section. Leave released sections alone.
    The website's privacy policy, `/en/privacy` and `/ar/privacy` (text in
    `landing/pages.txt`, **Last updated** date in `landing/content.mjs`), is the
-   source of truth. If it changed since the last release, update both
-   languages of `extension/privacy.html` to match it in this release. Include
-   those changes in the tested commit.
+   source of truth for the extension and the store listings.
+   When adding a platform, publish its website install instructions after the
+   corresponding public store listing offers that version. A merge to main
+   can deploy the website while the package is still in store review.
 3. **Build.** `./setup.sh --dev`. It checks every download and the built
    model against the pinned SHA-256.
 4. **Unit tests.** `cd tests && npm run unit`.
@@ -59,9 +60,11 @@ On Linux, before the tag:
    has no debug recorder and no audio-export path. Confirm the unzipped tree
    before you tag. The workflow builds the zip you will actually upload. This
    local zip is only for the listen pass.
-   Open **Privacy policy** from both the welcome page and the popup while
-   offline: the bundled page must open in a new tab without turning Musicless
-   on. Check both languages and light/dark appearance.
+   Open **Privacy policy** from both the welcome page and the popup. It opens
+   the website policy for the language on screen
+   (`https://musicless.ieasybooks.com/en/privacy` or `/ar/privacy`) in a new tab
+   and does not turn Musicless on. Check both languages and light/dark
+   appearance. The link needs a network connection.
 
 On macOS and on Windows, with the same unzipped release, before you publish
 the store item:
@@ -91,10 +94,9 @@ git push origin main
 Do not force-push `main`. If the push is rejected, `main` is not on top of
 `origin/main`.
 
-The stores link to the privacy policy on the website,
-`https://musicless.ieasybooks.com/en/privacy`, which is the source of truth.
-`docs/privacy.md` only points to it, and `extension/privacy.html` is updated
-to match it with the next extension release.
+The stores link to the English privacy policy at
+`https://musicless.ieasybooks.com/en/privacy`. The extension links to the
+English or Arabic policy based on the language it displays.
 
 ## 3. Tag
 
@@ -149,7 +151,8 @@ a native speaker's review before submission.
 A GitHub Release does not update copies installed from the store. Each
 store must receive the verified zip for the new version.
 
-The images in `docs/store/` come from `tests/screenshots.mjs`. Remake them
+The images in `docs/store/` come from `tests/screenshots.mjs`. Install DejaVu Sans
+for the English and Arabic setup and settings captions. Remake the screenshots
 after any change to the button, the pages or the strings:
 
 ```sh
@@ -185,8 +188,9 @@ section, and in the repository homepage, only after the listing is live.
 
 Open <https://addons.mozilla.org/developers/> with the ieasybooks Mozilla
 account and upload the verified `musicless-<version>-firefox.zip` as a new
-version of Musicless. Choose Firefox on the desktop only: Musicless does not
-run on phones. Its add-on ID, `musicless@ieasybooks` in the Firefox manifest,
+version of Musicless. For the build with Android audio decoding, select Firefox
+for desktop and Android. Verify a signed-out install on both after approval.
+Its add-on ID, `musicless@ieasybooks` in the Firefox manifest,
 can never change.
 
 Mozilla asks for the source of generated files, and `content.bundle.js` is
@@ -219,7 +223,7 @@ dashboard.
 
 When setting up or reviewing the repository:
 
-1. **Description.** "Removes the background music from YouTube videos and keeps the voices. A browser extension; everything runs on your computer."
+1. **Description.** "Removes the background music from YouTube videos and keeps the voices. A browser extension; everything runs on your device."
 2. **Topics.** `browser-extension`, `chrome-extension`, `firefox-addon`, `chromium`, `webextension`, `youtube`, `privacy`, `onnx`, `webassembly`.
 3. **Homepage.** Empty until the Chrome Web Store listing is live, then that listing URL.
 4. **Social preview.** Upload [store/github-social-1280x640.png](store/github-social-1280x640.png), the supplied 1280×640 image with the logo, tagline, quieter product description and faint stave with a gap.

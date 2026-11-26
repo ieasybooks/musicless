@@ -23,6 +23,8 @@ body:
         - Google Chrome
         - Microsoft Edge
         - Brave
+        - Brave Nightly
+        - Vivaldi
         - Chromium
         - Firefox
         - Other (say which in the last box)
@@ -45,6 +47,7 @@ body:
         - macOS
         - Linux
         - ChromeOS
+        - Android
         - Other (say which in the last box)
     validations:
       required: true

@@ -12,6 +12,25 @@ window.addEventListener("message", async (event) => {
   if (taken || !engineToken || event.data.token !== engineToken) return;
   taken = true;
   const worker = new Worker(new URL("./tab-worker.js", import.meta.url), { type: "module", name: "musicless" });
+  // Firefox for Android exposes its native audio decoders through Web Audio.
+  // Only this worker requests decoding; no page message can submit a file.
+  let decoder;
+  worker.onmessage = async ({ data, ports }) => {
+    if (data.type !== "decode-audio") return;
+    const [reply] = ports;
+    try {
+      decoder ??= new OfflineAudioContext(2, 1, 48000);
+      const audio = await decoder.decodeAudioData(data.file);
+      const left = audio.getChannelData(0);
+      const right = audio.numberOfChannels > 1 ? audio.getChannelData(1) : left;
+      reply.postMessage({ channels: [left, right], rate: audio.sampleRate },
+        left === right ? [left.buffer] : [left.buffer, right.buffer]);
+    } catch (error) {
+      reply.postMessage({ error: error.message });
+    } finally {
+      reply.close();
+    }
+  };
   const channel = new MessageChannel();
   worker.postMessage({ type: "port" }, [event.ports[0], channel.port1]);
   // A shared model that cannot start ends the worker at once rather than after

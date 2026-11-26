@@ -52,8 +52,8 @@ body {
   line-height: 22px;
 }
 /* Arabic titles are set in Alexandria, the face the Arabic logo is drawn
-   from: headings, the steps' titles and the policy's name. It is the one font
-   Musicless ships, cut to its Arabic letters (OFL, THIRD_PARTY_NOTICES.txt).
+   from: headings and the steps' titles. It is the one font Musicless ships,
+   cut to its Arabic letters (OFL, THIRD_PARTY_NOTICES.txt).
    Latin words keep the system's faces, as in English, and size-adjust brings
    its letters to the size of the system's Arabic. */
 @font-face {
@@ -65,8 +65,7 @@ body {
 }
 [lang="ar"] h1,
 [lang="ar"] h2,
-[lang="ar"] .welcome .steps strong,
-[lang="ar"] .privacy header > span {
+[lang="ar"] .welcome .steps strong {
   font-family: "Alexandria Arabic", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "SF Arabic", "Noto Sans Arabic", "Geeza Pro", Tahoma, system-ui, sans-serif;
 }
 h1 { margin: 0; font-weight: 400; }
@@ -118,9 +117,9 @@ h1:focus-visible {
 /* ---- the first-run page: one centred column, a little above the middle ---- */
 .welcome main {
   box-sizing: border-box;
-  max-width: 560px;
+  max-width: 600px;
   margin: 0 auto;
-  padding: min(16vh, 120px) 24px 48px;
+  padding: min(16vh, 120px) min(2.5vw, 24px) 48px;
   text-align: center;
 }
 /* The setup page alone starts with the whole note; turning it on reveals
@@ -146,7 +145,9 @@ h1:focus-visible {
 .welcome section { grid-area: 1 / 1; }
 .welcome section.off { visibility: hidden; }
 .welcome h1 { font-size: 32px; line-height: 40px; margin-bottom: 12px; text-wrap: balance; }
+.welcome #setup h1 { font-size: clamp(1.125rem, 5.5vw, 2rem); }
 [lang="ar"] .welcome h1 { font-size: 34px; line-height: 48px; }
+[lang="ar"] .welcome #setup h1 { font-size: clamp(1.375rem, 7.7vw, 2.125rem); }
 .welcome section p { max-width: 500px; margin: 0 auto 8px; color: var(--muted); font-size: 16px; line-height: 24px; text-wrap: pretty; }
 .welcome section p:has(+ div), .welcome section p:has(+ p[hidden] + div) { margin-bottom: 32px; } /* the last one shown */
 .welcome section p.aside { margin-top: 16px; font-size: 14px; line-height: 20px; }
@@ -186,13 +187,16 @@ h1:focus-visible {
 .glyph-on { -webkit-mask-image: url(icons/player-on.svg); mask-image: url(icons/player-on.svg); }
 
 /* ---- the toolbar popup ---- */
-.popup { width: 320px; }
+.popup { width: 352px; max-width: 100%; --gutter: 16px; }
+@media (max-width: 335px) {
+  .popup { --gutter: 8px; }
+}
 .popup-header {
   display: flex;
   align-items: center;
   box-sizing: border-box;
   height: 50px;
-  padding: 0 16px;
+  padding: 0 var(--gutter);
   border-bottom: 1px solid var(--divider);
 }
 .popup-header img { display: block; height: 26px; width: auto; }
@@ -203,7 +207,7 @@ h1:focus-visible {
   .popup { --bg: #28292c; } /* a popup floats a step above the page */
 }
 /* Before the first run: the disclosure and "Turn on Musicless", as on the first-run page. */
-.popup #consent { padding: 16px; }
+.popup #consent { padding: 16px var(--gutter); }
 .popup h1 { margin: 0 0 4px; font-size: 16px; line-height: 24px; font-weight: 500; }
 [lang="ar"] .popup h1 { font-size: 17px; line-height: 28px; }
 .popup .actions { display: flex; justify-content: flex-end; margin-top: 16px; }
@@ -217,12 +221,13 @@ h1:focus-visible {
   column-gap: 16px;
   min-height: 48px;
   box-sizing: border-box;
-  padding: 12px 16px;
+  padding: 12px var(--gutter);
   cursor: pointer;
 }
 .popup .hint { color: var(--muted); text-wrap: pretty; }
 /* Keep helper text below the setting row, outside its hover background. */
-.popup #settings .hint { margin: 0; padding: 0 16px 12px; }
+.popup #settings .hint { margin: 0; padding: 0 var(--gutter) 12px; }
+.popup #oneVideo { white-space: pre-line; }
 .popup .hint .glyph { background: var(--muted); }
 @media (forced-colors: active) {
   .glyph, .popup .hint .glyph { forced-color-adjust: none; background: CanvasText; }
@@ -236,7 +241,7 @@ h1:focus-visible {
   justify-content: space-between;
   min-height: 49px; /* 48 and the hairline */
   box-sizing: border-box;
-  padding: 0 16px;
+  padding: 0 var(--gutter);
   border-top: 1px solid var(--divider);
   color: var(--text);
   text-decoration: none;

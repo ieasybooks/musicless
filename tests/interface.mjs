@@ -61,7 +61,7 @@ async function fromVideo(check) {
 // The real Button module, with only its Session supplied as a UI fixture.
 // Browser focus, keyboard/pointer events, DOM moves and styles remain real.
 async function playerUI(page, shorts = false) {
-  await gotoExtensionPage(page, extensionId, "privacy.html");
+  await gotoExtensionPage(page, extensionId, "separator.html");
   await bringToFront(page);
   await page.evaluate(async shorts => {
     const css = document.createElement("link"); css.rel = "stylesheet"; css.href = "content.css";
@@ -92,6 +92,8 @@ try {
   await step("Back reloads a previously loaded muted video before missed capture is reported", () => fromVideo(async (page, welcome) => {
     await welcome.click("#accept");
     await welcome.waitForSelector("#back", { visible: true });
+    // Firefox for Android exposes tabs but no windows API.
+    await welcome.evaluate(() => Object.defineProperty(chrome, "windows", { value: undefined, configurable: true }));
     const before = await frameState(page);
     assert(!before.attached && !before.failure, "the muted video must not have reported missed capture yet");
     const navigation = page.waitForNavigation({ waitUntil: "domcontentloaded", timeout: 15000 });
@@ -238,6 +240,39 @@ try {
     });
   }
 
+  for (const [pagePath, player, controls] of [
+    ["/watch?v=mobile", '<div id="player-container-id"></div>', '<ytm-watch-player-controls><div class="player-controls-top"></div></ytm-watch-player-controls>'],
+    ["/shorts/mobile", "<shorts-video></shorts-video>", "<ytm-reel-player-overlay-renderer><reel-action-bar-view-model></reel-action-bar-view-model></ytm-reel-player-overlay-renderer>"],
+  ]) {
+    await step(`the mobile toggle follows its own controls on ${pagePath}`, async () => {
+      await page.goto(playerURL);
+      await page.evaluate((path, player, controls) => {
+        history.replaceState(null, "", path);
+        // Another overlay can stay mounted during navigation.
+        document.body.innerHTML = '<aside>' + controls + '</aside>' + player;
+        const active = document.body.lastElementChild;
+        active.innerHTML = '<div id="movie_player" class="html5-video-player"><video width="384" height="216"></video></div>';
+      }, pagePath, player, controls);
+      await page.waitForSelector("#movie_player .musicless-sr-only");
+      assert.equal(await page.$(".musicless-btn"), null);
+      const addRow = () => page.$eval("#movie_player", (host, controls) => {
+        host.insertAdjacentHTML("afterend", controls);
+        const row = host.nextElementSibling.firstElementChild;
+        row.innerHTML = '<button><span class="ytmClosedCaptioningButtonButton"></span></button>';
+        row.classList.add("active-row");
+      }, controls);
+      await addRow();
+      const note = '.active-row > .musicless-btn[data-place="top"]';
+      await page.waitForSelector(note, { visible: true });
+      await page.$eval(".active-row", row => row.parentElement.remove());
+      await sleep(2200);
+      assert.equal(await page.$(".musicless-btn"), null);
+      await addRow();
+      await page.waitForSelector(note, { visible: true });
+      assert(await page.$eval(note, el => el === el.parentElement.firstElementChild));
+    });
+  }
+
   await step("a settled watch page picks up controls added late without moving the video", async () => {
     await page.goto(playerURL);
     await page.evaluate(() => {
@@ -270,6 +305,44 @@ try {
       return { focused: document.activeElement === ui.control.el, first: row.firstElementChild === ui.control.el, mutations: records.length };
     });
     assert(state.focused && state.first && state.mutations === 0);
+    return state;
+  });
+
+  await step("the center Play button and action rail both receive taps on mobile Shorts", async () => {
+    await playerUI(page);
+    await page.evaluate(() => {
+      const { control, session, host } = window.ui;
+      const short = document.createElement("shorts-video");
+      short.style.cssText = "display:block;position:relative;width:640px;height:360px";
+      host.replaceWith(short);
+      short.append(host);
+      host.style.zIndex = "0";
+      const overlay = document.createElement("ytm-reel-player-overlay-renderer");
+      overlay.style.cssText = "position:absolute;inset:0;z-index:2";
+      overlay.innerHTML = '<reel-action-bar-view-model><button id="like" style="position:absolute;right:8px;bottom:8px">Like</button></reel-action-bar-view-model>';
+      short.append(overlay);
+      session.status = "blocked";
+      session.toggle = () => { window.ui.played = true; };
+      document.querySelector("#like").onclick = () => { window.ui.liked = true; };
+      control.position(host);
+      control.render();
+    });
+    await page.click(".musicless-notice__disc");
+    await page.click("#like");
+    assert(await page.evaluate(() => window.ui.played && window.ui.liked));
+  });
+
+  await step("the mobile audio frame has a box without obscuring the page or taking taps", async () => {
+    await playerUI(page);
+    const state = await page.evaluate(() => {
+      const frame = document.createElement("iframe");
+      frame.className = "musicless-engine";
+      document.body.append(frame);
+      const rect = frame.getBoundingClientRect();
+      return { size: [rect.width, rect.height], opacity: getComputedStyle(frame).opacity,
+        takesTaps: document.elementFromPoint(rect.left + 0.5, rect.top + 0.5) === frame };
+    });
+    assert.deepEqual(state, { size: [1, 1], opacity: "0", takesTaps: false });
     return state;
   });
 
@@ -336,13 +409,28 @@ try {
       const localized = await launch({ lang, consented: false, diagnostics: false });
       try {
         const popup = await localized.browser.newPage();
+        const privacyUrl = `https://musicless.ieasybooks.com/${lang === "ar" ? "ar" : "en"}/privacy`;
+        await popup.setViewport({ width: 720, height: 600 });
+        await gotoExtensionPage(popup, localized.extensionId, "welcome.html");
+        await popup.waitForSelector("#setup:not(.off)");
+        assert.equal(await popup.$eval("#privacy", link => link.href), privacyUrl);
+        await popup.evaluate(() => document.fonts.ready);
+        assert(await popup.$eval("#setup h1", el => el.offsetHeight === parseFloat(getComputedStyle(el).lineHeight)),
+          "the full setup title fits on one line");
+        await popup.goto("about:blank");
         await popup.setViewport({ width: 320, height: 600, deviceScaleFactor: 2 });
         await gotoExtensionPage(popup, localized.extensionId, "popup.html");
         await popup.waitForSelector("#accept", { visible: true });
+        assert.equal(await popup.$eval("#privacy", link => link.href), privacyUrl);
         const expectedAccept = await popup.evaluate(() => chrome.i18n.getMessage("consent_accept"));
         assert.equal(expectedAccept, lang === "ar" ? "تفعيل «بلا موسيقى»" : "Turn on Musicless");
         assert.equal(await popup.$eval("#accept", el => el.textContent), expectedAccept);
         await popup.click("#accept");
+        await popup.waitForSelector("#settings:not([hidden])");
+        assert(await popup.evaluate(() => document.documentElement.scrollWidth <= innerWidth), "settings fit a narrow phone");
+        await popup.goto("about:blank");
+        await popup.setViewport({ width: 390, height: 600, deviceScaleFactor: 2 });
+        await gotoExtensionPage(popup, localized.extensionId, "popup.html");
         await popup.waitForSelector("#settings:not([hidden])");
         for (const on of [true, false]) {
           if (!on) await popup.click("#autoStart");
@@ -360,6 +448,20 @@ try {
           assert(state.text.toLowerCase().includes(lang === "ar" ? "كل فيديو تفتحه" : "every video you open"));
           assert.equal(state.icon, state.iconName);
           assert.equal(state.crossed, on); assert.equal(state.described, "oneVideo");
+          const [start, end, instruction, last] = await popup.$eval("#oneVideo", hint => {
+            const first = hint.firstChild, last = hint.lastChild;
+            const nextLine = first.data.indexOf("\n") + 1;
+            const top = (node, i) => {
+              const range = document.createRange();
+              range.setStart(node, i);
+              range.setEnd(node, i + 1);
+              return range.getBoundingClientRect().top;
+            };
+            return [top(first, 0), top(first, nextLine - 2), top(first, nextLine), top(last, last.length - 1)];
+          });
+          assert.equal(start, end, "the default fits on the first line");
+          assert.equal(instruction, last, "the player instruction fits on the second line");
+          assert(instruction > end);
           for (const scheme of ["light", "dark"]) {
             await emulateMedia(popup, { "prefers-color-scheme": scheme });
             await until(popup, ([scheme, lang]) => {

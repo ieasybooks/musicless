@@ -8,6 +8,7 @@
 // decoding stays in this per-tab worker.
 
 import { configKey, createDemuxer } from "./demux.js";
+import { canWrap, decodeInFrame } from "./web-audio-decode.js";
 import { connectModel } from "./model-client.js";
 import { analyze, resample, synthesize } from "./dsp.js";
 import { applyFades, chunkIndex, chunkStart, RATE, WINDOW_SAMPLES, WINDOW_SECONDS } from "./grid.js";
@@ -167,6 +168,7 @@ function check(stream) {
 
 // Some builds (e.g. open-source Chromium) cannot decode AAC.
 function decodable(config) {
+  if (typeof AudioDecoder === "undefined") return Promise.resolve(canWrap(config));
   const key = configKey(config);
   if (!supported.has(key)) supported.set(key, AudioDecoder.isConfigSupported(config).then((result) => result.supported, () => false));
   return supported.get(key);
@@ -309,6 +311,11 @@ function ready(stream, k, from) {
 // however it ends.
 async function decode(frames, counts) {
   const first = frames[0].time;
+  if (typeof AudioDecoder === "undefined") {
+    const { channels, rate } = await decodeInFrame(frames);
+    counts.outputs += frames.length;
+    return [{ channels, rate, start: first }];
+  }
   const last = frames[frames.length - 1];
   const seconds = last.time + last.duration - first;
   const byRate = new Map(); // output sample rate -> { channels, placed }

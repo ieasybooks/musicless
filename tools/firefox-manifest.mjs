@@ -24,7 +24,7 @@ export function firefoxManifest(chrome) {
     id: GECKO_ID,
     strict_min_version: "153.0",
     data_collection_permissions: { required: ["none"] },
-  } };
+  }, gecko_android: {} };
   return firefox;
 }
 

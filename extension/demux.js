@@ -352,7 +352,11 @@ class Mp4Demuxer {
         numberOfChannels: channels || 2,
         description: asc,
       };
-      if (configKey(config) !== configKey(this.config)) this.config = config;
+      if (configKey(config) !== configKey(this.config)) {
+        // The Web Audio fallback reuses the source's AAC sample description.
+        config.sampleEntry = bytes.slice(entry.start, entry.end);
+        this.config = config;
+      }
       return;
     }
   }
