@@ -50,6 +50,7 @@ await build({
 // Not bundled: the worker imports it (and through it ONNX Runtime) only once a run starts.
 await mkdir(join(out, 'assets/engine'), { recursive: true });
 await cp(join(here, 'audio/engine/model.js'), join(out, 'assets/engine/model.js'));
+await cp(join(here, 'audio/engine/detector.onnx'), join(out, 'assets/engine/detector.onnx'));
 await copyOrt(join(out, 'assets/engine/vendor'));
 await cp(join(here, 'audio/audio.css'), join(out, 'assets/audio.css'));
 await cp(join(repo, 'extension/licenses'), join(out, 'licenses'), { recursive: true });

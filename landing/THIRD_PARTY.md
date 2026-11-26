@@ -18,3 +18,13 @@ Unmodified dependency sources and codec build instructions are available at
 those links and in the versioned npm source packages. License texts for
 Mediabunny, both encoder extensions, LAME and FFmpeg are included here.
 Encoders are loaded only when needed after the user starts processing.
+
+The music detector, `assets/engine/detector.onnx`, was trained with
+`tools/detector.py` on mixtures of speech from FLEURS (Google, CC BY 4.0,
+https://huggingface.co/datasets/google/fleurs), singing from VocalSet (Julia
+Wilkins, Prem Seetharaman, Alison Wahl and Bryan Pardo, CC BY 4.0,
+https://doi.org/10.5281/zenodo.1442513, through the mirror
+https://huggingface.co/datasets/Bill13579/vocalset-mirror) and music from the
+FMA small set (the Free Music Archive's tracks under Creative Commons licenses
+chosen by their artists, https://github.com/mdeff/fma). It contains no audio
+from any of them.

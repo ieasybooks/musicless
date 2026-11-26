@@ -74,6 +74,35 @@ in YouTube's privacy-enhanced player. The link below opens the video on YouTube.
   the screen awake while it works (phones pause hidden pages). Decoding is
   bounded to one window plus resampling margins. Export is incremental; only
   compressed output is retained.
+- A small music detector runs first on every window, and the model only runs
+  where it is needed. Windows without music keep their decoded audio (at
+  44.1 kHz) and go through the same crossfades and export, so a file without
+  music, or with music only in an intro, an outro or a few short cues, can
+  finish in a fraction of the time. The detector
+  ([audio/engine/detector.onnx](audio/engine/detector.onnx), a 129K-parameter
+  convolutional network of 506 KiB that ships with the site) reads 48 mel
+  bands of the window's mid and side channels up to 8 kHz, computed from the
+  spectrum the tool needs anyway, and scores every 0.19 s of the window; a
+  score of 0 or more means music is likely, and the window is separated. It
+  and the check below add about
+  20 ms per window on an Apple M3, against 2.9 s for the model there, so a file
+  with music throughout takes about 0.7% longer. It is trained to find music
+  from about 30 dB below the speech up; [tools/detector.py](../tools/detector.py)
+  rebuilds it and its docstring describes the data, the labels and the threshold.
+- The threshold errs towards music: in evaluation (speakers and music not used
+  in training) it flagged every window with music, down to beds 36 dB under
+  the speech and 0.5 s cues, and also most windows of spoken-word recordings
+  without music, especially reverberant ones. Those take as long as before; clean, dry recordings gain
+  the most. The detector does not adapt its threshold to a file, since a
+  window that looked like music in one part of a file says little about
+  another. After the model separates a window, [audio/dsp.js](audio/dsp.js)
+  measures what it removed (more than -40 dB of the window or -35 dB in any
+  second means it changed the window). After a window the model changed, the
+  next one is separated whatever its score, because music often fades out
+  across windows. If the detector can't load or run, or returns anything but
+  64 finite scores, every window is separated, as before. Only when the
+  detector flagged no window, so the model never ran, does the result say it
+  found no music.
 - Multithreading would need cross-origin isolation headers, which would block
   the home page's YouTube player, and the model's recurrent layers gain little
   from more threads, so the tool stays single-threaded.
@@ -121,7 +150,15 @@ The landing suite builds and serves on port 8841 (override with
 and downloads the actual R2 model. Set `FIREFOX=/path/to/firefox` to run the same
 suite in Firefox instead. It uses synthetic audio to check real MP3
 and AAC M4A downloads, duration/channels, audio agreement with the Python
-reference, native and WASM encoders, caching, retries, cancellation, validation,
+reference, the music detector (a voice-only file skips the model and says so;
+in a file with music only at the end, only those windows use the model; the
+browser and the reference give the detector the same input; a missing or
+failing detector separates every window; and, in every half second up to
+the end, before encoding, no music of a quiet bed, a short cue or music
+starting just before a window is left in, compared with separating every
+window: in the reference and, in Chrome, in the audio the browser encodes),
+native and WASM
+encoders, caching, retries, cancellation, validation,
 capability gating and English/Arabic responsive layouts. It also checks the
 About, Privacy policy, Terms of use and Contact & support pages against the
 approved text, with their links, footer, sitemap entries and layout.
@@ -139,7 +176,7 @@ directory and serve `index.html` for `/`, `/en/`, and `/ar/`, and
 redirect.
 Serve `.mjs` as JavaScript and `.wasm` as `application/wasm`. HTTPS is required
 outside localhost. The build fetches the pinned ORT package with SHA-256
-verification if `setup.sh` has not supplied it locally. It does not bundle the
-model into Pages or need Python. No cross-origin isolation headers are required
+verification if `setup.sh` has not supplied it locally. It bundles only the
+small music detector, not the model, and does not need Python. No cross-origin isolation headers are required
 for the single-thread runtime. License texts, upstream sources and codec build
 instructions are published in `/licenses/THIRD_PARTY.md` and adjacent files.
