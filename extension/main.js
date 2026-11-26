@@ -5,7 +5,7 @@
 // prepared.
 
 import { IN_FIREFOX, adopt, renewLeashes } from "./audio.js";
-import { Button } from "./button.js";
+import { Button, typing } from "./button.js";
 import { CaptureBus } from "./capture-bus.js";
 import { Engine } from "./engine.js";
 import { DEBUG, Session } from "./session.js";
@@ -155,6 +155,19 @@ function start() {
     if (removed) scheduleRefresh();
   }).observe(document.documentElement, { childList: true, subtree: true });
 
+  document.addEventListener("keydown", (event) => {
+    // The letter M, or the M key where it gives no Latin letter (Option on a Mac, Arabic).
+    const m = /^m$/i.test(event.key) || (!/^[a-z]$/i.test(event.key) && event.code === "KeyM");
+    if (!event.isTrusted || event.repeat || typing() || !m ||
+      !event.altKey || !event.shiftKey || event.ctrlKey || event.metaKey) return;
+    const shown = [...controllers.values()].filter(({ video, button }) => button && hasBox(video));
+    const current = shown.find(({ video }) => !video.paused) ?? shown[0];
+    if (!current) return;
+    event.preventDefault();
+    event.stopPropagation();
+    current.button.activate();
+    current.button.flash();
+  }, true);
   document.addEventListener("fullscreenchange", refresh, true);
   document.addEventListener("yt-navigate-finish", scheduleRefresh, true);
   let lastUrl = location.href;

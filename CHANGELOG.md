@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The keyboard shortcut Alt+Shift+M (Option+Shift+M on a Mac) removes or
+  restores the music on the video you are watching, like the button on the
+  player. The button's tooltip shows it. It does nothing while you type in a
+  text box.
+
 ## [1.1.3] - 2026-11-24
 
 ### Added

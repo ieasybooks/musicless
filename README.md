@@ -77,6 +77,8 @@ removes it when it closes.
   Its tooltip says **Restore original sound**. Select it again to **Remove music**.
   Look beside captions on regular videos, in the action row on Shorts (above Like
   on Android), or in the top row on supported embedded videos.
+  On a computer, the keyboard shortcut **Alt+Shift+M** (on a Mac,
+  **Option+Shift+M**) does the same for the video you are watching.
 - **Choose videos yourself.** Open Musicless from your browser’s extensions
   menu. Turn off **Remove music by default**.
   Then select the music note on any video where you want to remove the music.

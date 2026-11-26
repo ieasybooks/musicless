@@ -37,6 +37,10 @@ const STATES = {
   failed: ["error", TEXT.remove, ""],
 };
 const WAITS = new Set(["starting", "buffering"]);
+// The keyboard shortcut (main.js), shown in the tooltip as YouTube shows its own
+// (a key in a box after the label).
+const SHORTCUT = "Alt+Shift+M";
+const SHORTCUT_KEYS = /Mac/.test(navigator.platform) ? "⌥⇧M" : SHORTCUT;
 // A hold shorter than this shows nothing (a short one after a stall would only flicker).
 const NOTICE_DELAY_MS = 400;
 // The words come with the spinner while a video starts, when nobody knows yet
@@ -98,7 +102,7 @@ function keepKeys(element, { all = false } = {}) {
     });
   }
 }
-const typing = () => {
+export const typing = () => {
   const active = document.activeElement;
   return !!active && (active.isContentEditable || /^(input|textarea|select)$/i.test(active.tagName));
 };
@@ -111,8 +115,11 @@ function attr(element, name, value) {
 
 // Wait for a watch page or Short to build its controls. A missing row on
 // these pages is temporary, including when YouTube rebuilds it mid-video.
+// A Short's player: its buttons have the browser's own tooltips, and no sign
+// flashes in the middle for a key.
+const reelOf = (host) => host?.closest("ytd-reel-video-renderer, ytd-reel-video-renderer-cow, shorts-video") ?? null;
 function placement(host) {
-  const reel = host.closest("ytd-reel-video-renderer, ytd-reel-video-renderer-cow, shorts-video");
+  const reel = reelOf(host);
   if (reel) {
     // Mobile Shorts put their actions in a rail beside the video.
     const row = reel.querySelector(reel.localName === "shorts-video"
@@ -155,7 +162,7 @@ const minimized = (host) => host.classList.contains("ytp-player-minimized");
 let dialogs = 0;
 
 // What buttons put in the page: their elements, and their marks on the player.
-const PARTS = ".musicless-btn, .musicless-tip, .musicless-sr-only, .musicless-notice, .musicless-scrim, .musicless-dialog";
+const PARTS = ".musicless-btn, .musicless-tip, .musicless-sr-only, .musicless-notice, .musicless-scrim, .musicless-dialog, .musicless-bezel";
 const MARKS = ["musicless-waiting", "musicless-blocked"];
 
 export class Button {
@@ -180,20 +187,10 @@ export class Button {
     this.unseen = null; // YouTube's spinner, if it did not show when marked: ours is drawn instead
 
     this.el = setLanguage(html("button", { type: "button", className: "musicless-btn" }, glyph()));
+    this.el.setAttribute("aria-keyshortcuts", SHORTCUT);
     keepPointer(this.el);
     keepKeys(this.el);
-    this.el.addEventListener("click", trusted(() => {
-      const status = this.session.status;
-      if (status === "setup") openWelcome();
-      else if (this.session.failure) this.openRecovery({ focus: true });
-      else if (status === "blocked") {
-        // What the tooltip says, "Restore original sound"; the click also lets
-        // the page play sound, so the music is heard. The play button in the
-        // middle is the way to start the sound with the music removed.
-        this.session.toggle();
-        this.session.turnOff();
-      } else this.session.toggle();
-    }));
+    this.el.addEventListener("click", trusted(() => this.activate()));
     // A play attempt while a failure waits for the user's choice (the dialog
     // was closed) brings the choice back. Our own hold re-pauses the video, so
     // nothing is heard (fail closed); the intent stays "play", so this listens
@@ -204,7 +201,9 @@ export class Button {
     };
     video.addEventListener("play", this.onPlay);
     // A tooltip in the player's own style, on hover and on keyboard focus.
-    this.tip = setLanguage(html("div", { className: "musicless-tip", hidden: true }));
+    this.tipText = html("span", {});
+    this.tip = setLanguage(html("div", { className: "musicless-tip", hidden: true }, this.tipText,
+      html("kbd", { className: "musicless-tip__key", dir: "ltr", textContent: SHORTCUT_KEYS })));
     this.tip.setAttribute("aria-hidden", "true");
     this.el.addEventListener("pointerenter", () => this.showTip());
     this.el.addEventListener("pointerleave", () => this.hideTip());
@@ -224,6 +223,34 @@ export class Button {
     this.render();
   }
 
+  // What a click on the button does; the keyboard shortcut (main.js) does the same.
+  activate() {
+    const status = this.session.status;
+    if (status === "setup") openWelcome();
+    else if (this.session.failure) this.openRecovery({ focus: true });
+    else if (status === "blocked") {
+      // What the tooltip says, "Restore original sound"; the click also lets
+      // the page play sound, so the music is heard. The play button in the
+      // middle is the way to start the sound with the music removed.
+      this.session.toggle();
+      this.session.turnOff();
+    } else this.session.toggle();
+  }
+
+  // The shortcut's sign in the middle of the video, as YouTube's own shortcuts
+  // show theirs: the note for the state just chosen, fading out. A new element
+  // each time, so a quick second press starts the fade again.
+  flash() {
+    this.bezel?.remove();
+    if (!this.host || reelOf(this.host) || this.session.failure || this.session.status === "setup") return;
+    const bezel = html("div", { className: "musicless-bezel" }, glyph());
+    bezel.setAttribute("aria-hidden", "true");
+    bezel.dataset.on = String(this.session.on);
+    this.host.append(bezel);
+    this.bezel = bezel;
+    setTimeout(() => bezel.remove(), 1000); // the longest fade; with less motion it stands still until then
+  }
+
   render() {
     if (this.retired) return;
     const session = this.session;
@@ -236,8 +263,10 @@ export class Button {
     const toggle = status !== "setup" && status !== "failed";
     attr(this.el, "aria-pressed", toggle ? String(session.on) : null);
     attr(this.el, "aria-label", toggle ? TEXT.remove : tip);
-    if (this.tip.textContent !== tip) {
-      this.tip.textContent = tip;
+    // On a Short, the browser's tooltip, as YouTube's own buttons there ("Mute (m)").
+    attr(this.el, "title", reelOf(this.host) ? `${tip} (\u2066${SHORTCUT_KEYS}\u2069)` : null);
+    if (this.tipText.textContent !== tip) {
+      this.tipText.textContent = tip;
       this.placeTip();
     }
     // The end of a wait is said once; other statuses say what their row says.
@@ -340,7 +369,7 @@ export class Button {
   // ---- the tooltip ----------------------------------------------------------
 
   showTip() {
-    if (this.retired || !this.host || !this.el.isConnected) return;
+    if (this.retired || !this.host || reelOf(this.host) || !this.el.isConnected) return;
     if (this.tip.parentElement !== this.host) this.host.append(this.tip);
     this.tip.hidden = false;
     this.placeTip();
@@ -565,7 +594,7 @@ export class Button {
     this.closeRecovery();
     this.markHost(null);
     this.video.removeEventListener("play", this.onPlay);
-    for (const part of [this.el, this.live, this.notice, this.tip]) part.remove();
+    for (const part of [this.el, this.live, this.notice, this.tip, this.bezel]) part?.remove();
   }
 }
 
