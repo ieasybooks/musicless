@@ -52,8 +52,8 @@ body {
   line-height: 22px;
 }
 /* Arabic titles are set in Alexandria, the face the Arabic logo is drawn
-   from: headings, the steps' titles and the policy's name. It is the one font
-   Musicless ships, cut to its Arabic letters (OFL, THIRD_PARTY_NOTICES.txt).
+   from: headings and the steps' titles. It is the one font Musicless ships,
+   cut to its Arabic letters (OFL, THIRD_PARTY_NOTICES.txt).
    Latin words keep the system's faces, as in English, and size-adjust brings
    its letters to the size of the system's Arabic. */
 @font-face {
@@ -65,8 +65,7 @@ body {
 }
 [lang="ar"] h1,
 [lang="ar"] h2,
-[lang="ar"] .welcome .steps strong,
-[lang="ar"] .privacy header > span {
+[lang="ar"] .welcome .steps strong {
   font-family: "Alexandria Arabic", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "SF Arabic", "Noto Sans Arabic", "Geeza Pro", Tahoma, system-ui, sans-serif;
 }
 h1 { margin: 0; font-weight: 400; }
