@@ -226,6 +226,31 @@ audio per video.
 - Routing a media element through Web Audio cannot be undone, and a
   cross-origin file routed that way would play silence, so only Media Source
   (blob:) sources are routed; anything else is held instead.
+- Safari (macOS, iOS and iPadOS) has four WebKit-specific differences:
+  - iPhone Safari exposes `ManagedMediaSource` and `ManagedSourceBuffer`
+    instead of `MediaSource` and `SourceBuffer`, so `capture.js` hooks both
+    and uses tighter capture/worker buffer limits on mobile Safari.
+  - WebKit ignores `AudioContext.createMediaElementSource()` on
+    `MediaSource`/`ManagedMediaSource` videos (native audio keeps playing
+    alongside Web Audio). On Safari, `audio.js` skips
+    `createMediaElementSource()` and silences original audio through `intent.js`'s
+    shadowed `HTMLMediaElement.prototype.muted` property (preserving the user's
+    logical mute state, re-asserting native mute if iOS native fullscreen's
+    speaker button unmutes directly, and setting
+    `navigator.audioSession.type = "playback"`).
+  - WebKit's `SharedWorker` loader omits `safari-web-extension://` scheme
+    handlers (`NSURLError -1002`), so Safari runs `model-worker.js` in a
+    dedicated `Worker` per tab with shorter idle/background teardown (`10 s`
+    idle, `5 s` hidden paused) to limit memory pressure on iOS. `model.js`
+    yields via `MessageChannel` (avoiding WebKit's 1–2 s `setTimeout` clamp
+    in hidden cross-origin iframes) and pre-fetches `.wasm` bytes directly.
+  - Safari's manifest (`tools/safari-manifest.mjs`) uses a classic
+    non-persistent event page (`scripts` + `persistent: false`) rather than a
+    module service worker, `engine.js` reads `engineToken` directly from
+    `chrome.storage.local` first to avoid waking an idle background context,
+    `background.js` checks `reason === "install"`, and `welcome.js` scopes
+    `tabs.sendMessage` by `documentId` alone (Safari rejects passing both
+    `frameId` and `documentId`).
 
 ## Messages
 
@@ -252,10 +277,14 @@ checked for shape and size before anything acts on them, and the in-player
 controls ignore clicks a script fakes. The most a page can do with forged
 messages is make a video fail closed, for example by saying its stream closed.
 In Firefox it can also make the capture script reload the page, or not reload
-it once Musicless is gone (`alive`), which the page can do itself. It cannot
-make the music play while Musicless is on (the original track is silenced in
-the content script's world, which the page cannot reach), get around the
-separation, or reach the hidden frame and its workers (see the token above).
+it once Musicless is gone (`alive`), which the page can do itself. In Chrome
+and Firefox it cannot make the music play while Musicless is on (the original
+track is silenced in the content script's world, which the page cannot reach),
+get around the separation, or reach the hidden frame and its workers (see the
+token above). In Safari, silencing the original track uses the shadowed
+`HTMLMediaElement.prototype.muted` property in the page world because WebKit
+does not route `MediaSource` audio through `createMediaElementSource()`; the
+hidden frame and workers remain unreachable to the page.
 In Firefox the page can also reach the leash Musicless leaves on each video it
 routes, and the mark on a video it holds (Browser quirks): with them it can at
 most silence that video, or play it.

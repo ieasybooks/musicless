@@ -82,10 +82,10 @@ const trusted = (handler) => (event) => {
   event.preventDefault();
   if (event.isTrusted) handler(event);
 };
-// Keep the player from treating clicks on our controls as clicks on the video
-// (play/pause, double-click fullscreen).
+// Keep the player from treating clicks or taps on our controls as clicks on the
+// video (play/pause, double-click fullscreen, mobile YouTube touch overlays).
 function keepPointer(element, ...more) {
-  for (const type of ["pointerdown", "pointerup", "mousedown", "mouseup", "dblclick", ...more]) {
+  for (const type of ["pointerdown", "pointerup", "mousedown", "mouseup", "touchstart", "touchend", "dblclick", ...more]) {
     element.addEventListener(type, (event) => event.stopPropagation());
   }
 }
@@ -114,9 +114,12 @@ function attr(element, name, value) {
 function placement(host) {
   const reel = host.closest("ytd-reel-video-renderer, ytd-reel-video-renderer-cow, shorts-video");
   if (reel) {
-    // Mobile Shorts put their actions in a rail beside the video.
+    // Mobile Shorts put their actions in a rail beside the video; desktop Shorts
+    // use #right-controls (with or without the ytd-shorts-player-controls wrapper)
+    // or the unified action bar.
     const row = reel.querySelector(reel.localName === "shorts-video"
-      ? "reel-action-bar-view-model" : "ytd-shorts-player-controls #right-controls");
+      ? "reel-action-bar-view-model"
+      : "ytd-shorts-player-controls #right-controls, #right-controls, reel-action-bar-view-model");
     return row ? { row, before: row.firstElementChild, place: "top" } : null;
   }
   const right = host.querySelector(".ytp-right-controls");
@@ -492,10 +495,15 @@ export class Button {
   // ---- placement ----------------------------------------------------------
 
   overlayHost() {
-    const shorts = this.host?.closest("shorts-video");
-    // A fullscreen player can be inside the Short. Keep its controls inside
-    // the fullscreen element, which the browser draws above the whole page.
-    if (shorts && (!document.fullscreenElement || document.fullscreenElement.contains(shorts))) return shorts;
+    const container = this.host?.closest("shorts-video") ??
+      (this.host?.id === "movie_player" ? this.host.closest("#player-container-id") : null);
+    // Mobile Watch and Shorts place their touch overlay as a sibling above the
+    // video player. Keep controls inside any fullscreen element, which the
+    // browser draws above the whole page.
+    if (container && (!document.fullscreenElement || document.fullscreenElement.contains(container))) {
+      if (getComputedStyle(container).position === "static") container.style.position = "relative";
+      return container;
+    }
     return this.host;
   }
 

@@ -10,23 +10,50 @@
 // a crash), so a quiet worker is pinged; one that does not answer, or cannot
 // go on, is given up and its sessions start again with a new one.
 
-const IDLE_MS = 30 * 1000;
+const IN_SAFARI = chrome.runtime.getURL("").startsWith("safari-web-extension:");
+// Shorter on Safari so a tab's dedicated model worker (~250-340 MiB) is freed
+// promptly once idle, reducing iOS Jetsam pressure when several tabs are open.
+const IDLE_MS = IN_SAFARI ? 10 * 1000 : 30 * 1000;
 const CONNECT_MS = 10 * 1000; // a new worker says it is connected well within this
 const PING_MS = 2000; // a worker quiet this long is asked whether it is still there
 const SILENT_MS = 15 * 1000; // longer than the worker ever stays busy before answering
+const TOKEN_TIMEOUT_MS = 1500;
 
 // The hidden frame takes a port only with a secret from extension storage,
-// which pages cannot read (a page can load the frame itself). background.js
-// makes it; it is asked for at the moment of use and never kept here.
-function handshake(frame, origin, port) {
-  let asked;
+// which pages cannot read (a page can load the frame itself). Reading storage
+// directly avoids waking an idle background script on every page (which can
+// hang in Safari); background.js serializes first-run creation when missing.
+async function getEngineToken() {
   try {
-    asked = chrome.runtime.sendMessage({ type: "engine-token" });
+    const stored = await chrome.storage?.local?.get("engineToken");
+    if (stored?.engineToken) return stored.engineToken;
   } catch {
-    return; // the extension was updated or removed under this page
+    // Fall through to background.js.
   }
-  asked.then((answer) => {
-    if (answer?.token) frame.contentWindow?.postMessage({ type: "musicless-port", token: answer.token }, origin, [port]);
+  try {
+    const asked = chrome.runtime.sendMessage({ type: "engine-token" });
+    const answer = IN_SAFARI
+      ? await Promise.race([asked, new Promise((resolve) => setTimeout(() => resolve(null), TOKEN_TIMEOUT_MS))])
+      : await asked;
+    if (answer?.token) return answer.token;
+  } catch {
+    if (!IN_SAFARI) return null; // the extension was updated or removed under this page
+  }
+  if (IN_SAFARI && chrome.storage?.local) {
+    try {
+      const token = crypto.randomUUID();
+      await chrome.storage.local.set({ engineToken: token });
+      return token;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+function handshake(frame, origin, port) {
+  getEngineToken().then((token) => {
+    if (token) frame.contentWindow?.postMessage({ type: "musicless-port", token }, origin, [port]);
   }, () => {});
 }
 

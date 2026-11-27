@@ -27,8 +27,9 @@
 
   const NS = "musicless";
   const AUDIO_CODECS = /mp4a|opus/i;
-  const STREAM_LIMIT = 16 * 2 ** 20; // ~14 minutes of YouTube audio
-  const TOTAL_LIMIT = 48 * 2 ** 20; // across all streams on the page
+  const MOBILE_SAFARI = typeof MediaSource === "undefined" && typeof ManagedMediaSource !== "undefined";
+  const STREAM_LIMIT = MOBILE_SAFARI ? 6 * 2 ** 20 : 16 * 2 ** 20; // ~5 min on iPhone, ~14 min elsewhere
+  const TOTAL_LIMIT = MOBILE_SAFARI ? 12 * 2 ** 20 : 48 * 2 ** 20; // across all streams on the page
   const MAX_ENTRIES = 10000; // per stream; a player's stay far below
   const MAX_STREAMS = 64;
   const MAX_HEADER = 256 * 1024; // a format header is a few kilobytes: past this, parts are media
@@ -296,11 +297,74 @@
     enforceTotal();
   }
 
+  // Desktop and iPad browsers expose MediaSource; iPhone Safari exposes
+  // ManagedMediaSource (and ManagedSourceBuffer) instead.
+  const MS_CTORS = [
+    typeof MediaSource !== "undefined" ? MediaSource : null,
+    typeof ManagedMediaSource !== "undefined" ? ManagedMediaSource : null,
+  ].filter(Boolean);
+  const isMediaSource = (object) => MS_CTORS.some((Ctor) => object instanceof Ctor);
+
+  const hookedSbProtos = new WeakSet();
+  function hookSourceBufferProto(sbProto) {
+    if (!sbProto || hookedSbProtos.has(sbProto)) return;
+    hookedSbProtos.add(sbProto);
+    const nativeAppend = sbProto.appendBuffer;
+    if (nativeAppend) {
+      sbProto.appendBuffer = function (data) {
+        const result = nativeAppend.apply(this, arguments);
+        safely(() => {
+          const info = buffers.get(this);
+          if (!info || !streams.has(info.streamId)) return;
+          const view = ArrayBuffer.isView(data) ? new Uint8Array(data.buffer, data.byteOffset, data.byteLength) : new Uint8Array(data);
+          appended(info, this.timestampOffset, view.slice());
+        });
+        return result;
+      };
+    }
+
+    const nativeRemove = sbProto.remove;
+    if (nativeRemove) {
+      sbProto.remove = function (start, end) {
+        const result = nativeRemove.apply(this, arguments);
+        safely(() => {
+          const info = buffers.get(this);
+          if (info) record(info.streamId, { kind: "remove", bufferId: info.bufferId, start: Number(start), end: Number(end) });
+        });
+        return result;
+      };
+    }
+
+    const nativeAbort = sbProto.abort;
+    if (nativeAbort) {
+      sbProto.abort = function () {
+        const result = nativeAbort.apply(this, arguments);
+        safely(() => {
+          const info = buffers.get(this);
+          if (info) record(info.streamId, { kind: "abort", bufferId: info.bufferId });
+        });
+        return result;
+      };
+    }
+
+    if (sbProto.changeType) {
+      const nativeChangeType = sbProto.changeType;
+      sbProto.changeType = function (mime) {
+        const result = nativeChangeType.apply(this, arguments);
+        safely(() => {
+          const info = buffers.get(this);
+          if (info) record(info.streamId, { kind: "changeType", bufferId: info.bufferId, mime: String(mime) });
+        });
+        return result;
+      };
+    }
+  }
+
   const nativeCreateObjectURL = URL.createObjectURL;
   URL.createObjectURL = function (object) {
     const url = nativeCreateObjectURL.apply(this, arguments);
     safely(() => {
-      if (!(object instanceof MediaSource)) return;
+      if (!isMediaSource(object)) return;
       urls.set(object, url);
       const id = streamFor(object);
       streams.get(id).url = url;
@@ -309,91 +373,56 @@
     return url;
   };
 
-  const msProto = MediaSource.prototype;
-  const nativeAdd = msProto.addSourceBuffer;
-  msProto.addSourceBuffer = function (mime) {
-    const sourceBuffer = nativeAdd.apply(this, arguments);
-    safely(() => {
-      if (!AUDIO_CODECS.test(String(mime))) return;
-      const streamId = streamFor(this);
-      const bufferId = nextId++;
-      buffers.set(sourceBuffer, { streamId, bufferId });
-      streams.get(streamId).buffers.set(bufferId, { bufferId, mime: String(mime) });
-      record(streamId, { kind: "buffer", bufferId, mime: String(mime) });
-      post(describe(streamId));
-    });
-    return sourceBuffer;
-  };
+  if (typeof SourceBuffer !== "undefined") hookSourceBufferProto(SourceBuffer.prototype);
+  if (typeof ManagedSourceBuffer !== "undefined") hookSourceBufferProto(ManagedSourceBuffer.prototype);
 
-  // A removed buffer's audio is gone from the element: from the copy too, and
-  // from a subscriber's.
-  const nativeRemoveBuffer = msProto.removeSourceBuffer;
-  msProto.removeSourceBuffer = function (sourceBuffer) {
-    const result = nativeRemoveBuffer.apply(this, arguments);
-    safely(() => {
-      const info = buffers.get(sourceBuffer);
-      const stream = streams.get(info?.streamId);
-      if (!stream) return;
-      buffers.delete(sourceBuffer);
-      stream.buffers.delete(info.bufferId);
-      stream.headers.delete(info.bufferId);
-      stream.log = stream.log.filter((entry) => entry.bufferId !== info.bufferId);
-      stream.bytes = stream.log.reduce((sum, entry) => sum + (entry.bytes?.byteLength ?? 0), 0);
-      if (stream.subscribed) post({ type: "event", streamId: info.streamId, entry: { kind: "removeBuffer", bufferId: info.bufferId } });
-    });
-    return result;
-  };
+  const hookedMsProtos = new WeakSet();
+  for (const Ctor of MS_CTORS) {
+    const msProto = Ctor.prototype;
+    if (!msProto || hookedMsProtos.has(msProto)) continue;
+    hookedMsProtos.add(msProto);
 
-  const nativeEnd = msProto.endOfStream;
-  msProto.endOfStream = function () {
-    const result = nativeEnd.apply(this, arguments);
-    safely(() => {
-      const id = streamIds.get(this);
-      if (id) record(id, { kind: "end" });
-    });
-    return result;
-  };
-
-  const sbProto = SourceBuffer.prototype;
-  const nativeAppend = sbProto.appendBuffer;
-  sbProto.appendBuffer = function (data) {
-    const result = nativeAppend.apply(this, arguments);
-    safely(() => {
-      const info = buffers.get(this);
-      if (!info || !streams.has(info.streamId)) return;
-      const view = ArrayBuffer.isView(data) ? new Uint8Array(data.buffer, data.byteOffset, data.byteLength) : new Uint8Array(data);
-      appended(info, this.timestampOffset, view.slice());
-    });
-    return result;
-  };
-
-  const nativeRemove = sbProto.remove;
-  sbProto.remove = function (start, end) {
-    const result = nativeRemove.apply(this, arguments);
-    safely(() => {
-      const info = buffers.get(this);
-      if (info) record(info.streamId, { kind: "remove", bufferId: info.bufferId, start: Number(start), end: Number(end) });
-    });
-    return result;
-  };
-
-  const nativeAbort = sbProto.abort;
-  sbProto.abort = function () {
-    const result = nativeAbort.apply(this, arguments);
-    safely(() => {
-      const info = buffers.get(this);
-      if (info) record(info.streamId, { kind: "abort", bufferId: info.bufferId });
-    });
-    return result;
-  };
-
-  if (sbProto.changeType) {
-    const nativeChangeType = sbProto.changeType;
-    sbProto.changeType = function (mime) {
-      const result = nativeChangeType.apply(this, arguments);
+    const nativeAdd = msProto.addSourceBuffer;
+    msProto.addSourceBuffer = function (mime) {
+      const sourceBuffer = nativeAdd.apply(this, arguments);
       safely(() => {
-        const info = buffers.get(this);
-        if (info) record(info.streamId, { kind: "changeType", bufferId: info.bufferId, mime: String(mime) });
+        hookSourceBufferProto(Object.getPrototypeOf(sourceBuffer));
+        if (!AUDIO_CODECS.test(String(mime))) return;
+        const streamId = streamFor(this);
+        const bufferId = nextId++;
+        buffers.set(sourceBuffer, { streamId, bufferId });
+        streams.get(streamId).buffers.set(bufferId, { bufferId, mime: String(mime) });
+        record(streamId, { kind: "buffer", bufferId, mime: String(mime) });
+        post(describe(streamId));
+      });
+      return sourceBuffer;
+    };
+
+    // A removed buffer's audio is gone from the element: from the copy too, and
+    // from a subscriber's.
+    const nativeRemoveBuffer = msProto.removeSourceBuffer;
+    msProto.removeSourceBuffer = function (sourceBuffer) {
+      const result = nativeRemoveBuffer.apply(this, arguments);
+      safely(() => {
+        const info = buffers.get(sourceBuffer);
+        const stream = streams.get(info?.streamId);
+        if (!stream) return;
+        buffers.delete(sourceBuffer);
+        stream.buffers.delete(info.bufferId);
+        stream.headers.delete(info.bufferId);
+        stream.log = stream.log.filter((entry) => entry.bufferId !== info.bufferId);
+        stream.bytes = stream.log.reduce((sum, entry) => sum + (entry.bytes?.byteLength ?? 0), 0);
+        if (stream.subscribed) post({ type: "event", streamId: info.streamId, entry: { kind: "removeBuffer", bufferId: info.bufferId } });
+      });
+      return result;
+    };
+
+    const nativeEnd = msProto.endOfStream;
+    msProto.endOfStream = function () {
+      const result = nativeEnd.apply(this, arguments);
+      safely(() => {
+        const id = streamIds.get(this);
+        if (id) record(id, { kind: "end" });
       });
       return result;
     };

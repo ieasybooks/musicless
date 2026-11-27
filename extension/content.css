@@ -216,9 +216,12 @@ iframe.musicless-engine {
 }
 /* A Short's overlay owns swipes and the action rail. Only the center Play
    control intercepts a tap when the browser requires a gesture for audio. */
-shorts-video > .musicless-notice[data-kind="action"] { z-index: 2147483600; pointer-events: none; }
+shorts-video > .musicless-notice[data-kind="action"],
+#player-container-id > .musicless-notice[data-kind="action"] { z-index: 2147483600; pointer-events: none; }
 shorts-video > .musicless-notice[data-kind="action"] .musicless-notice__disc,
-shorts-video > .musicless-notice[data-kind="action"] .musicless-notice__text { pointer-events: auto; }
+shorts-video > .musicless-notice[data-kind="action"] .musicless-notice__text,
+#player-container-id > .musicless-notice[data-kind="action"] .musicless-notice__disc,
+#player-container-id > .musicless-notice[data-kind="action"] .musicless-notice__text { pointer-events: auto; }
 /* A play sign's weight sits left of its box: 2 px to the right looks centred. */
 .musicless-notice__disc svg { display: block; width: 60px; height: 60px; margin-left: 2px; }
 .musicless-notice[data-kind="action"]:hover .musicless-notice__disc { background: rgba(0, 0, 0, 0.65); }
@@ -231,11 +234,16 @@ shorts-video > .musicless-notice[data-kind="action"] .musicless-notice__text { p
 @keyframes musicless-in { from { opacity: 0; } }
 
 /* Around the dialog: a clear layer over the video, below YouTube's own
-   controls. A click on it closes the dialog. */
+   controls. On mobile watch and Shorts, the scrim sits in the outer player
+   container above YouTube's touch overlay so taps reach the dialog. */
 .musicless-scrim {
   position: absolute;
   z-index: 30;
   inset: 0;
+}
+shorts-video > .musicless-scrim,
+#player-container-id > .musicless-scrim {
+  z-index: 2147483600;
 }
 
 /* The recovery dialog, in the middle of the player. */

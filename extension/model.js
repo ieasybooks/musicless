@@ -10,8 +10,26 @@ ort.env.wasm.proxy = false;
 ort.env.wasm.wasmPaths = new URL("./vendor/", import.meta.url).href;
 ort.env.logLevel = "error";
 
+const IN_SAFARI = new URL(import.meta.url).protocol === "safari-web-extension:";
 const MODEL_URL = new URL("./model/spleeter-2stems.onnx", import.meta.url).href;
+const WASM_URL = new URL("./vendor/ort-wasm-simd-threaded.wasm", import.meta.url).href;
 export const INPUT_SHAPE = [2, 1, FRAMES, BINS];
+
+// Yield one macrotask so higher-priority jobs posted during a run can enter
+// the queue before the next pick. MessageChannel avoids WebKit's 1-2 s
+// setTimeout clamping in hidden cross-origin iframes.
+function yieldTurn() {
+  if (typeof MessageChannel === "undefined") return new Promise((resolve) => setTimeout(resolve, 0));
+  return new Promise((resolve) => {
+    const { port1, port2 } = new MessageChannel();
+    port1.onmessage = () => {
+      port1.close();
+      port2.close();
+      resolve();
+    };
+    port2.postMessage(null);
+  });
+}
 
 // Lower priority values run first; equal priorities run in arrival order.
 export function createModel() {
@@ -24,6 +42,12 @@ export function createModel() {
   function load() {
     loading ??= (async () => {
       const started = performance.now();
+      if (IN_SAFARI && !ort.env.wasm.wasmBinary) {
+        // safari-web-extension:// does not serve .wasm as application/wasm;
+        // supplying the bytes directly skips ORT's streaming-compile warning.
+        const response = await fetch(WASM_URL);
+        if (response.ok) ort.env.wasm.wasmBinary = await response.arrayBuffer();
+      }
       session = await ort.InferenceSession.create(MODEL_URL, {
         executionProviders: ["wasm"],
         graphOptimizationLevel: "all",
@@ -48,7 +72,7 @@ export function createModel() {
       while (queue.length) {
         // A run holds this thread until it ends, so jobs posted meanwhile (from
         // any tab) are still waiting as messages: let them in, then pick.
-        await new Promise((resolve) => setTimeout(resolve, 0));
+        await yieldTurn();
         try {
           await load();
         } catch (error) {

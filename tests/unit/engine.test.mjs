@@ -299,3 +299,90 @@ test("every attachment gets its own stream id, and messages go only to the curre
   engine.port.onmessage({ data: { type: "chunk", streamId: second, k: 0 } });
   assert.equal(session.messages.length, 1);
 });
+
+test("in Safari, separator.js spawns a dedicated model Worker instead of SharedWorker", async () => {
+  const handlers = [];
+  const workers = [];
+  let sharedCalls = 0;
+  load("separator.js", {
+    window: { addEventListener: (type, handler) => handlers.push(handler) },
+    chrome: { storage: { local: { get: async () => ({ engineToken: "secret" }) } } },
+    Worker: class {
+      constructor(url, options) { workers.push(options?.name); }
+      addEventListener() {}
+      postMessage() {}
+    },
+    SharedWorker: class { constructor() { sharedCalls++; } },
+    MessageChannel: class { constructor() { this.port1 = {}; this.port2 = {}; } },
+    URL,
+  }, { rewrite: (source) => source.replaceAll("import.meta.url", JSON.stringify("safari-web-extension://id/separator.js")) });
+  for (const handler of handlers) await handler({ data: { type: "musicless-port", token: "secret" }, ports: [{}], origin: "https://www.youtube.com" });
+  assert.deepEqual(workers, ["musicless", "musicless-model"]);
+  assert.equal(sharedCalls, 0);
+});
+
+test("engine.js reads engineToken directly from chrome.storage.local when present and frees idle Safari engines in 10 s", async () => {
+  class SafariURL extends URL {
+    get origin() {
+      return this.protocol === "safari-web-extension:" ? `${this.protocol}//${this.host}` : super.origin;
+    }
+  }
+  const frames = [];
+  const asked = [];
+  let now = 0;
+  const document = {
+    createElement() {
+      const listeners = {};
+      return {
+        src: "", isConnected: false, tabIndex: 0,
+        contentWindow: { posted: [], postMessage(message, origin) { this.posted.push({ message, origin }); } },
+        setAttribute() {},
+        addEventListener(type, handler) { listeners[type] = handler; },
+        remove() { this.isConnected = false; },
+        load() { listeners.load?.(); },
+      };
+    },
+    documentElement: { appendChild(frame) { frame.isConnected = true; frames.push(frame); } },
+  };
+  const { Engine } = load("engine.js", {
+    document,
+    chrome: {
+      runtime: {
+        getURL: (file) => `safari-web-extension://id/${file}`,
+        sendMessage: async (message) => { asked.push(message.type); return { token: "from-bg" }; },
+      },
+      storage: { local: { get: async () => ({ engineToken: "from-storage" }), set: async () => {} } },
+    },
+    MessageChannel: class { constructor() { this.port1 = { postMessage() {}, close() {} }; this.port2 = {}; } },
+    performance: { now: () => now },
+    URL: SafariURL,
+  });
+  const engine = new Engine();
+  const id = engine.attach(sessionStub());
+  frames[0].load();
+  await flush();
+  assert.deepEqual(asked, [], "background script was not woken");
+  assert.equal(frames[0].contentWindow.posted[0].message.token, "from-storage");
+  engine.detach(id);
+  now += 11000;
+  engine.tidy();
+  assert.equal(engine.port, null, "idle Safari engine released after 10 s");
+});
+
+test("background.js opens welcome on install even when chrome.runtime.OnInstalledReason is absent (Safari)", async () => {
+  let onInstalled;
+  const created = [];
+  load("background.js", {
+    chrome: {
+      runtime: {
+        getURL: (file) => `safari-web-extension://id/${file}`,
+        onInstalled: { addListener: (fn) => { onInstalled = fn; } },
+        onMessage: { addListener() {} },
+      },
+      tabs: { query: async () => [], create: async (info) => { created.push(info.url); } },
+    },
+  });
+  onInstalled({ reason: "install" });
+  await flush();
+  assert.deepEqual(created, ["safari-web-extension://id/welcome.html"]);
+});

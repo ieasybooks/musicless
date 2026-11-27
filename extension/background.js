@@ -14,7 +14,8 @@ async function openWelcome() {
 }
 
 chrome.runtime.onInstalled.addListener(({ reason }) => {
-  if (reason === chrome.runtime.OnInstalledReason.INSTALL) openWelcome();
+  // Safari does not define chrome.runtime.OnInstalledReason, only the string.
+  if (reason === "install") openWelcome();
 });
 
 // The hidden frame's secret (see engine.js), made here and nowhere else.

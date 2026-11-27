@@ -33,3 +33,8 @@ self.onconnect = (event) => {
     if (data?.type === "client" && ports[0]) serve(ports[0]);
   };
 };
+
+// Dedicated-worker entrypoint for Safari (separator.js).
+self.onmessage = ({ data, ports }) => {
+  if (data?.type === "client" && ports[0]) serve(ports[0]);
+};

@@ -11,7 +11,7 @@
 // Until the user turns Musicless on (settings.consented), a session only shows
 // "setup": it reads no audio and leaves the video alone.
 
-import { resumeAudio, routeElement } from "./audio.js";
+import { IN_SAFARI, isMuted, resumeAudio, routeElement } from "./audio.js";
 import { chunkIndex, chunkStart, OVERLAP_SAMPLES, RATE } from "./grid.js";
 import { createFailure } from "./failures.js";
 import { reloadPage } from "./navigation.js";
@@ -27,7 +27,10 @@ const DRIFT_SAMPLES = 8;
 const HOLD_LIMIT_MS = 30000;
 const UNKNOWN_SOURCE_MS = 2000;
 const STALL_MS = 400; // playing, but the clock has not moved for this long
-const SLEEP_MS = 2 * 60 * 1000; // paused, ended or muted this long: let the engine go
+// Paused, ended or muted this long: let the engine go. Shorter on Safari,
+// where each tab owns a dedicated model worker (~250-340 MiB).
+const SLEEP_MS = IN_SAFARI ? 30 * 1000 : 2 * 60 * 1000;
+const HIDDEN_SLEEP_MS = 5 * 1000;
 const AUDIO_START_MS = 3000; // after the user's click, the sound starts well within this
 const FADE_SECONDS = 0.004; // time constant of the fade when playback stops
 const OVERLAP_SECONDS = OVERLAP_SAMPLES / RATE;
@@ -373,7 +376,7 @@ export class Session {
   }
 
   applyVolume() {
-    if (this.graph) this.graph.output.gain.value = this.video.muted ? 0 : this.video.volume;
+    if (this.graph) this.graph.output.gain.value = isMuted(this.video) ? 0 : this.video.volume;
   }
 
   trace(event) {
@@ -534,7 +537,7 @@ export class Session {
     }
     const video = this.video;
     // Work only while the video can be heard; a paused one is prepared ahead of play.
-    const audible = !video.muted && video.volume > 0;
+    const audible = !isMuted(video) && video.volume > 0;
     if (!this.streamId) {
       // No source at all (between videos): nothing can play, so nothing to hold.
       // A source whose audio is not (or no longer) captured is held meanwhile.
@@ -557,7 +560,9 @@ export class Session {
       this.attach();
     } else if (video.paused || video.ended || !audible) {
       this.idleSince ??= performance.now();
-      if (performance.now() - this.idleSince > SLEEP_MS && !this.intent.held) {
+      const hidden = typeof document !== "undefined" && document.hidden;
+      const limit = IN_SAFARI && hidden ? HIDDEN_SLEEP_MS : SLEEP_MS;
+      if (performance.now() - this.idleSince > limit && !this.intent.held) {
         this.detach();
         this.asleep = true;
         this.update();
@@ -673,7 +678,8 @@ export class Session {
     if (!this.on) return "off";
     if (this.failure) return "failed";
     const ctx = this.graph?.ctx;
-    const { ended, muted, volume } = this.video;
+    const { ended, volume } = this.video;
+    const muted = isMuted(this.video);
     if (ctx && ctx.state !== "running" && this.intent.wantsPlay && !ended && !muted && volume > 0) return "blocked";
     if (this.intent.held) return this.stats.made ? "buffering" : "starting";
     return "on";

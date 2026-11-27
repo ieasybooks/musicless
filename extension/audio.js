@@ -6,6 +6,7 @@ let context = null;
 const graphs = new WeakMap(); // media element -> its routing, which cannot be undone
 
 export const IN_FIREFOX = chrome.runtime.getURL("").startsWith("moz-extension:");
+export const IN_SAFARI = chrome.runtime.getURL("").startsWith("safari-web-extension:");
 
 // Firefox stops a copy of Musicless that is removed or updated without a word
 // to it, while what it set up in the page plays on (docs/how-it-works.md,
@@ -20,12 +21,31 @@ const LEASH_KEY = "musiclessLeash"; // capture.js reads it too
 
 export function audioContext() {
   if (!context) {
+    // On iOS Safari, keep Web Audio playing even when the hardware silent
+    // switch is on or the video element is momentarily held.
+    if (typeof navigator !== "undefined" && "audioSession" in navigator) {
+      try {
+        navigator.audioSession.type = "playback";
+      } catch {
+        // Ignore if the browser disallows changing the audio session type.
+      }
+    }
     context = new AudioContext({ latencyHint: "playback" });
     for (const type of ["pointerdown", "keydown", "touchend"]) {
       window.addEventListener(type, resumeAudio, { capture: true, passive: true });
     }
   }
   return context;
+}
+
+// Logical user mute state: in Safari, native video.muted stays true while
+// Musicless silences original audio, so intent.js mirrors the user's mute state
+// to dataset.musiclessUserMuted.
+export function isMuted(video) {
+  if (IN_SAFARI && video.dataset?.musiclessUserMuted !== undefined) {
+    return video.dataset.musiclessUserMuted === "1";
+  }
+  return video.muted;
 }
 
 // Suspended (no gesture yet) or interrupted (another app took the audio device).
@@ -36,10 +56,35 @@ export function resumeAudio() {
 // Route a media element through Web Audio: its own track goes through
 // `original` (muted to silence it) and separated audio plays through `output`.
 // The page's volume and mute still apply to the element; `output` follows them.
+//
+// In Safari, WebKit's MediaSource / ManagedMediaSource pipeline ignores
+// createMediaElementSource(), so we skip it and silence the element natively
+// through intent.js's shadowed `muted` property instead.
 export function routeElement(video) {
   let graph = graphs.get(video);
   if (!graph) {
     const ctx = audioContext();
+    if (IN_SAFARI) {
+      const output = ctx.createGain();
+      output.connect(ctx.destination);
+      let gainValue = 1;
+      const original = {
+        gain: {
+          get value() { return gainValue; },
+          set value(next) {
+            gainValue = Number(next);
+            if (video.dataset) {
+              if (gainValue === 0) video.dataset.musiclessNativeSilence = "1";
+              else delete video.dataset.musiclessNativeSilence;
+            }
+            video.dispatchEvent?.(new Event("musicless:native-silence", { bubbles: true }));
+          },
+        },
+      };
+      graph = { ctx, element: null, original, output, leash: null };
+      graphs.set(video, graph);
+      return graph;
+    }
     const element = ctx.createMediaElementSource(video);
     const original = ctx.createGain();
     const output = ctx.createGain();

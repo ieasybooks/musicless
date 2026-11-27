@@ -30,7 +30,7 @@ class Video extends EventTarget {
   }
 }
 
-function sessionSandbox({ video: props, settings = {}, streams = { "blob:a": 1 }, StretchedPlayback = Stretched } = {}) {
+function sessionSandbox({ video: props, settings = {}, streams = { "blob:a": 1 }, StretchedPlayback = Stretched, safari = false, document } = {}) {
   let now = 1000;
   const param = () => ({ value: 1, setTargetAtTime() {}, setValueAtTime() {}, linearRampToValueAtTime() {}, cancelScheduledValues() {} });
   const started = [];
@@ -54,6 +54,8 @@ function sessionSandbox({ video: props, settings = {}, streams = { "blob:a": 1 }
   const reloads = [];
   const env = {
     ...grid, PlaybackIntent,
+    IN_SAFARI: safari,
+    isMuted: (v) => (safari && v.dataset?.musiclessUserMuted !== undefined ? v.dataset.musiclessUserMuted === "1" : v.muted),
     settings: { autoStart: true, consented: true, ...settings },
     resumeAudio() {},
     routeElement: () => {
@@ -72,6 +74,7 @@ function sessionSandbox({ video: props, settings = {}, streams = { "blob:a": 1 }
     URL,
     t: (key) => key, // i18n.js: failure messages by key
     StretchedPlayback,
+    ...(document ? { document } : {}),
   };
   const { settings: preferences, ...globals } = env;
   Object.assign(globals, load("failures.js", { t: env.t }), load("navigation.js", env));
@@ -529,3 +532,23 @@ for (const autoStart of [true, false]) {
     assert.equal(session.on, !autoStart);
   });
 }
+
+test("in Safari, logical user mute drives output gain and hidden paused tabs release the engine quickly", async () => {
+  const doc = { hidden: true };
+  const { session, video, graph, engine, advance } = sessionSandbox({
+    safari: true,
+    document: doc,
+    video: { currentTime: 3, muted: true, volume: 0.75, dataset: { musiclessUserMuted: "0" } },
+  });
+  assert.equal(graph.output.gain.value, 0.75, "native muted does not mute separated output when logical user is unmuted");
+  assert.equal(session.attached, true);
+  engine.deliver({ ...chunk(0), streamId: session.workerId });
+  engine.deliver({ ...chunk(1), streamId: session.workerId });
+  session.tick();
+  video.pause();
+  await flush();
+  session.tick();
+  advance(6000);
+  session.tick();
+  assert.equal(session.attached, false, "hidden paused Safari tab sleeps after 5 s");
+});
