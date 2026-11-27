@@ -15,7 +15,7 @@ const icons = {
 };
 let state = 'empty', phase = '', percent = null, remaining = null, errorCode = '';
 let file, info, worker, startupTimer, autoRun = false;
-let originalURL, resultURL, resultName, listening = 'processed';
+let originalURL, resultURL, resultName, listening = 'processed', noMusic = false;
 let supported = null;
 const audio = new Audio();
 audio.preload = 'metadata';
@@ -84,7 +84,7 @@ function render(focus = false) {
     const label = state === 'checking' ? 'checking' : phase;
     html = `${row()}<div class="audio-progress-content"><div class="audio-status-heading"><h2>${c[label]}</h2><span class="audio-percent" aria-hidden="true">${percent === null ? '' : percent + '%'}</span></div><progress max="100"${percent === null ? '' : ` value="${percent}"`} aria-label="${c[label]}"></progress><p class="audio-small" id="audio-progress-copy">${c[label + 'Copy']}</p>${label === 'processing' ? `<p class="audio-small" id="audio-remaining">${timeLeft(remaining)}</p>` : ''}</div><div class="audio-cancel">${button('cancel', c.cancel)}</div>`;
   } else if (state === 'done') {
-    html = `${row()}<h2>${c.done}</h2><div class="audio-listen" role="group" aria-label="${c.compare}"><button type="button" data-action="processed" aria-pressed="true">${c.processed}</button><button type="button" data-action="original" aria-pressed="false">${c.original}</button></div><div class="audio-player" dir="ltr"><button type="button" class="audio-play" data-action="play" aria-label="${c.play}">${icons.play}</button><input type="range" min="0" max="${info.duration}" step="0.1" value="0" aria-label="${c.seek}" id="audio-seek"><span class="audio-time"><span id="audio-elapsed">0:00</span> / ${time(info.duration)}</span></div><p class="audio-small" id="audio-preview-error" role="status" hidden></p><div class="audio-done-actions"><a class="button audio-primary" href="${resultURL}" download="${escape(resultName)}">${icons.download}${formatText(c.downloadFile)}</a>${button('reset', c.another)}</div>`;
+    html = `${row()}<h2>${c.done}</h2>${noMusic ? `<p class="audio-small">${c.noMusic}</p>` : ''}<div class="audio-listen" role="group" aria-label="${c.compare}"><button type="button" data-action="processed" aria-pressed="true">${c.processed}</button><button type="button" data-action="original" aria-pressed="false">${c.original}</button></div><div class="audio-player" dir="ltr"><button type="button" class="audio-play" data-action="play" aria-label="${c.play}">${icons.play}</button><input type="range" min="0" max="${info.duration}" step="0.1" value="0" aria-label="${c.seek}" id="audio-seek"><span class="audio-time"><span id="audio-elapsed">0:00</span> / ${time(info.duration)}</span></div><p class="audio-small" id="audio-preview-error" role="status" hidden></p><div class="audio-done-actions"><a class="button audio-primary" href="${resultURL}" download="${escape(resultName)}">${icons.download}${formatText(c.downloadFile)}</a>${button('reset', c.another)}</div>`;
   } else if (state === 'error') {
     const retryable = !errorCode.startsWith('file-') && errorCode !== 'decode-unsupported';
     html = `${row()}<div class="audio-error" role="alert"><h2>${retryable ? c.failed : c.errorTitle}</h2><p class="audio-small">${c.errors[errorCode] || c.errors.processing}</p></div><div class="audio-done-actions">${retryable ? button('retry', c.retry, true) : ''}${button('choose', c.another, !retryable)}</div>`;
@@ -137,11 +137,13 @@ function startWorker() {
         originalURL = URL.createObjectURL(file);
         resultName = file.name.replace(/\.(mp3|m4a)$/i, '') + '-musicless.' + info.format;
         listening = 'processed';
+        // Only the detector can say no window has music: the model never ran.
+        noMusic = data.separated === 0;
         audio.src = resultURL;
         state = 'done';
         stopWorker();
         render(true);
-        say(c.done);
+        say(noMusic ? `${c.done}. ${c.noMusic}` : c.done);
       } else if (data.type === 'error') showError(data.code);
     };
     current.onerror = event => {

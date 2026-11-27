@@ -84,6 +84,83 @@ export function analyze(left, right) {
   return x;
 }
 
+// The music detector's input (tests/website_reference.py mirrors it): the mid
+// and side power of analyze's spectrum in BANDS mel bands from 60 Hz to 8 kHz,
+// per frame, in dB relative to a loud frame of the window (its 95th percentile
+// energy, and at least FLOOR, about that of -60 dBFS noise), clipped to
+// [-100, 20] dB and divided by 20. Layout [mid, side] x FRAMES x BANDS.
+export const BANDS = 48;
+const FLOOR = 1.5;
+const mel = hz => 2595 * Math.log10(1 + hz / 700);
+const edges = Array.from({ length: BANDS + 2 }, (_, i) => {
+  const m = mel(60) + i * ((mel(8000) - mel(60)) / (BANDS + 1));
+  return 700 * (10 ** (m / 2595) - 1);
+});
+// Bin k is on the rising edge of triangle band[k] and the falling edge of the
+// one below. Below the lowest band and above the highest there is no triangle:
+// musicFeatures adds those edges to spare slots.
+const FIRST = Math.floor((edges[0] * N_FFT) / 44100) + 1;
+const LAST = Math.ceil((edges[BANDS + 1] * N_FFT) / 44100);
+const band = new Int32Array(LAST);
+const rise = new Float64Array(LAST);
+for (let k = FIRST, j = 0; k < LAST; k++) {
+  const hz = (k * 44100) / N_FFT;
+  while (hz >= edges[j + 1]) j++;
+  band[k] = j;
+  rise[k] = (hz - edges[j]) / (edges[j + 1] - edges[j]);
+}
+export function musicFeatures(x) {
+  const power = new Float64Array(2 * FRAMES * BANDS);
+  const energy = new Float64Array(FRAMES);
+  const mid = new Float64Array(BANDS + 2);
+  const side = new Float64Array(BANDS + 2);
+  for (let f = 0; f < FRAMES; f++) {
+    mid.fill(0); side.fill(0);
+    for (let k = FIRST, at = f * BINS + FIRST; k < LAST; k++, at++) {
+      const lr = x[at], li = x[PLANE + at], rr = x[2 * PLANE + at], ri = x[3 * PLANE + at];
+      const a = lr + rr, b = li + ri, c = lr - rr, d = li - ri;
+      const m = (a * a + b * b) * 0.25;
+      const s = (c * c + d * d) * 0.25;
+      // Slot j + 1 holds band j, so slot 0 and slot BANDS + 1 are spares.
+      const j = band[k], up = rise[k], down = 1 - up;
+      mid[j + 1] += up * m; side[j + 1] += up * s;
+      mid[j] += down * m; side[j] += down * s;
+    }
+    for (let b = 0; b < BANDS; b++) {
+      power[f * BANDS + b] = mid[b + 1];
+      power[(FRAMES + f) * BANDS + b] = side[b + 1];
+      energy[f] += mid[b + 1];
+    }
+  }
+  const reference = Math.max(energy.sort()[Math.floor(0.95 * (FRAMES - 1))], FLOOR);
+  return Float32Array.from(power, p => Math.min(20, Math.max(-100, 10 * Math.log10(p / reference + 1e-12))) / 20);
+}
+
+// Whether the model changed a window: the energy it removed, over the whole
+// window (-40 dB) or in any second of it (-35 dB, seconds every half second),
+// relative to the window's mean energy. Clean speech loses less; music far more.
+const HALF_SECOND = 22050;
+export function changed(input, output) {
+  const removed = new Float64Array(Math.ceil(WINDOW_SAMPLES / HALF_SECOND));
+  let energy = 0, total = 0;
+  for (let c = 0; c < input.length; c++) {
+    for (let i = 0; i < WINDOW_SAMPLES; i++) {
+      const d = input[c][i] - output[c][i];
+      energy += input[c][i] * input[c][i];
+      removed[Math.floor(i / HALF_SECOND)] += d * d;
+      total += d * d;
+    }
+  }
+  // Digital silence (below -100 dBFS) counts as unchanged.
+  const mean = Math.max(energy, 1e-10 * input.length * WINDOW_SAMPLES) / WINDOW_SAMPLES;
+  if (total / WINDOW_SAMPLES > 1e-4 * mean) return true;
+  for (let j = 0; j < removed.length; j++) {
+    const length = Math.min(2 * HALF_SECOND, WINDOW_SAMPLES - j * HALF_SECOND);
+    if ((removed[j] + (removed[j + 1] || 0)) / length > 10 ** -3.5 * mean) return true;
+  }
+  return false;
+}
+
 // Inverse STFT of the model output (laid out like analyze's) back to the whole
 // window for each channel.
 export function synthesize(y) {

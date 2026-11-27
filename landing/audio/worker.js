@@ -1,4 +1,4 @@
-import { analyze, synthesize } from './dsp.js';
+import { analyze, changed, musicFeatures, synthesize } from './dsp.js';
 import { applyFades, RATE, STRIDE_SAMPLES } from './grid.js';
 import { inspect, prepareEncoder, preflight, makeOutput, encode, readWindow, joinWindow } from './media.js';
 import { getModel } from './model-cache.js';
@@ -47,18 +47,33 @@ self.onmessage = async ({ data }) => {
         const total = Math.round(info.duration * RATE);
         const windows = Math.ceil(total / STRIDE_SAMPLES);
         const started = performance.now();
-        let tail;
+        // Windows without music keep their audio as it is; only the others pay
+        // for the separation model, which takes nearly all the time. A window is
+        // separated when the detector finds music likely (score >= 0; Infinity
+        // without a working detector), and after a window the model changed,
+        // since music often fades out across windows (tests/website_reference.py
+        // mirrors both rules).
+        let tail, carry = false, separated = 0, changedWindows = 0;
         report('processing', 0);
         for (let k = 0, start = 0; start < total; k++, start += STRIDE_SAMPLES) {
-          const channels = await readWindow(track, info, start);
+          let voices = await readWindow(track, info, start);
           // A mono file is separated as identical left and right channels.
-          const spectrum = await model.run(analyze(channels[0], channels[1] || channels[0]));
-          const { left, right } = synthesize(spectrum);
-          const voices = info.channels === 1 ? [left] : [left, right];
+          const spectrum = analyze(voices[0], voices[1] || voices[0]);
+          const score = await model.score(musicFeatures(spectrum));
+          const separate = carry || score >= 0;
+          carry = false;
+          if (separate) {
+            separated++;
+            const { left, right } = synthesize(await model.run(spectrum));
+            const output = info.channels === 1 ? [left] : [left, right];
+            if (changed(voices, output)) { changedWindows++; carry = true; }
+            voices = output;
+          }
           applyFades(voices, k);
           tail = joinWindow(voices, tail);
           await encode(source, voices, start, Math.min(STRIDE_SAMPLES, total - start));
-          // Every window costs about the same, so the time so far predicts the rest.
+          // The average window so far predicts the rest. Windows without music
+          // are much faster, so the estimate follows the share of music so far.
           const remaining = (performance.now() - started) / 1000 / (k + 1) * (windows - k - 1);
           report('processing', Math.min(100, Math.floor((start + STRIDE_SAMPLES) / total * 100)), remaining);
         }
@@ -67,7 +82,9 @@ self.onmessage = async ({ data }) => {
         source.close();
         await output.finalize();
         const buffer = target.buffer;
-        postMessage({ type: 'done', buffer, mime: info.format === 'mp3' ? 'audio/mpeg' : 'audio/mp4' }, [buffer]);
+        // Of the windows, how many the model separated, and how many of those it
+        // changed (dsp.js changed(): a threshold, not proof that nothing was removed).
+        postMessage({ type: 'done', buffer, mime: info.format === 'mp3' ? 'audio/mpeg' : 'audio/mp4', windows, separated, changedWindows }, [buffer]);
       } finally {
         if (output.state !== 'finalized') await output.cancel();
         input.dispose();

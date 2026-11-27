@@ -1,0 +1,10 @@
+# tools/detector.py: the versions that trained landing/audio/engine/detector.onnx.
+numpy==2.5.5
+onnx==1.23.2
+onnxruntime==1.32.0
+panns-inference==0.1.1
+pyarrow==26.0.1
+scipy==1.18.1
+soundfile==0.14.0
+torch==2.15.0
+yt-dlp==2026.8.19

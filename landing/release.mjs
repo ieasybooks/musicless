@@ -28,7 +28,8 @@ async function walk(dir) {
     else if (entry.isFile() && !['_headers', '_redirects'].includes(entry.name)) {
       const bytes = await readFile(path);
       if (bytes.length > 25 * 1024 * 1024) throw new Error('Static asset exceeds 25 MiB: ' + path);
-      if (path.endsWith('.onnx')) throw new Error('Models belong in R2, not the website deployment');
+      // Only the small music detector ships with the site; the separation model is in R2.
+      if (path.endsWith('.onnx') && path !== join(out, 'assets/engine/detector.onnx')) throw new Error('Models belong in R2, not the website deployment');
       files.push({ path: '/' + path.slice(out.length + 1), bytes: bytes.length,
         sha256: createHash('sha256').update(bytes).digest('hex') });
     } else if (!entry.isFile()) throw new Error('Unexpected build entry: ' + path);

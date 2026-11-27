@@ -28,7 +28,8 @@ Its release build calls the normal `landing/build.mjs`, then adds a 404 page,
 headers and `release.json` with the commit and each file's checksum. It also
 adds `/chrome` and `/firefox` short links, which redirect (302) to the store
 listings in `landing/content.mjs`. It rejects assets over Cloudflare's 25 MiB
-limit and bundled ONNX models. When the audio tool is present, it records its
+limit and bundled ONNX models, except the audio tool's small music detector
+(`assets/engine/detector.onnx`). When the audio tool is present, it records its
 model URL and hash for the R2 check.
 
 Hosting tests start local Wrangler on an available loopback port and stop it
