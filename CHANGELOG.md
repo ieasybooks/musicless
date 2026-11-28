@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Safari Web Extension for macOS, iOS (iPhone), and iPadOS (Safari 26+),
+  packaged as a universal Xcode app in `safari/` with English and Arabic
+  onboarding UI and `scripts/package-safari.sh` staging.
+
+### Fixed
+
+- On mobile YouTube (`m.youtube.com`), recovery dialogs now mount in the root
+  stacking context above YouTube's touch overlays so taps always reach the
+  dialog buttons.
+- Desktop Shorts button placement now falls back cleanly when YouTube omits the
+  `ytd-shorts-player-controls` wrapper.
+
 ## [1.1.3] - 2026-11-24
 
 ### Added
