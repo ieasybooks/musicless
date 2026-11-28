@@ -447,6 +447,8 @@ export class Button {
     this.recovery.remove();
     this.scrim.remove();
     this.recovery.style.cssText = "";
+    this.scrim.style.cssText = "";
+    this.scrim.classList.remove("musicless-scrim--floating");
     this.follow(false);
   }
 
@@ -459,32 +461,51 @@ export class Button {
   }
 
   // The dialog sits in the middle of the player. A player too small to hold
-  // the button gets it over the video instead, on document.body (or the
-  // fullscreen element), where the player cannot clip it.
+  // the button — or mobile YouTube, where sibling control overlays and capture
+  // touch handlers sit above #player-container-id — gets it on document.body
+  // (or the fullscreen element) in the root stacking context instead.
   positionPanel() {
     if (this.recovery.hidden) return;
     const focused = this.recovery.contains(document.activeElement) ? document.activeElement : null;
-    // Mobile Shorts place their touch overlay above the video player.
-    const player = this.overlayHost();
+    const mobileYouTube = location.hostname === "m.youtube.com";
+    const player = mobileYouTube ? null : this.overlayHost();
     if (player) {
       if (this.recovery.parentElement !== player) {
         player.append(this.scrim, this.recovery);
         focused?.focus(); // moving it blurs whatever is focused inside
       }
       this.recovery.classList.remove("musicless-dialog--floating");
+      this.scrim.classList.remove("musicless-scrim--floating");
       this.recovery.style.left = this.recovery.style.top = "";
+      this.scrim.style.cssText = "";
       this.follow(false);
       return;
     }
     const layer = document.fullscreenElement ?? document.body;
-    if (this.recovery.parentElement !== layer) {
-      this.scrim.remove();
-      layer.appendChild(this.recovery);
-      focused?.focus();
+    if (mobileYouTube) {
+      if (this.scrim.parentElement !== layer || this.recovery.parentElement !== layer) {
+        layer.append(this.scrim, this.recovery);
+        focused?.focus();
+      }
+      this.scrim.classList.add("musicless-scrim--floating");
+    } else {
+      if (this.recovery.parentElement !== layer) {
+        this.scrim.remove();
+        layer.appendChild(this.recovery);
+        focused?.focus();
+      }
+      this.scrim.classList.remove("musicless-scrim--floating");
+      this.scrim.style.cssText = "";
     }
     this.recovery.classList.add("musicless-dialog--floating");
     this.follow(true);
     const rect = this.video.getBoundingClientRect();
+    if (mobileYouTube) {
+      this.scrim.style.left = `${Math.round(rect.left)}px`;
+      this.scrim.style.top = `${Math.round(rect.top)}px`;
+      this.scrim.style.width = `${Math.round(rect.width)}px`;
+      this.scrim.style.height = `${Math.round(rect.height)}px`;
+    }
     const { offsetWidth: width, offsetHeight: height } = this.recovery;
     const left = rect.left + (rect.width - width) / 2;
     const top = rect.top + (rect.height - height) / 2;

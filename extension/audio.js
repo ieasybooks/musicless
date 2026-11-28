@@ -4,6 +4,9 @@
 
 let context = null;
 const graphs = new WeakMap(); // media element -> its routing, which cannot be undone
+const safariGraphs = new Set(); // Safari routed graphs, rebound if AudioContext is refreshed
+let safariNeedsRefresh = false;
+let visibilityWatched = false;
 
 export const IN_FIREFOX = chrome.runtime.getURL("").startsWith("moz-extension:");
 export const IN_SAFARI = chrome.runtime.getURL("").startsWith("safari-web-extension:");
@@ -19,23 +22,65 @@ const LEASH_SECONDS = 3;
 const FADE_SECONDS = 0.05;
 const LEASH_KEY = "musiclessLeash"; // capture.js reads it too
 
+function ensureAudioSession() {
+  // On iOS Safari, keep Web Audio playing even when the hardware silent
+  // switch is on or the video element is momentarily held.
+  if (typeof navigator !== "undefined" && "audioSession" in navigator) {
+    try {
+      navigator.audioSession.type = "playback";
+    } catch {
+      // Ignore if the browser disallows changing the audio session type.
+    }
+  }
+}
+
+function attachSafariListeners(ctx) {
+  ctx.addEventListener?.("statechange", () => {
+    if (ctx.state === "interrupted") safariNeedsRefresh = true;
+  });
+  if (!visibilityWatched && typeof document !== "undefined") {
+    visibilityWatched = true;
+    document.addEventListener?.("visibilitychange", () => {
+      if (document.hidden) safariNeedsRefresh = true;
+    });
+  }
+}
+
 export function audioContext() {
   if (!context) {
-    // On iOS Safari, keep Web Audio playing even when the hardware silent
-    // switch is on or the video element is momentarily held.
-    if (typeof navigator !== "undefined" && "audioSession" in navigator) {
-      try {
-        navigator.audioSession.type = "playback";
-      } catch {
-        // Ignore if the browser disallows changing the audio session type.
-      }
-    }
+    ensureAudioSession();
     context = new AudioContext({ latencyHint: "playback" });
+    if (IN_SAFARI) attachSafariListeners(context);
     for (const type of ["pointerdown", "keydown", "touchend"]) {
       window.addEventListener(type, resumeAudio, { capture: true, passive: true });
     }
   }
   return context;
+}
+
+// On iOS Safari, switching away to another tab that plays audio can leave this
+// tab's AudioContext interrupted or silently detached from CoreAudio even after
+// resume(). Because Safari skips createMediaElementSource(), we can close the
+// stale AudioContext and rebind every routed video's output gain to a fresh one.
+export function refreshSafariAudio() {
+  if (!IN_SAFARI || !context) return context;
+  ensureAudioSession();
+  const previous = context;
+  const next = new AudioContext({ latencyHint: "playback" });
+  context = next;
+  safariNeedsRefresh = false;
+  attachSafariListeners(next);
+  for (const graph of safariGraphs) {
+    const level = graph.output?.gain?.value ?? 1;
+    const output = next.createGain();
+    output.gain.value = level;
+    output.connect(next.destination);
+    graph.ctx = next;
+    graph.output = output;
+  }
+  previous.close?.().catch?.(() => {});
+  next.resume?.().catch?.(() => {});
+  return next;
 }
 
 // Logical user mute state: in Safari, native video.muted stays true while
@@ -50,7 +95,15 @@ export function isMuted(video) {
 
 // Suspended (no gesture yet) or interrupted (another app took the audio device).
 export function resumeAudio() {
-  if (context?.state === "suspended" || context?.state === "interrupted") context.resume().catch(() => {});
+  if (!context) return;
+  if (IN_SAFARI) {
+    ensureAudioSession();
+    if (safariNeedsRefresh || context.state === "interrupted") {
+      refreshSafariAudio();
+      return;
+    }
+  }
+  if (context.state === "suspended" || context.state === "interrupted") context.resume().catch(() => {});
 }
 
 // Route a media element through Web Audio: its own track goes through
@@ -83,6 +136,7 @@ export function routeElement(video) {
       };
       graph = { ctx, element: null, original, output, leash: null };
       graphs.set(video, graph);
+      safariGraphs.add(graph);
       return graph;
     }
     const element = ctx.createMediaElementSource(video);

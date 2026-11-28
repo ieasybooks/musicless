@@ -191,3 +191,56 @@ test("in Safari, routing skips createMediaElementSource, sets audioSession playb
   delete element.dataset.musiclessUserMuted;
   assert.equal(safari.isMuted(element), true, "falls back to native muted");
 });
+
+test("in Safari, returning from hidden or interrupted audio refreshes the AudioContext and rebinds output gain", () => {
+  const navigator = { audioSession: { type: "auto" } };
+  const contexts = [];
+  const docListeners = {};
+  const doc = {
+    hidden: false,
+    querySelectorAll: () => [],
+    addEventListener: (type, fn) => (docListeners[type] ??= []).push(fn),
+  };
+  class FakeContext {
+    constructor() {
+      this.state = "running";
+      this.closed = false;
+      this.resumed = 0;
+      this.destination = { name: "speakers" };
+      this.edges = [];
+      this.listeners = {};
+      contexts.push(this);
+    }
+    createGain() { return new GainNode(this, "output"); }
+    addEventListener(type, fn) { (this.listeners[type] ??= []).push(fn); }
+    close() { this.closed = true; this.state = "closed"; return Promise.resolve(); }
+    resume() { this.resumed++; this.state = "running"; return Promise.resolve(); }
+  }
+  const safari = load("audio.js", {
+    AudioContext: FakeContext, GainNode, Event, XPCNativeWrapper: (v) => v,
+    window: { addEventListener() {} },
+    chrome: { runtime: { getURL: (path) => SAFARI + path } },
+    document: doc,
+    navigator,
+  });
+  const element = { ...video(), dataset: {}, dispatchEvent() {} };
+  const graph = safari.routeElement(element);
+  graph.output.gain.value = 0.7;
+  assert.equal(contexts.length, 1);
+
+  // Tab goes hidden and another tab takes audio focus.
+  doc.hidden = true;
+  docListeners.visibilitychange.forEach((fn) => fn());
+  navigator.audioSession.type = "auto";
+
+  // Returning to the tab and tapping play refreshes the AudioContext.
+  doc.hidden = false;
+  safari.resumeAudio();
+  assert.equal(contexts.length, 2, "created a fresh AudioContext");
+  assert.equal(contexts[0].closed, true, "closed stale AudioContext");
+  assert.equal(graph.ctx, contexts[1], "graph points to fresh AudioContext");
+  assert.equal(graph.output.context, contexts[1], "output gain rebound to fresh AudioContext");
+  assert.equal(graph.output.gain.value, 0.7, "preserved output gain level");
+  assert.equal(navigator.audioSession.type, "playback", "re-asserted playback audioSession");
+  assert.equal(contexts[1].resumed, 1, "resumed fresh AudioContext");
+});

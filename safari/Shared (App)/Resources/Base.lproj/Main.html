@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="color-scheme" content="light dark">
+    <title>Musicless</title>
+    <link rel="stylesheet" href="../Style.css">
+    <script src="../Script.js" defer></script>
+</head>
+<body>
+    <main class="shell">
+        <header class="hero">
+            <svg class="mark" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="56" height="56" viewBox="0 0 100 100">
+                <rect width="100" height="100" rx="24" fill="#1f1d1a"/>
+                <path transform="matrix(0.9222 0 0 0.9222 7.46 3.72)" d="M52.37 43.18 47.51 46.82 45.64 40.04 41.02 42.84 50.11 11.15 60.68 14.18 60.68 14.19C61.33 17.65 63.78 20.98 66.45 24.62C70.58 30.23 75.25 36.58 74.66 45.24C74.1 54.44 69.29 60.35 63.58 63.91C61.95 64.9 60.3 63.39 61.37 61.82C64.65 56.93 66.49 51.22 64.42 46.47C62.51 42.28 58.87 38.63 54.48 35.81ZM18.24 82.37C15.65 75.97 20.61 67.93 29.32 64.41C32.77 63.02 36.29 62.54 39.44 62.88V54.96L43.11 51L46.78 57L50.44 52.16V72.91C50.45 73.1 50.45 73.3 50.44 73.49V74.7H50.34C49.6 79.81 45.19 84.96 38.68 87.59C29.98 91.11 20.82 88.77 18.24 82.37Z" fill="#f4ede0"/>
+            </svg>
+            <div class="hero-text">
+                <h1 id="title">Musicless</h1>
+                <p id="subtitle" class="subtitle"></p>
+            </div>
+        </header>
+
+        <div id="status-pill" class="status-pill" hidden>
+            <span class="status-dot" aria-hidden="true"></span>
+            <span id="status-text"></span>
+        </div>
+
+        <section class="card" aria-labelledby="steps-heading">
+            <h2 id="steps-heading" class="section-label"></h2>
+            <ol id="steps" class="steps"></ol>
+        </section>
+
+        <div class="actions platform-mac">
+            <button id="open-preferences" type="button" class="primary"></button>
+        </div>
+
+        <p id="mobile-tip" class="tip platform-ios"></p>
+
+        <footer class="footer">
+            <span id="privacy"></span>
+            <span id="version" class="version" hidden></span>
+        </footer>
+    </main>
+</body>
+</html>
