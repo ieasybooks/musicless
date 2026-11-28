@@ -3,6 +3,7 @@
 import { localizePage, localizeWithGlyph, t } from "./i18n.js";
 import { loadSettings, onSettingsChanged } from "./settings.js";
 
+const IN_SAFARI = chrome.runtime.getURL("").startsWith("safari-web-extension:");
 const $ = (id) => document.getElementById(id);
 localizePage();
 $("privacy").href = t("link_privacy_url");
@@ -65,11 +66,12 @@ $("back").addEventListener("click", async () => {
   try {
     const tab = await chrome.tabs.update(target.id, { active: true });
     await chrome.windows?.update?.(tab.windowId, { focused: true });
-    // Both IDs matter: a document alone can still be in the Back/Forward cache.
-    // Ask only if it is still the active document in the original frame.
-    await chrome.tabs.sendMessage(target.id, { type: "reload" }, {
-      frameId: target.frameId, documentId: target.documentId,
-    }).catch(() => {});
+    // Both IDs matter on Chrome/Firefox: a document alone can still be in the
+    // Back/Forward cache. Safari rejects specifying both frameId and documentId.
+    const targetOptions = IN_SAFARI
+      ? { documentId: target.documentId }
+      : { frameId: target.frameId, documentId: target.documentId };
+    await chrome.tabs.sendMessage(target.id, { type: "reload" }, targetOptions).catch(() => {});
   } catch {
     location.href = $("open").href; // the tab is gone: YouTube, here
     return;

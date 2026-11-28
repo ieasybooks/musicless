@@ -18,8 +18,10 @@ const GAP_TOLERANCE = 0.005;
 const LEAD_TOLERANCE = 0.3; // the page asks from 0.25 s before the playhead
 // Encoded audio kept behind the playhead. Players hold at most ~10 minutes of
 // audio in their own buffers; seeking further back makes them append it again.
-const KEEP_BEHIND_SECONDS = 900;
-const MAX_STREAM_BYTES = 64 * 2 ** 20; // far more than 30 minutes of the audio players send
+// Tighter on Safari to stay well clear of iOS Jetsam limits.
+const IN_SAFARI = typeof location !== "undefined" && location.protocol === "safari-web-extension:";
+const KEEP_BEHIND_SECONDS = IN_SAFARI ? 180 : 900;
+const MAX_STREAM_BYTES = IN_SAFARI ? 16 * 2 ** 20 : 64 * 2 ** 20; // ~14 min on Safari, >30 min elsewhere
 let port = null;
 let model = null;
 // stream id -> { id, buffers, frames, removed, bytes, ended, duration, wanted, done, carried, replayed, playing, position }

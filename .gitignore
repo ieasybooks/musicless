@@ -8,6 +8,12 @@ tests/.work/
 dist/
 .wrangler/
 
+# Safari Xcode build outputs
+safari/build/
+safari/DerivedData/
+safari/**/xcuserdata/
+*.xcuserstate
+
 # Python
 __pycache__/
 *.py[cod]

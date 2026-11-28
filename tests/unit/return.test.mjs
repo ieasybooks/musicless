@@ -64,3 +64,46 @@ test("setup remembers the requesting frame and document as well as its tab", asy
   assert.equal(active, 99, "reuse setup even when the Android windows API is absent");
   assert.deepEqual(stored, { videoTab: { id: 7, frameId: 12, documentId: "source-document" } });
 });
+
+test("welcome Back sends only documentId on Safari and both frameId and documentId elsewhere", async () => {
+  for (const [base, expected] of [
+    ["chrome-extension://test/", { frameId: 12, documentId: "doc-1" }],
+    ["safari-web-extension://test/", { documentId: "doc-1" }],
+  ]) {
+    const sent = [];
+    const clickHandlers = {};
+    const el = (id) => ({
+      id, hidden: false, textContent: "", href: "", classList: { toggle() {} },
+      removeAttribute() {}, focus() {},
+      addEventListener(type, fn) { if (type === "click") clickHandlers[id] = fn; },
+    });
+    const elements = new Map();
+    const document = {
+      getElementById: (id) => elements.get(id) ?? elements.set(id, el(id)).get(id),
+      querySelector: () => el("q"),
+    };
+    load("welcome.js", {
+      document,
+      location: { href: "" },
+      localizePage() {}, localizeWithGlyph() {}, t: (k) => k,
+      loadSettings: async () => ({ consented: true, autoStart: true }),
+      onSettingsChanged() {},
+      chrome: {
+        runtime: { getURL: (file) => base + file },
+        storage: {
+          session: { get: async () => ({ videoTab: { id: 7, frameId: 12, documentId: "doc-1" } }), remove() {} },
+          onChanged: { addListener() {} },
+        },
+        tabs: {
+          get: async () => ({ id: 7 }),
+          update: async () => ({ id: 7, windowId: 1 }),
+          getCurrent: async () => null,
+          sendMessage: async (tabId, message, options) => { sent.push({ tabId, message: plain(message), options: plain(options) }); },
+        },
+      },
+    });
+    await flush();
+    await clickHandlers.back();
+    assert.deepEqual(sent, [{ tabId: 7, message: { type: "reload" }, options: expected }], base);
+  }
+});

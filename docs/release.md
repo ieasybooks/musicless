@@ -219,7 +219,35 @@ The first time only:
 Upload the Chrome zip, with the same listing text, to the Edge Add-ons
 dashboard.
 
-## 8. Repository settings
+## 8. Apple App Store (Safari for Mac, iPhone, and iPad)
+
+The Safari Web Extension is packaged as a universal macOS + iOS + iPadOS app
+in `safari/` (`com.ieasybooks.musicless`). The model and ONNX Runtime Web
+binaries are never committed to git; stage them before archiving in Xcode:
+
+```sh
+./setup.sh                    # requires Python 3.12+ on macOS
+./scripts/package-safari.sh   # writes dist/safari-extension/ with Safari's manifest
+```
+
+Keep `MARKETING_VERSION` in `safari/Musicless.xcodeproj/project.pbxproj`
+aligned with `extension/manifest.json`, and increment `CURRENT_PROJECT_VERSION`
+for each App Store Connect upload.
+
+1. Open `safari/Musicless.xcodeproj` in Xcode on macOS (Xcode 26+ / macOS 26+).
+2. Archive **Musicless (macOS)** (`Any Mac`) and **Musicless (iOS)** (`Any iOS Device`),
+   then choose **Distribute App → App Store Connect** to upload both builds.
+3. Verify the uploaded build through **TestFlight** on Mac, iPhone, and iPad
+   (enable the extension in Safari Settings, allow all three YouTube domains,
+   turn Musicless on, and check Watch, Short, Embed, Silent mode, fullscreen,
+   and multi-tab return).
+4. Fill in App Store Connect using [app-store-listing.md](app-store-listing.md)
+   (English + Arabic copy, **Data Not Collected** privacy label, screenshots,
+   and App Review Notes) and submit for review.
+5. Publish Safari install links on the website and README only after the App
+   Store listing is live.
+
+## 9. Repository settings
 
 When setting up or reviewing the repository:
 

@@ -42,6 +42,7 @@ iframe.musicless-engine {
   border: 0;
   background: none;
   -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
   color: #fff;
   cursor: pointer;
 }
@@ -216,9 +217,12 @@ iframe.musicless-engine {
 }
 /* A Short's overlay owns swipes and the action rail. Only the center Play
    control intercepts a tap when the browser requires a gesture for audio. */
-shorts-video > .musicless-notice[data-kind="action"] { z-index: 2147483600; pointer-events: none; }
+shorts-video > .musicless-notice[data-kind="action"],
+#player-container-id > .musicless-notice[data-kind="action"] { z-index: 2147483600; pointer-events: none; }
 shorts-video > .musicless-notice[data-kind="action"] .musicless-notice__disc,
-shorts-video > .musicless-notice[data-kind="action"] .musicless-notice__text { pointer-events: auto; }
+shorts-video > .musicless-notice[data-kind="action"] .musicless-notice__text,
+#player-container-id > .musicless-notice[data-kind="action"] .musicless-notice__disc,
+#player-container-id > .musicless-notice[data-kind="action"] .musicless-notice__text { pointer-events: auto; }
 /* A play sign's weight sits left of its box: 2 px to the right looks centred. */
 .musicless-notice__disc svg { display: block; width: 60px; height: 60px; margin-left: 2px; }
 .musicless-notice[data-kind="action"]:hover .musicless-notice__disc { background: rgba(0, 0, 0, 0.65); }
@@ -231,11 +235,22 @@ shorts-video > .musicless-notice[data-kind="action"] .musicless-notice__text { p
 @keyframes musicless-in { from { opacity: 0; } }
 
 /* Around the dialog: a clear layer over the video, below YouTube's own
-   controls. A click on it closes the dialog. */
+   controls. On mobile watch and Shorts, the scrim sits in the outer player
+   container above YouTube's touch overlay so taps reach the dialog. */
 .musicless-scrim {
   position: absolute;
   z-index: 30;
   inset: 0;
+  pointer-events: auto;
+}
+shorts-video > .musicless-scrim,
+#player-container-id > .musicless-scrim,
+.musicless-scrim--floating {
+  z-index: 2147483600;
+}
+.musicless-scrim--floating {
+  position: fixed;
+  inset: auto;
 }
 
 /* The recovery dialog, in the middle of the player. */
@@ -256,6 +271,7 @@ shorts-video > .musicless-notice[data-kind="action"] .musicless-notice__text { p
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08); /* an edge on dark frames */
   color: #fff;
   text-align: center; /* a short title over two choices: one centred column */
+  pointer-events: auto;
   user-select: none;
 }
 .musicless-dialog:focus { outline: none; } /* focused itself only to be read out */
@@ -299,7 +315,12 @@ shorts-video > .musicless-notice[data-kind="action"] .musicless-notice__text { p
   font-size: 14px;
   font-weight: 500;
   line-height: 20px;
+  touch-action: manipulation;
   cursor: pointer;
+}
+@media (max-height: 260px) {
+  .musicless-dialog { padding: 14px 16px 16px; }
+  .musicless-dialog__message { margin-bottom: 12px; }
 }
 .musicless-dialog__action:hover { background: rgba(255, 255, 255, 0.2); }
 .musicless-dialog__action--main { background: #f1f1f1; color: #0f0f0f; }

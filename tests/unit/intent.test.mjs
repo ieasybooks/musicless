@@ -175,3 +175,70 @@ test("no mark once the user pauses during a hold, or when the hold ends", async 
   held.dispose({ restore: true });
   assert.equal(other.dataset.musiclessPlaybackHeld, undefined);
 });
+
+test("Safari native silence shadows muted, syncs logical mute, and blocks direct native unmute", () => {
+  const docListeners = {};
+  const document = {
+    addEventListener(type, fn) { (docListeners[type] ??= []).push(fn); },
+  };
+  let nativeMutedValue = false;
+  const volumeChanges = [];
+  class SafariMediaElement extends EventTarget {
+    constructor() {
+      super();
+      this.paused = false;
+      this.dataset = {};
+    }
+    play() { return Promise.resolve(); }
+    pause() {}
+    get muted() { return nativeMutedValue; }
+    set muted(value) { nativeMutedValue = Boolean(value); }
+  }
+  vm.runInNewContext(BRIDGE, {
+    window: {}, document, HTMLMediaElement: SafariMediaElement, CustomEvent, Event,
+  });
+  const video = new SafariMediaElement();
+  video.addEventListener("volumechange", () => volumeChanges.push(video.muted));
+  const fireDoc = (type) => { for (const fn of docListeners[type] ?? []) fn({ target: video }); };
+
+  // Turn native silence ON while user is unmuted.
+  video.dataset.musiclessNativeSilence = "1";
+  fireDoc("musicless:native-silence");
+  assert.equal(nativeMutedValue, true, "native audio is silenced");
+  assert.equal(video.muted, false, "page still sees logical unmuted state");
+  assert.equal(video.dataset.musiclessUserMuted, "0");
+
+  // User clicks mute in YouTube UI while silenced.
+  video.muted = true;
+  assert.equal(nativeMutedValue, true, "native audio stays silenced");
+  assert.equal(video.muted, true);
+  assert.equal(video.dataset.musiclessUserMuted, "1");
+  assert.deepEqual(volumeChanges, [true], "synthetic volumechange notifies listeners");
+
+  // User unmutes in YouTube UI while silenced.
+  video.muted = false;
+  assert.equal(nativeMutedValue, true);
+  assert.equal(video.muted, false);
+  assert.equal(video.dataset.musiclessUserMuted, "0");
+  assert.deepEqual(volumeChanges, [true, false]);
+
+  // iOS native fullscreen speaker button flips native muted directly and fires volumechange.
+  nativeMutedValue = false;
+  fireDoc("volumechange");
+  assert.equal(nativeMutedValue, true, "native mute is immediately re-asserted");
+  assert.equal(video.muted, false, "logical user state is preserved");
+
+  // Turn native silence OFF: restores logical unmuted state.
+  delete video.dataset.musiclessNativeSilence;
+  fireDoc("musicless:native-silence");
+  assert.equal(nativeMutedValue, false);
+  assert.equal(video.dataset.musiclessUserMuted, undefined);
+
+  // If user muted while silenced and then Musicless turns off, stays muted.
+  video.dataset.musiclessNativeSilence = "1";
+  fireDoc("musicless:native-silence");
+  video.muted = true;
+  delete video.dataset.musiclessNativeSilence;
+  fireDoc("musicless:native-silence");
+  assert.equal(nativeMutedValue, true, "user mute preference is kept on restore");
+});

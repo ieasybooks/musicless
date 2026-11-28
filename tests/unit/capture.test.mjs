@@ -513,3 +513,48 @@ test("once the content script has stopped, the audio is let go and no more is ke
     assert.equal(bytesOf(replay(page, 1).entries), INIT.length, `only the format header (routed: ${routed})`);
   }
 });
+
+test("iPhone Safari ManagedMediaSource and ManagedSourceBuffer are captured when MediaSource is absent", () => {
+  const posted = [];
+  const listeners = [];
+  class ManagedSourceBuffer {
+    constructor() { this.timestampOffset = 0; }
+    appendBuffer() {}
+    abort() {}
+    remove() {}
+  }
+  class ManagedMediaSource {
+    constructor() { this.listeners = {}; }
+    addEventListener(type, fn) { (this.listeners[type] ??= []).push(fn); }
+    addSourceBuffer() { return new ManagedSourceBuffer(); }
+    removeSourceBuffer() {}
+    endOfStream() {}
+  }
+  let urls = 0;
+  const context = {
+    ManagedMediaSource, Uint8Array, ArrayBuffer, Date, Map, Set, WeakMap, String, JSON,
+    // ManagedSourceBuffer intentionally omitted from globals to exercise dynamic prototype hooking.
+    URL: { createObjectURL: () => `blob:https://m.youtube.com/${++urls}` },
+    postMessage: (message) => posted.push(message),
+    addEventListener: (type, fn) => listeners.push(fn),
+  };
+  context.window = context;
+  vm.createContext(context);
+  vm.runInContext(SOURCE, context);
+  const self = vm.runInContext("window", context);
+  const control = (message) => {
+    for (const fn of listeners) fn({ source: self, data: { musicless: "control", ...message } });
+  };
+  control({ type: "consent", consented: true });
+  const mms = new context.ManagedMediaSource();
+  const url = context.URL.createObjectURL(mms);
+  const sb = mms.addSourceBuffer(WEBM);
+  sb.appendBuffer(INIT);
+  sb.appendBuffer(CLUSTERS[0]);
+  control({ type: "subscribe", streamId: 1 });
+  const stream = posted.find((m) => m.type === "stream" && m.streamId === 1);
+  const replayed = posted.findLast((m) => m.type === "replay" && m.streamId === 1);
+  assert.equal(stream.url, url);
+  assert.equal(replayed.missed, false);
+  assert.equal(bytesOf(replayed.entries), INIT.length + CLUSTERS[0].length);
+});

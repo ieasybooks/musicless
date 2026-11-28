@@ -6,6 +6,7 @@ import { load } from "./sandbox.mjs";
 
 const FIREFOX = "moz-extension://id/";
 const CHROME = "chrome-extension://id/";
+const SAFARI = "safari-web-extension://id/";
 
 // A gain that logs its automation, and what it connects to on its context.
 class GainNode {
@@ -24,7 +25,7 @@ class GainNode {
 
 // A copy of Musicless (audio.js) in the browser `base` names. Its context's
 // clock reads 10; `videos` are the page's.
-function copyOf(base, { failing = false, videos = [], AudioContext } = {}) {
+function copyOf(base, { failing = false, videos = [], AudioContext, navigator } = {}) {
   AudioContext ??= class {
     constructor() {
       this.currentTime = 10;
@@ -39,8 +40,9 @@ function copyOf(base, { failing = false, videos = [], AudioContext } = {}) {
     createGain() { return new GainNode(this, this.gains.shift()); }
   };
   return load("audio.js", {
-    AudioContext, GainNode, XPCNativeWrapper: (value) => value, window: { addEventListener() {} },
+    AudioContext, GainNode, Event, XPCNativeWrapper: (value) => value, window: { addEventListener() {} },
     chrome: { runtime: { getURL: (path) => base + path } }, document: { querySelectorAll: () => videos },
+    ...(navigator ? { navigator } : {}),
   });
 }
 
@@ -160,4 +162,85 @@ test("Chrome leaves nothing on the video and takes nothing over", () => {
   const chrome = copyOf(CHROME);
   chrome.adopt(marked);
   assert.equal(chrome.audioContext().edges.length, 0, "nothing routed");
+});
+
+test("in Safari, routing skips createMediaElementSource, sets audioSession playback, and drives native silence", () => {
+  const navigator = { audioSession: { type: "auto" } };
+  const events = [];
+  const element = {
+    ...video(),
+    muted: true,
+    dataset: {},
+    dispatchEvent: (event) => events.push(event.type),
+  };
+  const safari = copyOf(SAFARI, { failing: true, navigator });
+  const graph = safari.routeElement(element);
+  assert.equal(navigator.audioSession.type, "playback");
+  assert.equal(graph.element, null, "createMediaElementSource was not called");
+  assert.equal(graph.original.gain.value, 1);
+  graph.original.gain.value = 0;
+  assert.equal(element.dataset.musiclessNativeSilence, "1");
+  assert.deepEqual(events, ["musicless:native-silence"]);
+  graph.original.gain.value = 1;
+  assert.equal(element.dataset.musiclessNativeSilence, undefined);
+  assert.equal(events.length, 2);
+  element.dataset.musiclessUserMuted = "0";
+  assert.equal(safari.isMuted(element), false, "reads logical user mute when set");
+  element.dataset.musiclessUserMuted = "1";
+  assert.equal(safari.isMuted(element), true);
+  delete element.dataset.musiclessUserMuted;
+  assert.equal(safari.isMuted(element), true, "falls back to native muted");
+});
+
+test("in Safari, returning from hidden or interrupted audio refreshes the AudioContext and rebinds output gain", () => {
+  const navigator = { audioSession: { type: "auto" } };
+  const contexts = [];
+  const docListeners = {};
+  const doc = {
+    hidden: false,
+    querySelectorAll: () => [],
+    addEventListener: (type, fn) => (docListeners[type] ??= []).push(fn),
+  };
+  class FakeContext {
+    constructor() {
+      this.state = "running";
+      this.closed = false;
+      this.resumed = 0;
+      this.destination = { name: "speakers" };
+      this.edges = [];
+      this.listeners = {};
+      contexts.push(this);
+    }
+    createGain() { return new GainNode(this, "output"); }
+    addEventListener(type, fn) { (this.listeners[type] ??= []).push(fn); }
+    close() { this.closed = true; this.state = "closed"; return Promise.resolve(); }
+    resume() { this.resumed++; this.state = "running"; return Promise.resolve(); }
+  }
+  const safari = load("audio.js", {
+    AudioContext: FakeContext, GainNode, Event, XPCNativeWrapper: (v) => v,
+    window: { addEventListener() {} },
+    chrome: { runtime: { getURL: (path) => SAFARI + path } },
+    document: doc,
+    navigator,
+  });
+  const element = { ...video(), dataset: {}, dispatchEvent() {} };
+  const graph = safari.routeElement(element);
+  graph.output.gain.value = 0.7;
+  assert.equal(contexts.length, 1);
+
+  // Tab goes hidden and another tab takes audio focus.
+  doc.hidden = true;
+  docListeners.visibilitychange.forEach((fn) => fn());
+  navigator.audioSession.type = "auto";
+
+  // Returning to the tab and tapping play refreshes the AudioContext.
+  doc.hidden = false;
+  safari.resumeAudio();
+  assert.equal(contexts.length, 2, "created a fresh AudioContext");
+  assert.equal(contexts[0].closed, true, "closed stale AudioContext");
+  assert.equal(graph.ctx, contexts[1], "graph points to fresh AudioContext");
+  assert.equal(graph.output.context, contexts[1], "output gain rebound to fresh AudioContext");
+  assert.equal(graph.output.gain.value, 0.7, "preserved output gain level");
+  assert.equal(navigator.audioSession.type, "playback", "re-asserted playback audioSession");
+  assert.equal(contexts[1].resumed, 1, "resumed fresh AudioContext");
 });

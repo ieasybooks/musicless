@@ -11,7 +11,7 @@
 // Until the user turns Musicless on (settings.consented), a session only shows
 // "setup": it reads no audio and leaves the video alone.
 
-import { resumeAudio, routeElement } from "./audio.js";
+import { IN_SAFARI, isMuted, refreshSafariAudio, resumeAudio, routeElement } from "./audio.js";
 import { chunkIndex, chunkStart, OVERLAP_SAMPLES, RATE } from "./grid.js";
 import { createFailure } from "./failures.js";
 import { reloadPage } from "./navigation.js";
@@ -27,7 +27,10 @@ const DRIFT_SAMPLES = 8;
 const HOLD_LIMIT_MS = 30000;
 const UNKNOWN_SOURCE_MS = 2000;
 const STALL_MS = 400; // playing, but the clock has not moved for this long
-const SLEEP_MS = 2 * 60 * 1000; // paused, ended or muted this long: let the engine go
+// Paused, ended or muted this long: let the engine go. Shorter on Safari,
+// where each tab owns a dedicated model worker (~250-340 MiB).
+const SLEEP_MS = IN_SAFARI ? 30 * 1000 : 2 * 60 * 1000;
+const HIDDEN_SLEEP_MS = 5 * 1000;
 const AUDIO_START_MS = 3000; // after the user's click, the sound starts well within this
 const FADE_SECONDS = 0.004; // time constant of the fade when playback stops
 const OVERLAP_SECONDS = OVERLAP_SAMPLES / RATE;
@@ -86,6 +89,8 @@ export class Session {
     this.blockedClick = null; // when the user clicked to start the sound, while it has not started
     this.lastClock = -1;
     this.lastClockChange = 0;
+    this.lastCtxTime = -1;
+    this.frozenCtxTicks = 0;
     this.ticks = 0;
     this.stats = { holds: 0, resyncs: 0, made: 0, timings: [], drift: [], firstAudioMs: null };
     this.events = [];
@@ -257,8 +262,10 @@ export class Session {
   }
 
   wake() {
+    const wasAsleep = this.asleep;
     this.asleep = false;
     this.idleSince = null;
+    if (IN_SAFARI && wasAsleep) resumeAudio();
     this.tick();
   }
 
@@ -357,7 +364,9 @@ export class Session {
 
   addChunk(message) {
     const ctx = this.graph.ctx;
-    const buffer = ctx.createBuffer(2, message.left.length, RATE);
+    const buffer = typeof AudioBuffer === "function"
+      ? new AudioBuffer({ numberOfChannels: 2, length: message.left.length, sampleRate: RATE })
+      : ctx.createBuffer(2, message.left.length, RATE);
     buffer.copyToChannel(message.left, 0);
     buffer.copyToChannel(message.right, 1);
     this.chunks.set(message.k, { buffer, validFrom: message.validFrom, cut: message.cut, print: message.print });
@@ -373,7 +382,7 @@ export class Session {
   }
 
   applyVolume() {
-    if (this.graph) this.graph.output.gain.value = this.video.muted ? 0 : this.video.volume;
+    if (this.graph) this.graph.output.gain.value = isMuted(this.video) ? 0 : this.video.volume;
   }
 
   trace(event) {
@@ -386,17 +395,28 @@ export class Session {
   stopAll() {
     if (this.sources.size) {
       this.trace({ e: "stop", n: this.sources.size });
-      const now = this.graph.ctx.currentTime;
       const bus = this.bus;
-      bus.gain.setTargetAtTime(0, now, FADE_SECONDS);
-      for (const source of this.sources.values()) {
-        try {
-          source.stop(now + 8 * FADE_SECONDS);
-        } catch {
-          // already stopped
+      const busCtx = bus?.context ?? this.graph.ctx;
+      try {
+        const now = busCtx.currentTime;
+        bus.gain.setTargetAtTime(0, now, FADE_SECONDS);
+        for (const source of this.sources.values()) {
+          try {
+            source.stop(now + 8 * FADE_SECONDS);
+          } catch {
+            // already stopped
+          }
         }
+        setTimeout(() => {
+          try {
+            bus.disconnect();
+          } catch {
+            // already disconnected or closed
+          }
+        }, 200);
+      } catch {
+        // The previous AudioContext was closed during Safari audio recovery.
       }
-      setTimeout(() => bus.disconnect(), 200);
       this.bus = null;
     }
     this.sources.clear();
@@ -433,6 +453,10 @@ export class Session {
     // Like the page's own audio, keep the voice's pitch when sped up or slowed down.
     const stretched = rate !== 1 && this.video.preservesPitch !== false;
     const ctx = this.graph.ctx;
+    if (this.bus && this.bus.context !== ctx) {
+      this.bus = null;
+      this.sources.clear();
+    }
     const now = ctx.currentTime + 0.01;
     // Before validFrom the chunk holds no captured audio: it starts there.
     const lead = Math.max(0, chunk.validFrom - chunkStart(k)) / rate;
@@ -534,7 +558,7 @@ export class Session {
     }
     const video = this.video;
     // Work only while the video can be heard; a paused one is prepared ahead of play.
-    const audible = !video.muted && video.volume > 0;
+    const audible = !isMuted(video) && video.volume > 0;
     if (!this.streamId) {
       // No source at all (between videos): nothing can play, so nothing to hold.
       // A source whose audio is not (or no longer) captured is held meanwhile.
@@ -557,7 +581,9 @@ export class Session {
       this.attach();
     } else if (video.paused || video.ended || !audible) {
       this.idleSince ??= performance.now();
-      if (performance.now() - this.idleSince > SLEEP_MS && !this.intent.held) {
+      const hidden = typeof document !== "undefined" && document.hidden;
+      const limit = IN_SAFARI && hidden ? HIDDEN_SLEEP_MS : SLEEP_MS;
+      if (performance.now() - this.idleSince > limit && !this.intent.held) {
         this.detach();
         this.asleep = true;
         this.update();
@@ -634,8 +660,28 @@ export class Session {
       if (this.sources.size) this.trace({ e: "stall" });
       this.stopAll();
     } else if (!video.paused && !video.seeking) {
+      if (this.bus && this.bus.context !== this.graph.ctx) this.resync();
       if (!this.anchor) this.resync();
       else {
+        // In iOS Safari, an AudioContext whose hardware unit was detached in a
+        // background tab can report state === "running" while its clock stays
+        // frozen. Refresh the context once playback advances past two ticks.
+        if (IN_SAFARI && this.sources.size && this.graph.ctx.state === "running") {
+          const ctxTime = this.graph.ctx.currentTime;
+          if (this.lastCtxTime === ctxTime && video.currentTime - this.anchor.media > 0.25) {
+            if (++this.frozenCtxTicks >= 2) {
+              this.frozenCtxTicks = 0;
+              this.lastCtxTime = -1;
+              refreshSafariAudio();
+              this.resync();
+              this.update();
+              return;
+            }
+          } else {
+            this.lastCtxTime = ctxTime;
+            this.frozenCtxTicks = 0;
+          }
+        }
         // The drift first: the page holds video.currentTime still within a
         // task while the audio clock moves on, so time spent making audio
         // before reading both would look like drift.
@@ -673,7 +719,8 @@ export class Session {
     if (!this.on) return "off";
     if (this.failure) return "failed";
     const ctx = this.graph?.ctx;
-    const { ended, muted, volume } = this.video;
+    const { ended, volume } = this.video;
+    const muted = isMuted(this.video);
     if (ctx && ctx.state !== "running" && this.intent.wantsPlay && !ended && !muted && volume > 0) return "blocked";
     if (this.intent.held) return this.stats.made ? "buffering" : "starting";
     return "on";

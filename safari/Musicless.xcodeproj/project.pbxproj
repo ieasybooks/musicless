@@ -1,0 +1,940 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 110;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		7C93540630BA34EB004ABC6C /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C93540530BA34EB004ABC6C /* AppDelegate.swift */; };
+		7C93540830BA34EB004ABC6C /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C93540730BA34EB004ABC6C /* SceneDelegate.swift */; };
+		7C93540B30BA34EB004ABC6C /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7C93540930BA34EB004ABC6C /* LaunchScreen.storyboard */; };
+		7C93540E30BA34EB004ABC6C /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7C93540C30BA34EB004ABC6C /* Main.storyboard */; };
+		7C93541730BA34EB004ABC6C /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C93541630BA34EB004ABC6C /* AppDelegate.swift */; };
+		7C93541A30BA34EB004ABC6C /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 7C93541830BA34EB004ABC6C /* Main.storyboard */; };
+		7C93542130BA34EB004ABC6C /* Musicless Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7C93542030BA34EB004ABC6C /* Musicless Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		7C93542B30BA34EB004ABC6C /* Musicless Extension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 7C93542A30BA34EB004ABC6C /* Musicless Extension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		7C93543030BA34EB004ABC6C /* Main.html in Resources */ = {isa = PBXBuildFile; fileRef = 7C9353F530BA34EA004ABC6C /* Main.html */; };
+		7C93543130BA34EB004ABC6C /* Main.html in Resources */ = {isa = PBXBuildFile; fileRef = 7C9353F530BA34EA004ABC6C /* Main.html */; };
+		7C93543430BA34EB004ABC6C /* Style.css in Resources */ = {isa = PBXBuildFile; fileRef = 7C9353F830BA34EA004ABC6C /* Style.css */; };
+		7C93543530BA34EB004ABC6C /* Style.css in Resources */ = {isa = PBXBuildFile; fileRef = 7C9353F830BA34EA004ABC6C /* Style.css */; };
+		7C93543630BA34EB004ABC6C /* Script.js in Resources */ = {isa = PBXBuildFile; fileRef = 7C9353F930BA34EA004ABC6C /* Script.js */; };
+		7C93543730BA34EB004ABC6C /* Script.js in Resources */ = {isa = PBXBuildFile; fileRef = 7C9353F930BA34EA004ABC6C /* Script.js */; };
+		7C93543830BA34EB004ABC6C /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C9353FA30BA34EA004ABC6C /* ViewController.swift */; };
+		7C93543930BA34EB004ABC6C /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C9353FA30BA34EA004ABC6C /* ViewController.swift */; };
+		7C93543A30BA34EB004ABC6C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7C9353FB30BA34EB004ABC6C /* Assets.xcassets */; };
+		7C93543B30BA34EB004ABC6C /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 7C9353FB30BA34EB004ABC6C /* Assets.xcassets */; };
+		7C93543C30BA34EB004ABC6C /* SafariWebExtensionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C9353FD30BA34EB004ABC6C /* SafariWebExtensionHandler.swift */; };
+		7C93543D30BA34EB004ABC6C /* SafariWebExtensionHandler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C9353FD30BA34EB004ABC6C /* SafariWebExtensionHandler.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		7C93542230BA34EB004ABC6C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7C9353EF30BA34EA004ABC6C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7C93541F30BA34EB004ABC6C;
+			remoteInfo = "Musicless Extension (iOS)";
+		};
+		7C93542C30BA34EB004ABC6C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7C9353EF30BA34EA004ABC6C /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7C93542930BA34EB004ABC6C;
+			remoteInfo = "Musicless Extension (macOS)";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		7C93544330BA34EB004ABC6C /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			dstPath = "";
+			dstSubfolder = PlugIns;
+			files = (
+				7C93542130BA34EB004ABC6C /* Musicless Extension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+		};
+		7C93544A30BA34EB004ABC6C /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			dstPath = "";
+			dstSubfolder = PlugIns;
+			files = (
+				7C93542B30BA34EB004ABC6C /* Musicless Extension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		7C9353F630BA34EA004ABC6C /* Base */ = {isa = PBXFileReference; lastKnownFileType = text.html; name = Base; path = Base.lproj/Main.html; sourceTree = "<group>"; };
+		7C9353F830BA34EA004ABC6C /* Style.css */ = {isa = PBXFileReference; lastKnownFileType = text.css; path = Style.css; sourceTree = "<group>"; };
+		7C9353F930BA34EA004ABC6C /* Script.js */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.javascript; path = Script.js; sourceTree = "<group>"; };
+		7C9353FA30BA34EA004ABC6C /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		7C9353FB30BA34EB004ABC6C /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		7C9353FD30BA34EB004ABC6C /* SafariWebExtensionHandler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SafariWebExtensionHandler.swift; sourceTree = "<group>"; };
+		7C93540230BA34EB004ABC6C /* Musicless.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Musicless.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7C93540530BA34EB004ABC6C /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		7C93540730BA34EB004ABC6C /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		7C93540A30BA34EB004ABC6C /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		7C93540D30BA34EB004ABC6C /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		7C93540F30BA34EB004ABC6C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		7C93541430BA34EB004ABC6C /* Musicless.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Musicless.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7C93541630BA34EB004ABC6C /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		7C93541930BA34EB004ABC6C /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		7C93541B30BA34EB004ABC6C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		7C93542030BA34EB004ABC6C /* Musicless Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Musicless Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		7C93542530BA34EB004ABC6C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		7C93542A30BA34EB004ABC6C /* Musicless Extension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = "Musicless Extension.appex"; sourceTree = BUILT_PRODUCTS_DIR; };
+		7C93542F30BA34EB004ABC6C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		7C9353FF30BA34EB004ABC6C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+		7C93541130BA34EB004ABC6C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+		7C93541D30BA34EB004ABC6C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+		7C93542730BA34EB004ABC6C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			files = (
+			);
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		7C9353EE30BA34EA004ABC6C = {
+			isa = PBXGroup;
+			children = (
+				7C9353F330BA34EA004ABC6C /* Shared (App) */,
+				7C9353FC30BA34EB004ABC6C /* Shared (Extension) */,
+				7C93540430BA34EB004ABC6C /* iOS (App) */,
+				7C93541530BA34EB004ABC6C /* macOS (App) */,
+				7C93542430BA34EB004ABC6C /* iOS (Extension) */,
+				7C93542E30BA34EB004ABC6C /* macOS (Extension) */,
+				7C93540330BA34EB004ABC6C /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		7C9353F330BA34EA004ABC6C /* Shared (App) */ = {
+			isa = PBXGroup;
+			children = (
+				7C9353FA30BA34EA004ABC6C /* ViewController.swift */,
+				7C9353FB30BA34EB004ABC6C /* Assets.xcassets */,
+				7C9353F430BA34EA004ABC6C /* Resources */,
+			);
+			path = "Shared (App)";
+			sourceTree = "<group>";
+		};
+		7C9353F430BA34EA004ABC6C /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				7C9353F530BA34EA004ABC6C /* Main.html */,
+				7C9353F830BA34EA004ABC6C /* Style.css */,
+				7C9353F930BA34EA004ABC6C /* Script.js */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		7C9353FC30BA34EB004ABC6C /* Shared (Extension) */ = {
+			isa = PBXGroup;
+			children = (
+				7C9353FD30BA34EB004ABC6C /* SafariWebExtensionHandler.swift */,
+			);
+			path = "Shared (Extension)";
+			sourceTree = "<group>";
+		};
+		7C93540330BA34EB004ABC6C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				7C93540230BA34EB004ABC6C /* Musicless.app */,
+				7C93541430BA34EB004ABC6C /* Musicless.app */,
+				7C93542030BA34EB004ABC6C /* Musicless Extension.appex */,
+				7C93542A30BA34EB004ABC6C /* Musicless Extension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		7C93540430BA34EB004ABC6C /* iOS (App) */ = {
+			isa = PBXGroup;
+			children = (
+				7C93540530BA34EB004ABC6C /* AppDelegate.swift */,
+				7C93540730BA34EB004ABC6C /* SceneDelegate.swift */,
+				7C93540930BA34EB004ABC6C /* LaunchScreen.storyboard */,
+				7C93540C30BA34EB004ABC6C /* Main.storyboard */,
+				7C93540F30BA34EB004ABC6C /* Info.plist */,
+			);
+			path = "iOS (App)";
+			sourceTree = "<group>";
+		};
+		7C93541530BA34EB004ABC6C /* macOS (App) */ = {
+			isa = PBXGroup;
+			children = (
+				7C93541630BA34EB004ABC6C /* AppDelegate.swift */,
+				7C93541830BA34EB004ABC6C /* Main.storyboard */,
+				7C93541B30BA34EB004ABC6C /* Info.plist */,
+			);
+			path = "macOS (App)";
+			sourceTree = "<group>";
+		};
+		7C93542430BA34EB004ABC6C /* iOS (Extension) */ = {
+			isa = PBXGroup;
+			children = (
+				7C93542530BA34EB004ABC6C /* Info.plist */,
+			);
+			path = "iOS (Extension)";
+			sourceTree = "<group>";
+		};
+		7C93542E30BA34EB004ABC6C /* macOS (Extension) */ = {
+			isa = PBXGroup;
+			children = (
+				7C93542F30BA34EB004ABC6C /* Info.plist */,
+			);
+			path = "macOS (Extension)";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		7C93540130BA34EB004ABC6C /* Musicless (iOS) */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7C93544430BA34EB004ABC6C /* Build configuration list for PBXNativeTarget "Musicless (iOS)" */;
+			buildPhases = (
+				7C9353FE30BA34EB004ABC6C /* Sources */,
+				7C9353FF30BA34EB004ABC6C /* Frameworks */,
+				7C93540030BA34EB004ABC6C /* Resources */,
+				7C93544330BA34EB004ABC6C /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				7C93542330BA34EB004ABC6C /* PBXTargetDependency */,
+			);
+			name = "Musicless (iOS)";
+			productName = "Musicless (iOS)";
+			productReference = 7C93540230BA34EB004ABC6C /* Musicless.app */;
+			productType = "com.apple.product-type.application";
+		};
+		7C93541330BA34EB004ABC6C /* Musicless (macOS) */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7C93544B30BA34EB004ABC6C /* Build configuration list for PBXNativeTarget "Musicless (macOS)" */;
+			buildPhases = (
+				7C93541030BA34EB004ABC6C /* Sources */,
+				7C93541130BA34EB004ABC6C /* Frameworks */,
+				7C93541230BA34EB004ABC6C /* Resources */,
+				7C93544A30BA34EB004ABC6C /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				7C93542D30BA34EB004ABC6C /* PBXTargetDependency */,
+			);
+			name = "Musicless (macOS)";
+			productName = "Musicless (macOS)";
+			productReference = 7C93541430BA34EB004ABC6C /* Musicless.app */;
+			productType = "com.apple.product-type.application";
+		};
+		7C93541F30BA34EB004ABC6C /* Musicless Extension (iOS) */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7C93544030BA34EB004ABC6C /* Build configuration list for PBXNativeTarget "Musicless Extension (iOS)" */;
+			buildPhases = (
+				7C93541C30BA34EB004ABC6C /* Sources */,
+				7C93541D30BA34EB004ABC6C /* Frameworks */,
+				7C93541E30BA34EB004ABC6C /* Resources */,
+				7C9354D130BA34EB004ABC6C /* Copy Staged Safari Extension Resources */,
+			);
+			buildRules = (
+			);
+			name = "Musicless Extension (iOS)";
+			productName = "Musicless Extension (iOS)";
+			productReference = 7C93542030BA34EB004ABC6C /* Musicless Extension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		7C93542930BA34EB004ABC6C /* Musicless Extension (macOS) */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7C93544730BA34EB004ABC6C /* Build configuration list for PBXNativeTarget "Musicless Extension (macOS)" */;
+			buildPhases = (
+				7C93542630BA34EB004ABC6C /* Sources */,
+				7C93542730BA34EB004ABC6C /* Frameworks */,
+				7C93542830BA34EB004ABC6C /* Resources */,
+				7C9354D230BA34EB004ABC6C /* Copy Staged Safari Extension Resources */,
+			);
+			buildRules = (
+			);
+			name = "Musicless Extension (macOS)";
+			productName = "Musicless Extension (macOS)";
+			productReference = 7C93542A30BA34EB004ABC6C /* Musicless Extension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		7C9353EF30BA34EA004ABC6C /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2700;
+				LastUpgradeCheck = 2700;
+				TargetAttributes = {
+					7C93540130BA34EB004ABC6C = {
+						CreatedOnToolsVersion = 27.0;
+					};
+					7C93541330BA34EB004ABC6C = {
+						CreatedOnToolsVersion = 27.0;
+					};
+					7C93541F30BA34EB004ABC6C = {
+						CreatedOnToolsVersion = 27.0;
+					};
+					7C93542930BA34EB004ABC6C = {
+						CreatedOnToolsVersion = 27.0;
+					};
+				};
+			};
+			buildConfigurationList = 7C9353F230BA34EA004ABC6C /* Build configuration list for PBXProject "Musicless" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				ar,
+				Base,
+			);
+			mainGroup = 7C9353EE30BA34EA004ABC6C;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 7C93540330BA34EB004ABC6C /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				7C93540130BA34EB004ABC6C /* Musicless (iOS) */,
+				7C93541330BA34EB004ABC6C /* Musicless (macOS) */,
+				7C93541F30BA34EB004ABC6C /* Musicless Extension (iOS) */,
+				7C93542930BA34EB004ABC6C /* Musicless Extension (macOS) */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		7C93540030BA34EB004ABC6C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+				7C93540B30BA34EB004ABC6C /* LaunchScreen.storyboard in Resources */,
+				7C93543030BA34EB004ABC6C /* Main.html in Resources */,
+				7C93543630BA34EB004ABC6C /* Script.js in Resources */,
+				7C93543A30BA34EB004ABC6C /* Assets.xcassets in Resources */,
+				7C93540E30BA34EB004ABC6C /* Main.storyboard in Resources */,
+				7C93543430BA34EB004ABC6C /* Style.css in Resources */,
+			);
+		};
+		7C93541230BA34EB004ABC6C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+				7C93543530BA34EB004ABC6C /* Style.css in Resources */,
+				7C93541A30BA34EB004ABC6C /* Main.storyboard in Resources */,
+				7C93543730BA34EB004ABC6C /* Script.js in Resources */,
+				7C93543B30BA34EB004ABC6C /* Assets.xcassets in Resources */,
+				7C93543130BA34EB004ABC6C /* Main.html in Resources */,
+			);
+		};
+		7C93541E30BA34EB004ABC6C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+		7C93542830BA34EB004ABC6C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			files = (
+			);
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		7C9354D130BA34EB004ABC6C /* Copy Staged Safari Extension Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Staged Safari Extension Resources";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -euo pipefail\nSRC=\"${PROJECT_DIR}/../dist/safari-extension\"\nif [ ! -f \"${SRC}/manifest.json\" ]; then\n  echo \"error: Missing ${SRC}/manifest.json. Run './setup.sh && ./scripts/package-safari.sh' from the repository root first.\" >&2\n  exit 1\nfi\nDEST=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}\"\nmkdir -p \"${DEST}\"\nrsync -a --exclude='.DS_Store' \"${SRC}/\" \"${DEST}/\"\n";
+		};
+		7C9354D230BA34EB004ABC6C /* Copy Staged Safari Extension Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Staged Safari Extension Resources";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -euo pipefail\nSRC=\"${PROJECT_DIR}/../dist/safari-extension\"\nif [ ! -f \"${SRC}/manifest.json\" ]; then\n  echo \"error: Missing ${SRC}/manifest.json. Run './setup.sh && ./scripts/package-safari.sh' from the repository root first.\" >&2\n  exit 1\nfi\nDEST=\"${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}\"\nmkdir -p \"${DEST}\"\nrsync -a --delete --exclude='.DS_Store' \"${SRC}/\" \"${DEST}/\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		7C9353FE30BA34EB004ABC6C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+				7C93543830BA34EB004ABC6C /* ViewController.swift in Sources */,
+				7C93540630BA34EB004ABC6C /* AppDelegate.swift in Sources */,
+				7C93540830BA34EB004ABC6C /* SceneDelegate.swift in Sources */,
+			);
+		};
+		7C93541030BA34EB004ABC6C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+				7C93543930BA34EB004ABC6C /* ViewController.swift in Sources */,
+				7C93541730BA34EB004ABC6C /* AppDelegate.swift in Sources */,
+			);
+		};
+		7C93541C30BA34EB004ABC6C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+				7C93543C30BA34EB004ABC6C /* SafariWebExtensionHandler.swift in Sources */,
+			);
+		};
+		7C93542630BA34EB004ABC6C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			files = (
+				7C93543D30BA34EB004ABC6C /* SafariWebExtensionHandler.swift in Sources */,
+			);
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		7C93542330BA34EB004ABC6C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7C93541F30BA34EB004ABC6C /* Musicless Extension (iOS) */;
+			targetProxy = 7C93542230BA34EB004ABC6C /* PBXContainerItemProxy */;
+		};
+		7C93542D30BA34EB004ABC6C /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7C93542930BA34EB004ABC6C /* Musicless Extension (macOS) */;
+			targetProxy = 7C93542C30BA34EB004ABC6C /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		7C9353F530BA34EA004ABC6C /* Main.html */ = {
+			isa = PBXVariantGroup;
+			children = (
+				7C9353F630BA34EA004ABC6C /* Base */,
+			);
+			name = Main.html;
+			sourceTree = "<group>";
+		};
+		7C93540930BA34EB004ABC6C /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				7C93540A30BA34EB004ABC6C /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+		7C93540C30BA34EB004ABC6C /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				7C93540D30BA34EB004ABC6C /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		7C93541830BA34EB004ABC6C /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				7C93541930BA34EB004ABC6C /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		7C93543E30BA34EB004ABC6C /* Debug configuration for PBXProject "Musicless" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 2BP7YFA674;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		7C93543F30BA34EB004ABC6C /* Release configuration for PBXProject "Musicless" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 2BP7YFA674;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		7C93544130BA34EB004ABC6C /* Debug configuration for PBXNativeTarget "Musicless Extension (iOS)" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "iOS (Extension)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Musicless;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.1.3;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.ieasybooks.musicless.Extension;
+				PRODUCT_NAME = "Musicless Extension";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		7C93544230BA34EB004ABC6C /* Release configuration for PBXNativeTarget "Musicless Extension (iOS)" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "iOS (Extension)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Musicless;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.1.3;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.ieasybooks.musicless.Extension;
+				PRODUCT_NAME = "Musicless Extension";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		7C93544530BA34EB004ABC6C /* Debug configuration for PBXNativeTarget "Musicless (iOS)" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "iOS (App)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Musicless;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.1.3;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.ieasybooks.musicless;
+				PRODUCT_NAME = Musicless;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		7C93544630BA34EB004ABC6C /* Release configuration for PBXNativeTarget "Musicless (iOS)" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "iOS (App)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Musicless;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.1.3;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.ieasybooks.musicless;
+				PRODUCT_NAME = Musicless;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		7C93544830BA34EB004ABC6C /* Debug configuration for PBXNativeTarget "Musicless Extension (macOS)" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "macOS (Extension)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Musicless;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.1.3;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.ieasybooks.musicless.Extension;
+				PRODUCT_NAME = "Musicless Extension";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		7C93544930BA34EB004ABC6C /* Release configuration for PBXNativeTarget "Musicless Extension (macOS)" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "macOS (Extension)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Musicless;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@executable_path/../../../../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.1.3;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.ieasybooks.musicless.Extension;
+				PRODUCT_NAME = "Musicless Extension";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		7C93544C30BA34EB004ABC6C /* Debug configuration for PBXNativeTarget "Musicless (macOS)" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "macOS (App)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Musicless;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSMainStoryboardFile = Main;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.1.3;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.ieasybooks.musicless;
+				PRODUCT_NAME = Musicless;
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		7C93544D30BA34EB004ABC6C /* Release configuration for PBXNativeTarget "Musicless (macOS)" */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "macOS (App)/Info.plist";
+				INFOPLIST_KEY_CFBundleDisplayName = Musicless;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
+				INFOPLIST_KEY_NSMainStoryboardFile = Main;
+				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				MARKETING_VERSION = 1.1.3;
+				OTHER_LDFLAGS = (
+					"-framework",
+					SafariServices,
+					"-framework",
+					WebKit,
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.ieasybooks.musicless;
+				PRODUCT_NAME = Musicless;
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		7C9353F230BA34EA004ABC6C /* Build configuration list for PBXProject "Musicless" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7C93543E30BA34EB004ABC6C /* Debug configuration for PBXProject "Musicless" */,
+				7C93543F30BA34EB004ABC6C /* Release configuration for PBXProject "Musicless" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		7C93544030BA34EB004ABC6C /* Build configuration list for PBXNativeTarget "Musicless Extension (iOS)" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7C93544130BA34EB004ABC6C /* Debug configuration for PBXNativeTarget "Musicless Extension (iOS)" */,
+				7C93544230BA34EB004ABC6C /* Release configuration for PBXNativeTarget "Musicless Extension (iOS)" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		7C93544430BA34EB004ABC6C /* Build configuration list for PBXNativeTarget "Musicless (iOS)" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7C93544530BA34EB004ABC6C /* Debug configuration for PBXNativeTarget "Musicless (iOS)" */,
+				7C93544630BA34EB004ABC6C /* Release configuration for PBXNativeTarget "Musicless (iOS)" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		7C93544730BA34EB004ABC6C /* Build configuration list for PBXNativeTarget "Musicless Extension (macOS)" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7C93544830BA34EB004ABC6C /* Debug configuration for PBXNativeTarget "Musicless Extension (macOS)" */,
+				7C93544930BA34EB004ABC6C /* Release configuration for PBXNativeTarget "Musicless Extension (macOS)" */,
+			);
+			defaultConfigurationName = Release;
+		};
+		7C93544B30BA34EB004ABC6C /* Build configuration list for PBXNativeTarget "Musicless (macOS)" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7C93544C30BA34EB004ABC6C /* Debug configuration for PBXNativeTarget "Musicless (macOS)" */,
+				7C93544D30BA34EB004ABC6C /* Release configuration for PBXNativeTarget "Musicless (macOS)" */,
+			);
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 7C9353EF30BA34EA004ABC6C /* Project object */;
+	validationLevel = 1;
+}

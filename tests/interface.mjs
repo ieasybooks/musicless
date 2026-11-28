@@ -332,6 +332,31 @@ try {
     assert(await page.evaluate(() => window.ui.played && window.ui.liked));
   });
 
+  await step("the recovery dialog sits above the mobile watch touch overlay and receives taps", async () => {
+    await playerUI(page);
+    await page.evaluate(() => {
+      const { control, session, host } = window.ui;
+      const container = document.createElement("div");
+      container.id = "player-container-id";
+      container.style.cssText = "position:relative;width:640px;height:360px";
+      host.id = "movie_player";
+      host.style.zIndex = "0";
+      host.replaceWith(container);
+      container.append(host);
+      const overlay = document.createElement("ytm-watch-player-controls");
+      overlay.style.cssText = "position:absolute;inset:0;z-index:5";
+      overlay.innerHTML = '<div class="player-controls-top"></div>';
+      container.append(overlay);
+      session.status = "failed";
+      session.failure = window.ui.createFailure("slow");
+      session.retry = () => { window.ui.retried = true; };
+      control.position(host);
+      control.render();
+    });
+    await page.click('.musicless-dialog__action[data-action="retry"]');
+    assert(await page.evaluate(() => window.ui.retried === true));
+  });
+
   await step("the mobile audio frame has a box without obscuring the page or taking taps", async () => {
     await playerUI(page);
     const state = await page.evaluate(() => {

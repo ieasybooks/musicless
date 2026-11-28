@@ -82,10 +82,10 @@ const trusted = (handler) => (event) => {
   event.preventDefault();
   if (event.isTrusted) handler(event);
 };
-// Keep the player from treating clicks on our controls as clicks on the video
-// (play/pause, double-click fullscreen).
+// Keep the player from treating clicks or taps on our controls as clicks on the
+// video (play/pause, double-click fullscreen, mobile YouTube touch overlays).
 function keepPointer(element, ...more) {
-  for (const type of ["pointerdown", "pointerup", "mousedown", "mouseup", "dblclick", ...more]) {
+  for (const type of ["pointerdown", "pointerup", "mousedown", "mouseup", "touchstart", "touchend", "dblclick", ...more]) {
     element.addEventListener(type, (event) => event.stopPropagation());
   }
 }
@@ -114,9 +114,12 @@ function attr(element, name, value) {
 function placement(host) {
   const reel = host.closest("ytd-reel-video-renderer, ytd-reel-video-renderer-cow, shorts-video");
   if (reel) {
-    // Mobile Shorts put their actions in a rail beside the video.
+    // Mobile Shorts put their actions in a rail beside the video; desktop Shorts
+    // use #right-controls (with or without the ytd-shorts-player-controls wrapper)
+    // or the unified action bar.
     const row = reel.querySelector(reel.localName === "shorts-video"
-      ? "reel-action-bar-view-model" : "ytd-shorts-player-controls #right-controls");
+      ? "reel-action-bar-view-model"
+      : "ytd-shorts-player-controls #right-controls, #right-controls, reel-action-bar-view-model");
     return row ? { row, before: row.firstElementChild, place: "top" } : null;
   }
   const right = host.querySelector(".ytp-right-controls");
@@ -444,6 +447,8 @@ export class Button {
     this.recovery.remove();
     this.scrim.remove();
     this.recovery.style.cssText = "";
+    this.scrim.style.cssText = "";
+    this.scrim.classList.remove("musicless-scrim--floating");
     this.follow(false);
   }
 
@@ -456,32 +461,51 @@ export class Button {
   }
 
   // The dialog sits in the middle of the player. A player too small to hold
-  // the button gets it over the video instead, on document.body (or the
-  // fullscreen element), where the player cannot clip it.
+  // the button — or mobile YouTube, where sibling control overlays and capture
+  // touch handlers sit above #player-container-id — gets it on document.body
+  // (or the fullscreen element) in the root stacking context instead.
   positionPanel() {
     if (this.recovery.hidden) return;
     const focused = this.recovery.contains(document.activeElement) ? document.activeElement : null;
-    // Mobile Shorts place their touch overlay above the video player.
-    const player = this.overlayHost();
+    const mobileYouTube = location.hostname === "m.youtube.com";
+    const player = mobileYouTube ? null : this.overlayHost();
     if (player) {
       if (this.recovery.parentElement !== player) {
         player.append(this.scrim, this.recovery);
         focused?.focus(); // moving it blurs whatever is focused inside
       }
       this.recovery.classList.remove("musicless-dialog--floating");
+      this.scrim.classList.remove("musicless-scrim--floating");
       this.recovery.style.left = this.recovery.style.top = "";
+      this.scrim.style.cssText = "";
       this.follow(false);
       return;
     }
     const layer = document.fullscreenElement ?? document.body;
-    if (this.recovery.parentElement !== layer) {
-      this.scrim.remove();
-      layer.appendChild(this.recovery);
-      focused?.focus();
+    if (mobileYouTube) {
+      if (this.scrim.parentElement !== layer || this.recovery.parentElement !== layer) {
+        layer.append(this.scrim, this.recovery);
+        focused?.focus();
+      }
+      this.scrim.classList.add("musicless-scrim--floating");
+    } else {
+      if (this.recovery.parentElement !== layer) {
+        this.scrim.remove();
+        layer.appendChild(this.recovery);
+        focused?.focus();
+      }
+      this.scrim.classList.remove("musicless-scrim--floating");
+      this.scrim.style.cssText = "";
     }
     this.recovery.classList.add("musicless-dialog--floating");
     this.follow(true);
     const rect = this.video.getBoundingClientRect();
+    if (mobileYouTube) {
+      this.scrim.style.left = `${Math.round(rect.left)}px`;
+      this.scrim.style.top = `${Math.round(rect.top)}px`;
+      this.scrim.style.width = `${Math.round(rect.width)}px`;
+      this.scrim.style.height = `${Math.round(rect.height)}px`;
+    }
     const { offsetWidth: width, offsetHeight: height } = this.recovery;
     const left = rect.left + (rect.width - width) / 2;
     const top = rect.top + (rect.height - height) / 2;
@@ -492,10 +516,15 @@ export class Button {
   // ---- placement ----------------------------------------------------------
 
   overlayHost() {
-    const shorts = this.host?.closest("shorts-video");
-    // A fullscreen player can be inside the Short. Keep its controls inside
-    // the fullscreen element, which the browser draws above the whole page.
-    if (shorts && (!document.fullscreenElement || document.fullscreenElement.contains(shorts))) return shorts;
+    const container = this.host?.closest("shorts-video") ??
+      (this.host?.id === "movie_player" ? this.host.closest("#player-container-id") : null);
+    // Mobile Watch and Shorts place their touch overlay as a sibling above the
+    // video player. Keep controls inside any fullscreen element, which the
+    // browser draws above the whole page.
+    if (container && (!document.fullscreenElement || document.fullscreenElement.contains(container))) {
+      if (getComputedStyle(container).position === "static") container.style.position = "relative";
+      return container;
+    }
     return this.host;
   }
 
