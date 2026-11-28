@@ -56,6 +56,7 @@ function sessionSandbox({ video: props, settings = {}, streams = { "blob:a": 1 }
     ...grid, PlaybackIntent,
     IN_SAFARI: safari,
     isMuted: (v) => (safari && v.dataset?.musiclessUserMuted !== undefined ? v.dataset.musiclessUserMuted === "1" : v.muted),
+    refreshSafariAudio: () => { env.refreshed = (env.refreshed ?? 0) + 1; },
     settings: { autoStart: true, consented: true, ...settings },
     resumeAudio() {},
     routeElement: () => {
@@ -551,4 +552,24 @@ test("in Safari, logical user mute drives output gain and hidden paused tabs rel
   advance(6000);
   session.tick();
   assert.equal(session.attached, false, "hidden paused Safari tab sleeps after 5 s");
+});
+
+test("in Safari, a frozen AudioContext clock while playback advances triggers refreshSafariAudio", () => {
+  const { session, video, ctx, engine, env, advance } = sessionSandbox({
+    safari: true,
+    video: { currentTime: 3, muted: true, volume: 1, dataset: { musiclessUserMuted: "0" } },
+  });
+  engine.deliver({ ...chunk(0), streamId: session.workerId });
+  engine.deliver({ ...chunk(1), streamId: session.workerId });
+  session.tick();
+  assert.equal(session.sources.size > 0, true);
+  // Video advances while AudioContext.currentTime stays frozen at 0 across 2 ticks.
+  video.currentTime = 3.4;
+  advance(250);
+  session.tick();
+  video.currentTime = 3.7;
+  advance(250);
+  session.tick();
+  assert.equal(env.refreshed, 1, "refreshed stale Safari AudioContext after two frozen ticks");
+  assert.equal(ctx.currentTime, 0);
 });

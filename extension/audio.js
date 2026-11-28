@@ -70,7 +70,12 @@ export function refreshSafariAudio() {
   context = next;
   safariNeedsRefresh = false;
   attachSafariListeners(next);
-  for (const graph of safariGraphs) {
+  for (const entry of safariGraphs) {
+    if (entry.video.isConnected === false) {
+      safariGraphs.delete(entry);
+      continue;
+    }
+    const { graph } = entry;
     const level = graph.output?.gain?.value ?? 1;
     const output = next.createGain();
     output.gain.value = level;
@@ -136,7 +141,7 @@ export function routeElement(video) {
       };
       graph = { ctx, element: null, original, output, leash: null };
       graphs.set(video, graph);
-      safariGraphs.add(graph);
+      safariGraphs.add({ video, graph });
       return graph;
     }
     const element = ctx.createMediaElementSource(video);
